@@ -182,8 +182,10 @@ void CSpecDyn::print_vti()
   
   int offset = 0;
 	int N_tot = N*N*N;
-	int N_bytes_scalar  = N_tot * sizeof(float);
+	int N_bytes_scalar  =   N_tot * sizeof(float);
+	int N_bytes_vector  = 3*N_tot * sizeof(float);
   int bin_size_scalar = N_bytes_scalar + sizeof(uint64_t);// 2nd term is the size of the the leading integer announcing the numbers n the data chunk
+  int bin_size_vector = N_bytes_vector + sizeof(uint64_t);
   
   // header
   if(myRank==0)
@@ -209,16 +211,17 @@ void CSpecDyn::print_vti()
 		os << "    <Piece Extent=\"" << extend_l[0] << " " << extend_r[0] << " " 
                                  << extend_l[1] << " " << extend_r[1] << " " 
                                  << extend_l[2] << " " << extend_r[2] << "\">" << std::endl;
-    os << "      <PointData Scalars=\"X\">" << std::endl;
+    os << "      <PointData Scalars=\"P\" Vectors=\"V\">" << std::endl;
     
-    os << "        <DataArray type=\"Float32\" Name=\"X\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    os << "        <DataArray type=\"Float32\" Name=\"P\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
     os << "        </DataArray>" << std::endl;
     offset += bin_size_scalar;
-    os << "        <DataArray type=\"Float32\" Name=\"Y\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    os << "        <DataArray type=\"Float32\" Name=\"V\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
     os << "        </DataArray>" << std::endl;
-    offset += bin_size_scalar;
-    os << "        <DataArray type=\"Float32\" Name=\"Z\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    offset += bin_size_vector;
+    os << "        <DataArray type=\"Float32\" Name=\"B\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
     os << "        </DataArray>" << std::endl;
+    offset += bin_size_vector;
     
     os << "      </PointData>" << std::endl;
     os << "      <CellData>" << std::endl;
@@ -236,9 +239,13 @@ void CSpecDyn::print_vti()
   if(myRank==0)
   {
     float value;
-    double X = 1.;
-    double Y = 2.;
-    double Z = 3.;
+    double P = 1.;
+    double Vx = 2.;
+    double Vy = 3.;
+    double Vz = 4.;
+    double Bx = 5.;
+    double By = 6.;
+    double Bz = 7.;
     
     std::ofstream binary_os(file_name.c_str(), std::ios::out | std::ios::app | std::ios::binary );
     if(!binary_os){
@@ -246,40 +253,48 @@ void CSpecDyn::print_vti()
       exit(2);
     }
     
-    // print X
+    // print P
     binary_os.write(reinterpret_cast<const char*>(&N_bytes_scalar),sizeof(uint64_t)); // size of following binary package
     for(int ix = 0; ix < N; ix++){
     for(int iy = 0; iy < N; iy++){
     for(int iz = 0; iz < N; iz++){
       
-      value = (float)X;
+      value = (float)P;
       
       binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
       
     }}}
     
-    // print Y
-    binary_os.write(reinterpret_cast<const char*>(&N_bytes_scalar),sizeof(uint64_t)); // size of following binary package
+    // print V
+    binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
     for(int ix = 0; ix < N; ix++){
     for(int iy = 0; iy < N; iy++){
     for(int iz = 0; iz < N; iz++){
       
-      value = (float)Y;
-      
+      value = (float)Vx;
       binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-
+      value = (float)Vy;
+      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      value = (float)Vz;
+      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      
     }}}
-    // print Z
-    binary_os.write(reinterpret_cast<const char*>(&N_bytes_scalar),sizeof(uint64_t)); // size of following binary package
+    
+    // print B
+    binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
     for(int ix = 0; ix < N; ix++){
     for(int iy = 0; iy < N; iy++){
     for(int iz = 0; iz < N; iz++){
       
-      value = (float)Z;
-      
+      value = (float)Bx;
       binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-
+      value = (float)By;
+      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      value = (float)Bz;
+      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      
     }}}
+    
   }
   
   // footer
