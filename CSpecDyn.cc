@@ -165,6 +165,7 @@ void CSpecDyn::execute()
   for(int i = 0; i < 3; i++)
   {
     print_vti();
+    time += dt;
   }
 }
 
@@ -208,11 +209,18 @@ void CSpecDyn::print_vti()
                                         << extend_l[2] << " " << extend_r[2] 
 				 << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
 				 << "\" Spacing=\"" << dx << " " << dx << " " << dx << "\">" << std::endl;
+    
+    os << "      <FieldData>" << std::endl;
+    os << "        <DataArray type=\"Float32\" Name=\"TimeValue\" NumberOfTuples=\"1\" format=\"ascii\">" << std::endl;
+    os << "        "<< float(time) << std::endl;
+    os << "        </DataArray>" << std::endl;
+    os << "      </FieldData>" << std::endl;
+        
 		os << "    <Piece Extent=\"" << extend_l[0] << " " << extend_r[0] << " " 
                                  << extend_l[1] << " " << extend_r[1] << " " 
                                  << extend_l[2] << " " << extend_r[2] << "\">" << std::endl;
-    os << "      <PointData Scalars=\"P\" Vectors=\"V\">" << std::endl;
     
+    os << "      <PointData Scalars=\"P\" Vectors=\"V\">" << std::endl;
     os << "        <DataArray type=\"Float32\" Name=\"P\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
     os << "        </DataArray>" << std::endl;
     offset += bin_size_scalar;
