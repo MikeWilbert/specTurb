@@ -20,11 +20,11 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 256;
+const int NUM = 128;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
-const double CFL = 0.5;
+const double DT = 0.001;
 
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Test1";
@@ -33,15 +33,15 @@ const double OUT_INTERVAL = 1.;
 // simulation time
 const double END_SIMU = 4.;
 
-// choose initial setup: (0):all zero; (1):testing purposes
+// choose initial setup: (0):all zero; (1):Orszag-Tang
 const int SETUP = 1;
 
 // domain size
-const double LENGTH = 1.;
+const double LENGTH = PI2;
 // kinematic viscosity
-const double NU = 1.e-6;
+const double NU  = 0.02;
 // magnetic diffusivity
-const double ETA = 1.e-6;
+const double ETA = 0.02;
 
 /** DEFINES **/
 

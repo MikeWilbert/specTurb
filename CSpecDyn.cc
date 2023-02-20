@@ -3,7 +3,7 @@
 // Fyi: Immer FORTRAN order!!! (stride1 ist nicht definiert!)
 
 CSpecDyn::CSpecDyn():
-N(NUM), pdims(PDIMS), cfl(CFL), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_simu(END_SIMU), L(LENGTH), nu(NU), eta(ETA), setup(SETUP)
+N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_simu(END_SIMU), L(LENGTH), nu(NU), eta(ETA), setup(SETUP)
 {
   
   // init MPI
@@ -29,7 +29,6 @@ N(NUM), pdims(PDIMS), cfl(CFL), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), en
   XB = -L*0.5;
   dx = L/N;
   dk = PI2/L;
-  dt = cfl*dx;
   time = 0.;
   
   // allocate memory
@@ -45,6 +44,43 @@ N(NUM), pdims(PDIMS), cfl(CFL), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), en
   Bx_R = FFT.malloc_R();
   By_R = FFT.malloc_R();
   Bz_R = FFT.malloc_R();
+  
+  Vx_F = FFT.malloc_C();
+  Vy_F = FFT.malloc_C();
+  Vz_F = FFT.malloc_C();
+  Vx_F1 = FFT.malloc_C();
+  Vy_F1 = FFT.malloc_C();
+  Vz_F1 = FFT.malloc_C();
+  Vx_F2 = FFT.malloc_C();
+  Vy_F2 = FFT.malloc_C();
+  Vz_F2 = FFT.malloc_C();
+  Bx_F = FFT.malloc_C();
+  By_F = FFT.malloc_C();
+  Bz_F = FFT.malloc_C();
+  Bx_F1 = FFT.malloc_C();
+  By_F1 = FFT.malloc_C();
+  Bz_F1 = FFT.malloc_C();
+  Bx_F2 = FFT.malloc_C();
+  By_F2 = FFT.malloc_C();
+  Bz_F2 = FFT.malloc_C();
+  RHS_Vx_F = FFT.malloc_C();
+  RHS_Vy_F = FFT.malloc_C();
+  RHS_Vz_F = FFT.malloc_C();
+  RHS_Vx_F1 = FFT.malloc_C();
+  RHS_Vy_F1 = FFT.malloc_C();
+  RHS_Vz_F1 = FFT.malloc_C();
+  RHS_Vx_F2 = FFT.malloc_C();
+  RHS_Vy_F2 = FFT.malloc_C();
+  RHS_Vz_F2 = FFT.malloc_C();
+  RHS_Bx_F = FFT.malloc_C();
+  RHS_By_F = FFT.malloc_C();
+  RHS_Bz_F = FFT.malloc_C();
+  RHS_Bx_F1 = FFT.malloc_C();
+  RHS_By_F1 = FFT.malloc_C();
+  RHS_Bz_F1 = FFT.malloc_C();
+  RHS_Bx_F2 = FFT.malloc_C();
+  RHS_By_F2 = FFT.malloc_C();
+  RHS_Bz_F2 = FFT.malloc_C();
   
   float_array = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
@@ -142,7 +178,7 @@ void CSpecDyn::setup_fields()
       break;
       
     case 1:
-      // testing purposes
+      // Orszag-Tang
       for(int ix = 0; ix < size_R[0]; ix++){
       for(int iy = 0; iy < size_R[1]; iy++){
       for(int iz = 0; iz < size_R[2]; iz++){
@@ -152,17 +188,16 @@ void CSpecDyn::setup_fields()
         double x_val = (start_R[0]+ix)*dx+XB;
         double y_val = (start_R[1]+iy)*dx+XB;
         double z_val = (start_R[2]+iz)*dx+XB;
-        double r_val = sqrt(y_val*y_val + z_val*z_val);
-        double p_val = atan2(z_val, y_val);
-        double s_val = x_val;
         
-        Vx_R[id] = 1.;
-        Vy_R[id] = 2.;
-        Vz_R[id] = 3.;
+        Vx_R[id] = -2.*sin(y_val);
+        Vy_R[id] =  2.*sin(x_val);
+        Vz_R[id] =  0.;
         
-        Bx_R[id] = 0.;
-        By_R[id] = 0.;
-        Bz_R[id] = 0.;
+        double beta = 0.8;
+        
+        Bx_R[id] = ( -2.*sin(y_val) + sin(z_val) )*beta;
+        By_R[id] = (  2.*sin(x_val) + sin(z_val) )*beta;
+        Bz_R[id] = (     sin(x_val) + sin(y_val) )*beta;
     
       }}}
       break;
@@ -174,15 +209,48 @@ void CSpecDyn::setup_fields()
       exit(EXIT_FAILURE);
   }
   
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
 }
 
 void CSpecDyn::execute()
 {
-  //~ for(int i = 0; i < 3; i++)
-  //~ {
-    print_vti();
-    //~ time += dt;
-  //~ }
+  double out_time = time;
+  
+  print_vti();
+
+  while(time < end_simu)
+  {
+    time_step();
+    out_time += dt;
+    
+    if(out_time > out_interval)
+    {
+      print_vti();
+      out_time -= out_interval;
+    }
+    
+  }
+}
+
+void CSpecDyn::time_step()
+{
+  
+  // do something
+  
+  time += dt;
+  
+  if(myRank == 0)
+	{
+		printf("  time step: time = %f, dt = %f\n", time, dt);
+	}MPI_Barrier(comm);
+}
+
+void CSpecDyn::calc_RHS(CX* RHS_X , CX* RHS_Y , CX* RHS_Z , CX* V_X, CX* V_Y, CX* V_Z,
+                        CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z)
+{
+  // do something
 }
 
 void CSpecDyn::finalize()
@@ -192,6 +260,8 @@ void CSpecDyn::finalize()
 
 void CSpecDyn::print_vti()
 {
+  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
   
   std::string file_name  = out_dir + "/step_" + std::to_string(vti_count) + ".vti";
   std::ofstream os;
@@ -268,7 +338,7 @@ void CSpecDyn::print_vti()
   
   }MPI_Barrier(comm);
   
-  double start_time = MPI_Wtime();
+  //~ double start_time = MPI_Wtime();
   
   // print field components in parallel
   print_mpi_scalar(Vx_R, N_bytes_scalar, file_name.c_str());
@@ -278,8 +348,8 @@ void CSpecDyn::print_vti()
   print_mpi_scalar(By_R, N_bytes_scalar, file_name.c_str()); 
   print_mpi_scalar(Bz_R, N_bytes_scalar, file_name.c_str()); 
   
-  double print_time = MPI_Wtime() - start_time;
-  if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
+  //~ double print_time = MPI_Wtime() - start_time;
+  //~ if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
   
   // footer
   if(myRank==0)
@@ -297,6 +367,9 @@ void CSpecDyn::print_vti()
   }MPI_Barrier(comm);
   
   vti_count++;
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
 }
 
 void CSpecDyn::print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name)
@@ -329,4 +402,63 @@ void CSpecDyn::print_mpi_scalar(double* field, int& N_bytes_scalar, const char* 
   
   // close file
   MPI_File_close(&mpi_file);  
+}
+
+void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
+{
+  // 2/3 rule
+  double kmax = N/2.*dk;
+  double kmax_23 = N/2.*dk*2./3.;
+  
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
+    {
+      fieldX[id] = 0.;
+      fieldY[id] = 0.;
+      fieldZ[id] = 0.;
+    }
+    
+  }}}
+}
+
+void CSpecDyn::projection(CX* fieldX, CX* fieldY, CX* fieldZ)
+{
+
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    CX temp = (kx[ix] * fieldX[id] + ky[iy] * fieldY[id] + kz[iz] * fieldZ[id]) / k2[id];
+    
+    fieldX[id] -= kx[ix] * temp;
+    fieldY[id] -= ky[iy] * temp;
+    fieldZ[id] -= kz[iz] * temp;	
+    
+  }}}
+  
+}
+
+void CSpecDyn::fFFT(double* IN_x, double* IN_y, double* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z)
+{
+  
+  FFT.r2c(IN_x, OUT_x);
+  FFT.r2c(IN_y, OUT_y);
+  FFT.r2c(IN_z, OUT_z);
+  
+}
+
+void CSpecDyn::bFFT(CX* IN_x, CX* IN_y, CX* IN_z, double* OUT_x, double* OUT_y, double* OUT_z)
+{
+  
+  FFT.c2r(IN_x, OUT_x);
+  FFT.c2r(IN_y, OUT_y);
+  FFT.c2r(IN_z, OUT_z);
+  
 }
