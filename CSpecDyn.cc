@@ -46,6 +46,8 @@ N(NUM), pdims(PDIMS), cfl(CFL), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), en
   By_R = FFT.malloc_R();
   Bz_R = FFT.malloc_R();
   
+  float_array = (float*) malloc(sizeof(float)*size_R_tot);
+  
   // setup initial fields
   setup_k();
   setup_V();
@@ -120,7 +122,7 @@ void CSpecDyn::setup_V()
 {
   switch(setup)
   {
-    case 0:
+    case 1:
       // u = 0
       for(int id = 0; id < size_R_tot; id++)
       {    
@@ -128,6 +130,27 @@ void CSpecDyn::setup_V()
         Vy_R[id] = 0.;
         Vz_R[id] = 0.;
       }
+      break;
+      
+    case 0:
+      for(int ix = 0; ix < size_R[0]; ix++){
+      for(int iy = 0; iy < size_R[1]; iy++){
+      for(int iz = 0; iz < size_R[2]; iz++){
+      
+        int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+        
+        double x_val = (start_R[0]+ix)*dx+XB;
+        double y_val = (start_R[1]+iy)*dx+XB;
+        double z_val = (start_R[2]+iz)*dx+XB;
+        double r_val = sqrt(y_val*y_val + z_val*z_val);
+        double p_val = atan2(z_val, y_val);
+        double s_val = x_val;
+        
+        Vx_R[id] = z_val;
+        Vy_R[id] = 0.;
+        Vz_R[id] = 0.;
+    
+      }}}
       break;
     
     default: 
@@ -162,11 +185,11 @@ void CSpecDyn::setup_B()
 
 void CSpecDyn::execute()
 {
-  for(int i = 0; i < 3; i++)
-  {
+  //~ for(int i = 0; i < 3; i++)
+  //~ {
     print_vti();
-    time += dt;
-  }
+    //~ time += dt;
+  //~ }
 }
 
 void CSpecDyn::finalize()
@@ -174,6 +197,156 @@ void CSpecDyn::finalize()
   MPI_Finalize();
 }
 
+
+//~ void CSpecDyn::print_vti()
+//~ {
+  
+  //~ std::string file_name  = out_dir + "/step_" + std::to_string(vti_count) + ".vti";
+  //~ std::ofstream os;
+  
+  //~ int offset = 0;
+	//~ int N_tot = N*N*N;
+	//~ int N_bytes_scalar  =   N_tot * sizeof(float);
+	//~ int N_bytes_vector  = 3*N_tot * sizeof(float);
+  //~ int bin_size_scalar = N_bytes_scalar + sizeof(uint64_t);// 2nd term is the size of the the leading integer announcing the numbers n the data chunk
+  //~ int bin_size_vector = N_bytes_vector + sizeof(uint64_t);
+  
+  //~ // header
+  //~ if(myRank==0)
+  //~ {
+    //~ printf("Printing vti # %d!\n", vti_count);
+    
+    //~ os.open(file_name.c_str(), std::ios::out);
+    //~ if(!os){
+      //~ std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    //~ }
+    
+    //~ // write header	
+		//~ int extend_l[3]  = {0, 0, 0};
+		//~ int extend_r[3]  = {N-1, N-1, N-1};
+		//~ double origin[3] = {XB,XB,XB};
+    
+    //~ os << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">" << std::endl;	
+    //~ os << "  <ImageData WholeExtent=\"" << extend_l[0] << " " << extend_r[0] << " " 
+                                        //~ << extend_l[1] << " " << extend_r[1] << " " 
+                                        //~ << extend_l[2] << " " << extend_r[2] 
+				 //~ << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
+				 //~ << "\" Spacing=\"" << dx << " " << dx << " " << dx << "\">" << std::endl;
+    
+    //~ os << "      <FieldData>" << std::endl;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"TimeValue\" NumberOfTuples=\"1\" format=\"ascii\">" << std::endl;
+    //~ os << "        "<< float(time) << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ os << "      </FieldData>" << std::endl;
+        
+		//~ os << "    <Piece Extent=\"" << extend_l[0] << " " << extend_r[0] << " " 
+                                 //~ << extend_l[1] << " " << extend_r[1] << " " 
+                                 //~ << extend_l[2] << " " << extend_r[2] << "\">" << std::endl;
+    
+    //~ os << "      <PointData Scalars=\"P\" Vectors=\"V\">" << std::endl;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"P\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ offset += bin_size_scalar;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"V\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ offset += bin_size_vector;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"B\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ offset += bin_size_vector;
+    
+    //~ os << "      </PointData>" << std::endl;
+    //~ os << "      <CellData>" << std::endl;
+    //~ os << "      </CellData>" << std::endl;
+    //~ os << "    </Piece>" << std::endl;
+    //~ os << "  </ImageData>" << std::endl;
+    //~ os << "  <AppendedData encoding=\"raw\">" << std::endl;
+    //~ os << "   _" ;
+                                
+    //~ os.close();
+  
+  //~ }MPI_Barrier(comm);
+  
+  //~ // binary data
+  //~ if(myRank==0)
+  //~ {
+    //~ float value;
+    //~ double P = 1.;
+    //~ double Vx = 2.;
+    //~ double Vy = 3.;
+    //~ double Vz = 4.;
+    //~ double Bx = 5.;
+    //~ double By = 6.;
+    //~ double Bz = 7.;
+    
+    //~ std::ofstream binary_os(file_name.c_str(), std::ios::out | std::ios::app | std::ios::binary );
+    //~ if(!binary_os){
+      //~ std::cout << "Die Binär-Daten konnten nicht in das file '" << file_name << "' geschrieben werden!" << std::endl;
+      //~ exit(2);
+    //~ }
+    
+    //~ // print P
+    //~ binary_os.write(reinterpret_cast<const char*>(&N_bytes_scalar),sizeof(uint64_t)); // size of following binary package
+    //~ for(int ix = 0; ix < N; ix++){
+    //~ for(int iy = 0; iy < N; iy++){
+    //~ for(int iz = 0; iz < N; iz++){
+      
+      //~ value = (float)P;
+      
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      
+    //~ }}}
+    
+    //~ // print V
+    //~ binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
+    //~ for(int ix = 0; ix < N; ix++){
+    //~ for(int iy = 0; iy < N; iy++){
+    //~ for(int iz = 0; iz < N; iz++){
+      
+      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      
+      //~ value = (float)Vx_R[id];
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      //~ value = (float)Vy;
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      //~ value = (float)Vz;
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      
+    //~ }}}
+    
+    //~ // print B
+    //~ binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
+    //~ for(int ix = 0; ix < N; ix++){
+    //~ for(int iy = 0; iy < N; iy++){
+    //~ for(int iz = 0; iz < N; iz++){
+      
+      //~ value = (float)Bx;
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      //~ value = (float)By;
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      //~ value = (float)Bz;
+      //~ binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
+      
+    //~ }}}
+    
+  //~ }
+  
+  //~ // footer
+  //~ if(myRank==0)
+  //~ {
+    //~ os.open(file_name.c_str(), std::ios::out | std::ios::app);
+    //~ if(!os){
+      //~ std::cout << "Cannot write footer to file '" << file_name << "'!\n";
+      //~ exit(3);
+    //~ }
+		
+		//~ os << std::endl << "  </AppendedData>" << std::endl;
+    //~ os<< "</VTKFile>" << std::endl;
+	
+    //~ os.close();
+  //~ }MPI_Barrier(comm);
+  
+  //~ vti_count++;
+//~ }
 
 void CSpecDyn::print_vti()
 {
@@ -208,7 +381,8 @@ void CSpecDyn::print_vti()
                                         << extend_l[1] << " " << extend_r[1] << " " 
                                         << extend_l[2] << " " << extend_r[2] 
 				 << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
-				 << "\" Spacing=\"" << dx << " " << dx << " " << dx << "\">" << std::endl;
+				 << "\" Spacing=\"" << dx << " " << dx << " " << dx
+         << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // C -> FORTRAN order
     
     os << "      <FieldData>" << std::endl;
     os << "        <DataArray type=\"Float32\" Name=\"TimeValue\" NumberOfTuples=\"1\" format=\"ascii\">" << std::endl;
@@ -224,12 +398,12 @@ void CSpecDyn::print_vti()
     os << "        <DataArray type=\"Float32\" Name=\"P\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
     os << "        </DataArray>" << std::endl;
     offset += bin_size_scalar;
-    os << "        <DataArray type=\"Float32\" Name=\"V\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
-    os << "        </DataArray>" << std::endl;
-    offset += bin_size_vector;
-    os << "        <DataArray type=\"Float32\" Name=\"B\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
-    os << "        </DataArray>" << std::endl;
-    offset += bin_size_vector;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"V\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ offset += bin_size_vector;
+    //~ os << "        <DataArray type=\"Float32\" Name=\"B\" NumberOfComponents=\"3\" format=\"appended\" offset=\"" << offset << "\">" << std::endl;
+    //~ os << "        </DataArray>" << std::endl;
+    //~ offset += bin_size_vector;
     
     os << "      </PointData>" << std::endl;
     os << "      <CellData>" << std::endl;
@@ -246,64 +420,39 @@ void CSpecDyn::print_vti()
   // binary data
   if(myRank==0)
   {
-    float value;
-    double P = 1.;
-    double Vx = 2.;
-    double Vy = 3.;
-    double Vz = 4.;
-    double Bx = 5.;
-    double By = 6.;
-    double Bz = 7.;
-    
     std::ofstream binary_os(file_name.c_str(), std::ios::out | std::ios::app | std::ios::binary );
-    if(!binary_os){
-      std::cout << "Die Binär-Daten konnten nicht in das file '" << file_name << "' geschrieben werden!" << std::endl;
-      exit(2);
-    }
-    
-    // print P
     binary_os.write(reinterpret_cast<const char*>(&N_bytes_scalar),sizeof(uint64_t)); // size of following binary package
-    for(int ix = 0; ix < N; ix++){
-    for(int iy = 0; iy < N; iy++){
-    for(int iz = 0; iz < N; iz++){
-      
-      value = (float)P;
-      
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      
-    }}}
-    
-    // print V
-    binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
-    for(int ix = 0; ix < N; ix++){
-    for(int iy = 0; iy < N; iy++){
-    for(int iz = 0; iz < N; iz++){
-      
-      value = (float)Vx;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      value = (float)Vy;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      value = (float)Vz;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      
-    }}}
-    
-    // print B
-    binary_os.write(reinterpret_cast<const char*>(&N_bytes_vector),sizeof(uint64_t)); // size of following binary package
-    for(int ix = 0; ix < N; ix++){
-    for(int iy = 0; iy < N; iy++){
-    for(int iz = 0; iz < N; iz++){
-      
-      value = (float)Bx;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      value = (float)By;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      value = (float)Bz;
-      binary_os.write(reinterpret_cast<const char*>(&value),sizeof(int32_t));
-      
-    }}}
-    
+    os.close();
+  }MPI_Barrier(comm);
+  
+  // data to float array
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    float_array[id] = float(Vx_R[id]);
   }
+  
+  // create subarray
+  MPI_Datatype subarray;
+  int size_total[3] = {N,N,N};
+ 
+  MPI_Type_create_subarray(3, size_total, size_R, start_R, MPI_ORDER_C, MPI_FLOAT, &subarray);
+  MPI_Type_commit(&subarray);
+  
+  // open file
+  MPI_File mpi_file;
+  MPI_File_open(comm, file_name.c_str(), MPI_MODE_APPEND|MPI_MODE_WRONLY, MPI_INFO_NULL, &mpi_file);
+  
+  // offset to end of file
+  MPI_Offset mpi_eof;
+  MPI_File_get_position_shared(mpi_file, &mpi_eof);
+  MPI_Barrier(comm);
+  
+  // write data
+  MPI_File_set_view(mpi_file, mpi_eof, MPI_FLOAT, subarray, "native", MPI_INFO_NULL);
+  MPI_File_write_all(mpi_file, float_array, size_R_tot, MPI_FLOAT, MPI_STATUS_IGNORE);
+  
+  // close file
+  MPI_File_close(&mpi_file);  
   
   // footer
   if(myRank==0)

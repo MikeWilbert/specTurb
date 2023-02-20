@@ -62,6 +62,8 @@ class CSpecDyn
     double* By_R;  
     double* Bz_R;
     
+    float* float_array;
+    
     // private methods
     void setup_k();
     void setup_V();
