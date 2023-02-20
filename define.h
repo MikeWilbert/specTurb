@@ -22,7 +22,7 @@ const CX IM = CX(0., 1.);
 // spatial resolution
 const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {2,2};
+int const PDIMS[2] = {2,4};
 // CFL number
 const double CFL = 0.5;
 
@@ -33,8 +33,8 @@ const double OUT_INTERVAL = 1.;
 // simulation time
 const double END_SIMU = 4.;
 
-// choose initial setup: (0):all zero; 
-const int SETUP = 0;
+// choose initial setup: (0):all zero; (1):testing purposes
+const int SETUP = 1;
 
 // domain size
 const double LENGTH = 1.;

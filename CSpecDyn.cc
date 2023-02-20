@@ -50,8 +50,7 @@ N(NUM), pdims(PDIMS), cfl(CFL), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), en
   
   // setup initial fields
   setup_k();
-  setup_V();
-  setup_B();
+  setup_fields();
   
   // create output directory
   if(myRank == 0)
@@ -118,21 +117,26 @@ void CSpecDyn::setup_k()
   
 }
 
-void CSpecDyn::setup_V()
+void CSpecDyn::setup_fields()
 {
   switch(setup)
   {
-    case 1:
-      // u = 0
+    case 0:
+      // u = 0, B = 0
       for(int id = 0; id < size_R_tot; id++)
       {    
         Vx_R[id] = 0.;
         Vy_R[id] = 0.;
         Vz_R[id] = 0.;
+        
+        Bx_R[id] = 0.;
+        By_R[id] = 0.;
+        Bz_R[id] = 0.;
       }
       break;
       
-    case 0:
+    case 1:
+      // testing purposes
       for(int ix = 0; ix < size_R[0]; ix++){
       for(int iy = 0; iy < size_R[1]; iy++){
       for(int iz = 0; iz < size_R[2]; iz++){
@@ -146,9 +150,13 @@ void CSpecDyn::setup_V()
         double p_val = atan2(z_val, y_val);
         double s_val = x_val;
         
-        Vx_R[id] = z_val;
+        Vx_R[id] = myRank;
         Vy_R[id] = 0.;
         Vz_R[id] = 0.;
+        
+        Bx_R[id] = 0.;
+        By_R[id] = 0.;
+        Bz_R[id] = 0.;
     
       }}}
       break;
@@ -159,28 +167,7 @@ void CSpecDyn::setup_V()
       MPI_Finalize();
       exit(EXIT_FAILURE);
   }
-}
-
-void CSpecDyn::setup_B()
-{
-  switch(setup)
-  {
-    case 0:
-      // B = 0
-      for(int id = 0; id < size_R_tot; id++)
-      {    
-        Bx_R[id] = 0.;
-        By_R[id] = 0.;
-        Bz_R[id] = 0.;
-      }
-      break;
-    
-    default: 
-      if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
-      MPI_Barrier(comm);
-      MPI_Finalize();
-      exit(EXIT_FAILURE);
-  }
+  
 }
 
 void CSpecDyn::execute()

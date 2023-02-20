@@ -66,8 +66,7 @@ class CSpecDyn
     
     // private methods
     void setup_k();
-    void setup_V();
-    void setup_B();
+    void setup_fields();
     
     void print_vti();
     
