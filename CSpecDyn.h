@@ -35,6 +35,8 @@ class CSpecDyn
     int mpi_coords[2];
     MPI_Comm comm;
     
+    MPI_Datatype vti_subarray;
+    
     // MikeFFT
     MikeFFT FFT;
   
@@ -63,12 +65,14 @@ class CSpecDyn
     double* Bz_R;
     
     float* float_array;
+    float* float_array_vector;
     
     // private methods
     void setup_k();
     void setup_fields();
     
     void print_vti();
+    void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
     
   public:
   

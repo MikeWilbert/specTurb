@@ -20,9 +20,9 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 64;
+const int NUM = 256;
 // processor grid
-int const PDIMS[2] = {2,4};
+int const PDIMS[2] = {8,8};
 // CFL number
 const double CFL = 0.5;
 
