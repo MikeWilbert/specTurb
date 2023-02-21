@@ -297,7 +297,7 @@ void CSpecDyn::time_step()
     Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
   }
   
-  diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
   projection(Vx_F2, Vy_F2, Vz_F2);
   projection(Bx_F2, By_F2, Bz_F2);
@@ -322,7 +322,7 @@ void CSpecDyn::time_step()
 
   }
   
-  diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
   
   projection(Vx_F , Vy_F , Vz_F );
   projection(Bx_F , By_F , Bz_F );
@@ -347,9 +347,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
     int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Wx_F[id] = ky[iy]*V_Z[id] - kz[iz]*V_Y[id];
-    Wy_F[id] = kz[iz]*V_X[id] - kx[ix]*V_Z[id];
-    Wz_F[id] = kx[ix]*V_Y[id] - ky[iy]*V_X[id];
+    Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
+    Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
+    Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
     
   }}}
   
@@ -360,9 +360,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
     int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Jx_F[id] = ky[iy]*B_Z[id] - kz[iz]*B_Y[id];
-    Jy_F[id] = kz[iz]*B_X[id] - kx[ix]*B_Z[id];
-    Jz_F[id] = kx[ix]*B_Y[id] - ky[iy]*B_X[id];
+    Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
+    Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
+    Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
     
   }}}
   
@@ -381,9 +381,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // RHS_V = VxW + JxB
   for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + Jy_R[id]*Bz_R[id]-Bz_R[id]*Jy_R[id];
-    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + Jz_R[id]*Bx_R[id]-Bx_R[id]*Jz_R[id];
-    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + Jx_R[id]*By_R[id]-By_R[id]*Jx_R[id];
+    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + Jy_R[id]*Bz_R[id]-Jz_R[id]*By_R[id];
+    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + Jz_R[id]*Bx_R[id]-Jx_R[id]*Bz_R[id];
+    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + Jx_R[id]*By_R[id]-Jy_R[id]*Bx_R[id];
     
   }
   
@@ -419,9 +419,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     CX VxB_Y = RHSB_Y[id];
     CX VxB_Z = RHSB_Z[id];
     
-    RHSB_X[id] = ky[iy]*VxB_Z - kz[iz]*VxB_Y;
-    RHSB_Y[id] = kz[iz]*VxB_X - kx[ix]*VxB_Z;
-    RHSB_Z[id] = kx[ix]*VxB_Y - ky[iy]*VxB_X;
+    RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
+    RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
+    RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
     
   }}}
   

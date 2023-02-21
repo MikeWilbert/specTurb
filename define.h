@@ -20,18 +20,18 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 128;
+const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
-const double DT = 0.001;
+const double DT = 0.01;
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Test1";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/OrszagTang";
 // output interval
-const double OUT_INTERVAL = 1.;
+const double OUT_INTERVAL = 0.1;
 // simulation time
-const double END_SIMU = 4.;
+const double END_SIMU = 8.;
 
 // choose initial setup: (0):all zero; (1):Orszag-Tang
 const int SETUP = 1;
