@@ -101,6 +101,26 @@ class CSpecDyn
     CX* RHS_By_F2;
     CX* RHS_Bz_F2;
     
+    double* RHS_Vx_R;
+    double* RHS_Vy_R;
+    double* RHS_Vz_R;
+    double* RHS_Bx_R;
+    double* RHS_By_R;
+    double* RHS_Bz_R;
+    
+    double* Wx_R;  
+    double* Wy_R;  
+    double* Wz_R;
+    double* Jx_R;  
+    double* Jy_R;  
+    double* Jz_R;
+    CX* Wx_F;  
+    CX* Wy_F;  
+    CX* Wz_F;
+    CX* Jx_F;  
+    CX* Jy_F;  
+    CX* Jz_F;
+    
     float* float_array;
     float* float_array_vector;
     
@@ -109,9 +129,10 @@ class CSpecDyn
     void setup_fields();
     
     void time_step();
-    void calc_RHS(CX* RHS_X , CX* RHS_Y , CX* RHS_Z , CX* V_X, CX* V_Y, CX* V_Z,
-                  CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z);
-    
+    void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
+                  CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
+                  double del_t);
+    void diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t);
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);
     
