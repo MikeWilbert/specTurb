@@ -35,6 +35,8 @@ class CSpecDyn
     MPI_Comm comm;
     
     MPI_Datatype vti_subarray;
+    MPI_Datatype vti_subarray_vector;
+    MPI_Datatype vti_float3;
     
     // MikeFFT
     MikeFFT FFT;
@@ -141,6 +143,7 @@ class CSpecDyn
     
     void print_vti();
     void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
+    void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);
     
   public:
   
