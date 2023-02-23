@@ -7,11 +7,9 @@
 // main
 int main(int argc, char** argv)
 {
-  
   CSpecDyn simu;
   simu.execute();
-  simu.finalize();
 
+  simu.finalize();
   return 0;
-  
 }

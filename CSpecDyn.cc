@@ -239,6 +239,7 @@ void CSpecDyn::setup_fields()
 
 void CSpecDyn::execute()
 {
+  double start_time = MPI_Wtime();
   double out_time = time;
   
   print_vti();
@@ -255,6 +256,9 @@ void CSpecDyn::execute()
     }
     
   }
+  
+  double print_time = MPI_Wtime() - start_time;
+  if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
 }
 
 void CSpecDyn::time_step()
