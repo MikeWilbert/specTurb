@@ -4,7 +4,7 @@ INCLUDE_PATH := -I../libs/fftw3/include
 LIB_PATH     := -L../libs/fftw3/lib
 FLAGS        := -std=c++11 -O3
 
-CSpecDyn_256: main.o CSpecDyn.o MikeFFT.o
+CSpecDyn: main.o CSpecDyn.o MikeFFT.o
 	$(MPICXX) $^ -o $@ $(LIB_PATH) $(LIBS) $(FLAGS)
 	
 main.o: main.cc CSpecDyn.h define.h

@@ -184,10 +184,16 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
+  std::mt19937 eng(myRank);
+  std::uniform_real_distribution<double> phi(0.,PI2);
+  double norm_loc = 0.;
+  double norm;
+  double s = 5./3.+2;
+  
   switch(setup)
   {
     case 0:
-      // u = 0, B = 0
+      /** u = 0, B = 0 **/
       for(int id = 0; id < size_R_tot; id++)
       {    
         Vx_R[id] = 0.;
@@ -198,10 +204,12 @@ void CSpecDyn::setup_fields()
         By_R[id] = 0.;
         Bz_R[id] = 0.;
       }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       break;
       
     case 1:
-      // Orszag-Tang
+      /** Orszag-Tang **/
       for(int ix = 0; ix < size_R[0]; ix++){
       for(int iy = 0; iy < size_R[1]; iy++){
       for(int iz = 0; iz < size_R[2]; iz++){
@@ -223,6 +231,66 @@ void CSpecDyn::setup_fields()
         Bz_R[id] = (     sin(x_val) + sin(y_val) )*beta;
     
       }}}
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      break;
+    
+    case 2:
+      /** random with energy spectrum **/
+    
+      // get normalization
+      //~ for(int id = 0; id < size_F_tot; id++){
+        //~ if(id != 0)
+        //~ {
+          //~ norm_loc += pow(1+k2[id],-0.5*s);
+        //~ }
+      //~ }
+      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      //~ norm = 1.e10/norm;
+      norm = 1.;
+      
+      // produce energy spectrum
+      for(int ix = 0; ix < size_F[0]; ix++){
+      for(int iy = 0; iy < size_F[1]; iy++){
+      for(int iz = 0; iz < size_F[2]; iz++){
+      
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        
+        double A = sqrt( norm*pow(1+k2[id],-0.5*s) );
+        double k2_inv = 1./k2[id];
+        double k_x = kx[ix];
+        double k_y = ky[iy];
+        double k_z = kz[iz];
+        
+        Vx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
+        Vy_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
+        Vz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        
+        Bx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
+        By_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
+        Bz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        
+      }}}
+      
+      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      norm_loc = 0.;
+      for(int id = 0; id < size_R_tot; id++){
+        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      }
+      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
+      for(int id = 0; id < size_R_tot; id++){
+        Vx_R[id] /= norm;
+        Vy_R[id] /= norm;
+        Vz_R[id] /= norm;
+        Bx_R[id] /= norm;
+        By_R[id] /= norm;
+        Bz_R[id] /= norm;
+      }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      
       break;
     
     default: 
@@ -231,9 +299,6 @@ void CSpecDyn::setup_fields()
       MPI_Finalize();
       exit(EXIT_FAILURE);
   }
-  
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
   
 }
 
@@ -396,6 +461,27 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
   }
   
+  // Taylor-Green forcing
+  if(setup==2)
+  {
+    for(int ix = 0; ix < size_R[0]; ix++){
+    for(int iy = 0; iy < size_R[1]; iy++){
+    for(int iz = 0; iz < size_R[2]; iz++){
+    
+      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      
+      double x_val = (start_R[0]+ix)*dx+XB;
+      double y_val = (start_R[1]+iy)*dx+XB;
+      double z_val = (start_R[2]+iz)*dx+XB;
+      
+      double kf = 2.;
+      
+      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      
+    }}}
+}
+  
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
     
@@ -474,28 +560,6 @@ void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* 
 void CSpecDyn::finalize()
 {
   MPI_Finalize();
-}
-
-void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
-{
-  // 2/3 rule
-  double kmax = N/2.*dk;
-  double kmax_23 = N/2.*dk*2./3.;
-  
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
-    {
-      fieldX[id] = 0.;
-      fieldY[id] = 0.;
-      fieldZ[id] = 0.;
-    }
-    
-  }}}
 }
 
 void CSpecDyn::projection(CX* fieldX, CX* fieldY, CX* fieldZ)
@@ -698,4 +762,41 @@ void CSpecDyn::print_mpi_scalar(double* field, int& N_bytes_scalar, const char* 
   
   // close file
   MPI_File_close(&mpi_file);  
+}
+
+void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
+{
+  // spherical truncation
+  double kmax  = sqrt(2)/3.*N/2.*dk;
+  double kmax2 = kmax*kmax;
+  
+  for(int id = 0; id < size_F_tot; id++){
+   
+    //~ if(k2[id] > kmax)
+    //~ {
+      //~ fieldX[id] = 0.;
+      //~ fieldY[id] = 0.;
+      //~ fieldZ[id] = 0.;
+    //~ }
+    
+  }
+  
+  // 2/3 rule
+  //~ double kmax = N/2.*dk;
+  //~ double kmax_23 = N/2.*dk*2./3.;
+  
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
+    
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    //~ if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
+    //~ {
+      //~ fieldX[id] = 0.;
+      //~ fieldY[id] = 0.;
+      //~ fieldZ[id] = 0.;
+    //~ }
+    
+  //~ }}}
 }
