@@ -27,11 +27,11 @@ int const PDIMS[2] = {8,8};
 const double DT = 0.005*(64./NUM);
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/NoAliasing_N64_EnergySpectrum";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OrnsteinUhlenbeck";
 // output interval
 const double OUT_INTERVAL = 0.1;
 // simulation time
-const double END_SIMU = 60.;
+const double END_SIMU = 10.;
 
 // choose initial setup: 
 // (0):all zero; 
@@ -42,10 +42,19 @@ const int SETUP = 2;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.007;
+const double NU  = 0.02;
 // magnetic diffusivity
 const double ETA = NU;
 
 /** DEFINES **/
 
 // nothing
+
+/** Resolutions **/
+/*
+ * N =   64 -> nu = 0.02
+ * N =  128 -> nu = 0.007
+ * N =  256 -> nu = 0.003
+ * N =  512 -> nu = 0.0001
+ * N = 1024 -> nu = 0.00004
+ */

@@ -51,6 +51,10 @@ class CSpecDyn
     // output
     int vti_count = 0;
     
+    // random
+    std::mt19937 normal_eng;
+    std::normal_distribution<double> normal;
+    
     // fields
     double* kx;
 		double* ky;
@@ -126,6 +130,9 @@ class CSpecDyn
     float* float_array;
     float* float_array_vector;
     
+    // time amplitude for Orstein-Uhlenbeck forcing
+    double f_OU[3] = {0.,0.,0.};
+    
     // private methods
     void setup_k();
     void setup_fields();
@@ -133,7 +140,7 @@ class CSpecDyn
     void time_step();
     void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                   CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                  double del_t);
+                  double del_t, double OU);
     void diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t);
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);
@@ -144,6 +151,8 @@ class CSpecDyn
     void print_vti();
     void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
     void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);
+    
+    void OrnsteinUhlenbeck();
     
   public:
   

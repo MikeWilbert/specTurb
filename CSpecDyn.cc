@@ -123,6 +123,10 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   
   MPI_Type_create_subarray(3, size_total, size_R, start_R, MPI_ORDER_C, vti_float3, &vti_subarray_vector);
   MPI_Type_commit(&vti_subarray_vector);
+
+  // random
+  normal_eng = std::mt19937(42);
+  normal = std::normal_distribution<double>(0.,1.);
 }
 
 void CSpecDyn::setup_k()
@@ -328,13 +332,15 @@ void CSpecDyn::execute()
 
 void CSpecDyn::time_step()
 {
+  OrnsteinUhlenbeck();
+  
   double del_t;
   
   // step 1
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
+          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t, f_OU[0]);
   
   for(int id = 0; id < size_F_tot; id++)
   { 
@@ -356,7 +362,7 @@ void CSpecDyn::time_step()
   del_t = 0.5;
   
   calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t, f_OU[1]);
    
   double dt_025 = 0.25*dt; 
           
@@ -380,7 +386,7 @@ void CSpecDyn::time_step()
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t, f_OU[0]);
   
   double dt_6 = dt/6.;
   
@@ -412,7 +418,7 @@ void CSpecDyn::time_step()
 
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                        double del_t)
+                        double del_t, double OU)
 {
   // W = rot(V)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -461,26 +467,26 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
   }
   
-  // Taylor-Green forcing
-  if(setup==2)
-  {
-    for(int ix = 0; ix < size_R[0]; ix++){
-    for(int iy = 0; iy < size_R[1]; iy++){
-    for(int iz = 0; iz < size_R[2]; iz++){
+  //~ // Taylor-Green forcing
+  //~ if(setup==2)
+  //~ {
+    //~ for(int ix = 0; ix < size_R[0]; ix++){
+    //~ for(int iy = 0; iy < size_R[1]; iy++){
+    //~ for(int iz = 0; iz < size_R[2]; iz++){
     
-      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      double x_val = (start_R[0]+ix)*dx+XB;
-      double y_val = (start_R[1]+iy)*dx+XB;
-      double z_val = (start_R[2]+iz)*dx+XB;
+      //~ double x_val = (start_R[0]+ix)*dx+XB;
+      //~ double y_val = (start_R[1]+iy)*dx+XB;
+      //~ double z_val = (start_R[2]+iz)*dx+XB;
       
-      double kf = 2.;
+      //~ double kf = 2.;
       
-      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    }}}
-}
+    //~ }}}
+  //~ }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -502,6 +508,30 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(B_X, B_Y, B_Z);
   dealias(RHSV_X, RHSV_Y, RHSV_Z);
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
+  
+  // Ornstein-Uhlenbeck forcing
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    if(k2[id] == 4)
+    {
+      
+      double strength = 1.e6;
+      double k2_inv = 1./k2[id];
+      double k_x = kx[ix];
+      double k_y = ky[iy];
+      double k_z = kz[iz];
+
+      RHSV_X[id] += strength * OU * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      RHSV_Y[id] += strength * OU * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      RHSV_Z[id] += strength * OU * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+
+    }
+    
+  }}}
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -799,4 +829,19 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
     //~ }
     
   //~ }}}
+}
+
+void CSpecDyn::OrnsteinUhlenbeck()
+{
+  double rand[2] = {normal(normal_eng), normal(normal_eng)};
+  double kf    = 2.;
+  double T     = 0.1;
+  double T_inv = 1./T;
+  double sigma = 0.25*sqrt(2.*T_inv);
+  
+  f_OU[0] = f_OU[2];
+  
+  f_OU[1] = f_OU[0] - 0.5*dt*T_inv*f_OU[0] + sqrt(0.5*dt)*sigma*rand[0];
+  f_OU[2] = f_OU[1] - 0.5*dt*T_inv*f_OU[1] + sqrt(0.5*dt)*sigma*rand[1];
+  
 }
