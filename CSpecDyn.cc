@@ -241,18 +241,6 @@ void CSpecDyn::setup_fields()
     
     case 2:
       /** random with energy spectrum **/
-    
-      // get normalization
-      //~ for(int id = 0; id < size_F_tot; id++){
-        //~ if(id != 0)
-        //~ {
-          //~ norm_loc += pow(1+k2[id],-0.5*s);
-        //~ }
-      //~ }
-      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
-      
-      //~ norm = 1.e10/norm;
-      norm = 1.;
       
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
@@ -518,16 +506,15 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
     if(k2[id] == 4)
     {
-      
-      double strength = 1.e6;
+      Zu
       double k2_inv = 1./k2[id];
       double k_x = kx[ix];
       double k_y = ky[iy];
       double k_z = kz[iz];
 
-      RHSV_X[id] += strength * OU * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      RHSV_Y[id] += strength * OU * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      RHSV_Z[id] += strength * OU * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+      RHSV_X[id] += OU * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      RHSV_Y[id] += OU * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      RHSV_Z[id] += OU * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
     }
     
@@ -800,7 +787,7 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
   double kmax  = sqrt(2)/3.*N/2.*dk;
   double kmax2 = kmax*kmax;
   
-  for(int id = 0; id < size_F_tot; id++){
+  //~ for(int id = 0; id < size_F_tot; id++){
    
     //~ if(k2[id] > kmax)
     //~ {
@@ -809,7 +796,7 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
       //~ fieldZ[id] = 0.;
     //~ }
     
-  }
+  //~ }
   
   // 2/3 rule
   //~ double kmax = N/2.*dk;
