@@ -500,13 +500,15 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
   // Ornstein-Uhlenbeck forcing
+  double dk2 = dk*dk;
+  
   for(int ix = 0; ix<size_F[0]; ix++){
   for(int iy = 0; iy<size_F[1]; iy++){
   for(int iz = 0; iz<size_F[2]; iz++){
     
     int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    if(k2[id] == 4)
+    if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
     {
       
       double k2_inv = 1./k2[id];
