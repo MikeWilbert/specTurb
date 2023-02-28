@@ -132,6 +132,9 @@ class CSpecDyn
     
     // time amplitude for Orstein-Uhlenbeck forcing
     double f_OU[3] = {0.,0.,0.};
+    CX f_OU_X[3] = {0.,0.,0.};
+    CX f_OU_Y[3] = {0.,0.,0.};
+    CX f_OU_Z[3] = {0.,0.,0.};
     
     // private methods
     void setup_k();
@@ -140,7 +143,7 @@ class CSpecDyn
     void time_step();
     void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                   CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                  double del_t, double OU);
+                  double del_t, int substep);
     void diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t);
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);

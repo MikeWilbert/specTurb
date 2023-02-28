@@ -127,6 +127,7 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   // random
   normal_eng = std::mt19937(42);
   normal = std::normal_distribution<double>(0.,1.);
+  
 }
 
 void CSpecDyn::setup_k()
@@ -241,6 +242,18 @@ void CSpecDyn::setup_fields()
     
     case 2:
       /** random with energy spectrum **/
+    
+      // get normalization
+      //~ for(int id = 0; id < size_F_tot; id++){
+        //~ if(id != 0)
+        //~ {
+          //~ norm_loc += pow(1+k2[id],-0.5*s);
+        //~ }
+      //~ }
+      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      //~ norm = 1.e10/norm;
+      norm = 1.;
       
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
@@ -328,7 +341,7 @@ void CSpecDyn::time_step()
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t, f_OU[0]);
+          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t, 0);
   
   for(int id = 0; id < size_F_tot; id++)
   { 
@@ -350,7 +363,7 @@ void CSpecDyn::time_step()
   del_t = 0.5;
   
   calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t, f_OU[1]);
+          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t, 1);
    
   double dt_025 = 0.25*dt; 
           
@@ -374,7 +387,7 @@ void CSpecDyn::time_step()
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t, f_OU[0]);
+          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t, 2);
   
   double dt_6 = dt/6.;
   
@@ -406,7 +419,7 @@ void CSpecDyn::time_step()
 
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                        double del_t, double OU)
+                        double del_t, int substep)
 {
   // W = rot(V)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -506,15 +519,15 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
     if(k2[id] == 4)
     {
-      Zu
+      
       double k2_inv = 1./k2[id];
       double k_x = kx[ix];
       double k_y = ky[iy];
       double k_z = kz[iz];
 
-      RHSV_X[id] += OU * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      RHSV_Y[id] += OU * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      RHSV_Z[id] += OU * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+      RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
     }
     
@@ -820,15 +833,89 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 
 void CSpecDyn::OrnsteinUhlenbeck()
 {
-  double rand[2] = {normal(normal_eng), normal(normal_eng)};
   double kf    = 2.;
   double T     = 0.1;
   double T_inv = 1./T;
   double sigma = 0.25*sqrt(2.*T_inv);
+  // for testing
+  //~ double kf    = 2.;
+  //~ double T     = 1.;
+  //~ double T_inv = 1./T;
+  //~ double sigma = sqrt(T_inv);
+ 
+  double rand[2] = {normal(normal_eng), normal(normal_eng)};
+  
+  CX rand_C[2];
   
   f_OU[0] = f_OU[2];
-  
   f_OU[1] = f_OU[0] - 0.5*dt*T_inv*f_OU[0] + sqrt(0.5*dt)*sigma*rand[0];
   f_OU[2] = f_OU[1] - 0.5*dt*T_inv*f_OU[1] + sqrt(0.5*dt)*sigma*rand[1];
   
+  // X
+  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  
+  f_OU_X[0] = f_OU_X[2];
+  f_OU_X[1] = f_OU_X[0] - 0.5*dt*T_inv*f_OU_X[0] + sqrt(0.5*dt)*sigma*rand_C[0];
+  f_OU_X[2] = f_OU_X[1] - 0.5*dt*T_inv*f_OU_X[1] + sqrt(0.5*dt)*sigma*rand_C[1];
+  
+  // Y
+  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  
+  f_OU_Y[0] = f_OU_Y[2];
+  f_OU_Y[1] = f_OU_Y[0] - 0.5*dt*T_inv*f_OU_Y[0] + sqrt(0.5*dt)*sigma*rand_C[0];
+  f_OU_Y[2] = f_OU_Y[1] - 0.5*dt*T_inv*f_OU_Y[1] + sqrt(0.5*dt)*sigma*rand_C[1];
+  
+  // Z
+  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  
+  f_OU_Z[0] = f_OU_Z[2];
+  f_OU_Z[1] = f_OU_Z[0] - 0.5*dt*T_inv*f_OU_Z[0] + sqrt(0.5*dt)*sigma*rand_C[0];
+  f_OU_Z[2] = f_OU_Z[1] - 0.5*dt*T_inv*f_OU_Z[1] + sqrt(0.5*dt)*sigma*rand_C[1];
+  
+  // plot for testing
+  //~ if(myRank==0)
+  //~ {
+    //~ std::ofstream os;
+    //~ std::string file_name  = out_dir + "/Ornstein_Uhlenbeck.csv";
+    
+    //~ os.open(file_name.c_str(), std::ios::out | std::ios::app);
+    //~ if(!os){
+      //~ std::cout << "Cannot write footer to file '" << file_name << "'!\n";
+      //~ exit(3);
+    //~ }
+		
+		//~ os << time << 
+    //~ ", " << f_OU_X[0].real() <<
+    //~ ", " << f_OU_Y[0].real() <<
+    //~ ", " << f_OU_Z[0].real() <<
+    //~ ", " << f_OU_X[0].imag() <<
+    //~ ", " << f_OU_Y[0].imag() <<
+    //~ ", " << f_OU_Z[0].imag() <<
+    //~ std::endl;
+    
+		//~ os << time + 0.5*dt << 
+    //~ ", " << f_OU_X[1].real() <<
+    //~ ", " << f_OU_Y[1].real() <<
+    //~ ", " << f_OU_Z[1].real() <<
+    //~ ", " << f_OU_X[1].imag() <<
+    //~ ", " << f_OU_Y[1].imag() <<
+    //~ ", " << f_OU_Z[1].imag() <<
+    //~ std::endl;
+	
+    //~ os.close();
+  //~ }MPI_Barrier(comm);
+  
 }
+
+
+
+
+
+
+
+
+
+

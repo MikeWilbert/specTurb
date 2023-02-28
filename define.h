@@ -20,16 +20,16 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 512;
+const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {8,8};
 // CFL number
 const double DT = 0.005*(64./NUM);
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/NoAliasing_N512_OrnsteinUhlenbeck";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OU6";
 // output interval
-const double OUT_INTERVAL = 0.25;
+const double OUT_INTERVAL = 0.1;
 // simulation time
 const double END_SIMU = 10.;
 
@@ -42,7 +42,7 @@ const int SETUP = 2;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.0001;
+const double NU  = 0.002;
 // magnetic diffusivity
 const double ETA = NU;
 
