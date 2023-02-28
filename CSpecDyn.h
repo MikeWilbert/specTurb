@@ -131,7 +131,6 @@ class CSpecDyn
     float* float_array_vector;
     
     // time amplitude for Orstein-Uhlenbeck forcing
-    double f_OU[3] = {0.,0.,0.};
     CX f_OU_X[3] = {0.,0.,0.};
     CX f_OU_Y[3] = {0.,0.,0.};
     CX f_OU_Z[3] = {0.,0.,0.};

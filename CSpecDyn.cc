@@ -242,18 +242,6 @@ void CSpecDyn::setup_fields()
     
     case 2:
       /** random with energy spectrum **/
-    
-      // get normalization
-      //~ for(int id = 0; id < size_F_tot; id++){
-        //~ if(id != 0)
-        //~ {
-          //~ norm_loc += pow(1+k2[id],-0.5*s);
-        //~ }
-      //~ }
-      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
-      
-      //~ norm = 1.e10/norm;
-      norm = 1.;
       
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
@@ -262,7 +250,7 @@ void CSpecDyn::setup_fields()
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        double A = sqrt( norm*pow(1+k2[id],-0.5*s) );
+        double A = sqrt( pow(1+k2[id],-0.5*s) );
         double k2_inv = 1./k2[id];
         double k_x = kx[ix];
         double k_y = ky[iy];
@@ -278,6 +266,7 @@ void CSpecDyn::setup_fields()
         
       }}}
       
+      // normalize to |V|_max=1.
       bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
       bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
       norm_loc = 0.;
@@ -698,14 +687,9 @@ void CSpecDyn::print_vti()
   
   }MPI_Barrier(comm);
   
-  //~ double start_time = MPI_Wtime();
-  
   // print fields in parallel  
   print_mpi_vector(Vx_R, Vy_R, Vz_R, N_bytes_vector, file_name.c_str()); 
   print_mpi_vector(Bx_R, By_R, Bz_R, N_bytes_vector, file_name.c_str()); 
-  
-  //~ double print_time = MPI_Wtime() - start_time;
-  //~ if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
   
   // footer
   if(myRank==0)
@@ -837,76 +821,32 @@ void CSpecDyn::OrnsteinUhlenbeck()
   double T     = 0.1;
   double T_inv = 1./T;
   double sigma = 0.25*sqrt(2.*T_inv);
-  // for testing
-  //~ double kf    = 2.;
-  //~ double T     = 1.;
-  //~ double T_inv = 1./T;
-  //~ double sigma = sqrt(T_inv);
  
-  double rand[2] = {normal(normal_eng), normal(normal_eng)};
-  
-  CX rand_C[2];
-  
-  f_OU[0] = f_OU[2];
-  f_OU[1] = f_OU[0] - 0.5*dt*T_inv*f_OU[0] + sqrt(0.5*dt)*sigma*rand[0];
-  f_OU[2] = f_OU[1] - 0.5*dt*T_inv*f_OU[1] + sqrt(0.5*dt)*sigma*rand[1];
+  CX rand[2];
   
   // X
-  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
   
   f_OU_X[0] = f_OU_X[2];
-  f_OU_X[1] = f_OU_X[0] - 0.5*dt*T_inv*f_OU_X[0] + sqrt(0.5*dt)*sigma*rand_C[0];
-  f_OU_X[2] = f_OU_X[1] - 0.5*dt*T_inv*f_OU_X[1] + sqrt(0.5*dt)*sigma*rand_C[1];
+  f_OU_X[1] = f_OU_X[0] - 0.5*dt*T_inv*f_OU_X[0] + sqrt(0.5*dt)*sigma*rand[0];
+  f_OU_X[2] = f_OU_X[1] - 0.5*dt*T_inv*f_OU_X[1] + sqrt(0.5*dt)*sigma*rand[1];
   
   // Y
-  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
   
   f_OU_Y[0] = f_OU_Y[2];
-  f_OU_Y[1] = f_OU_Y[0] - 0.5*dt*T_inv*f_OU_Y[0] + sqrt(0.5*dt)*sigma*rand_C[0];
-  f_OU_Y[2] = f_OU_Y[1] - 0.5*dt*T_inv*f_OU_Y[1] + sqrt(0.5*dt)*sigma*rand_C[1];
+  f_OU_Y[1] = f_OU_Y[0] - 0.5*dt*T_inv*f_OU_Y[0] + sqrt(0.5*dt)*sigma*rand[0];
+  f_OU_Y[2] = f_OU_Y[1] - 0.5*dt*T_inv*f_OU_Y[1] + sqrt(0.5*dt)*sigma*rand[1];
   
   // Z
-  rand_C[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand_C[1] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
+  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
   
   f_OU_Z[0] = f_OU_Z[2];
-  f_OU_Z[1] = f_OU_Z[0] - 0.5*dt*T_inv*f_OU_Z[0] + sqrt(0.5*dt)*sigma*rand_C[0];
-  f_OU_Z[2] = f_OU_Z[1] - 0.5*dt*T_inv*f_OU_Z[1] + sqrt(0.5*dt)*sigma*rand_C[1];
-  
-  // plot for testing
-  //~ if(myRank==0)
-  //~ {
-    //~ std::ofstream os;
-    //~ std::string file_name  = out_dir + "/Ornstein_Uhlenbeck.csv";
-    
-    //~ os.open(file_name.c_str(), std::ios::out | std::ios::app);
-    //~ if(!os){
-      //~ std::cout << "Cannot write footer to file '" << file_name << "'!\n";
-      //~ exit(3);
-    //~ }
-		
-		//~ os << time << 
-    //~ ", " << f_OU_X[0].real() <<
-    //~ ", " << f_OU_Y[0].real() <<
-    //~ ", " << f_OU_Z[0].real() <<
-    //~ ", " << f_OU_X[0].imag() <<
-    //~ ", " << f_OU_Y[0].imag() <<
-    //~ ", " << f_OU_Z[0].imag() <<
-    //~ std::endl;
-    
-		//~ os << time + 0.5*dt << 
-    //~ ", " << f_OU_X[1].real() <<
-    //~ ", " << f_OU_Y[1].real() <<
-    //~ ", " << f_OU_Z[1].real() <<
-    //~ ", " << f_OU_X[1].imag() <<
-    //~ ", " << f_OU_Y[1].imag() <<
-    //~ ", " << f_OU_Z[1].imag() <<
-    //~ std::endl;
-	
-    //~ os.close();
-  //~ }MPI_Barrier(comm);
+  f_OU_Z[1] = f_OU_Z[0] - 0.5*dt*T_inv*f_OU_Z[0] + sqrt(0.5*dt)*sigma*rand[0];
+  f_OU_Z[2] = f_OU_Z[1] - 0.5*dt*T_inv*f_OU_Z[1] + sqrt(0.5*dt)*sigma*rand[1];
   
 }
 
