@@ -27,7 +27,7 @@ int const PDIMS[2] = {8,8};
 const double DT = 0.005*(64./NUM);
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OU6";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/PowerSpectrum";
 // output interval
 const double OUT_INTERVAL = 0.1;
 // simulation time

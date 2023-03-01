@@ -135,6 +135,13 @@ class CSpecDyn
     CX f_OU_Y[3] = {0.,0.,0.};
     CX f_OU_Z[3] = {0.,0.,0.};
     
+    // Energy Spectrum
+    double* energySpectrum;
+    double* energySpectrum_loc;
+    int*   bin_counter;
+    int*   bin_counter_loc;
+    void calc_EnergySpectrum();
+    
     // private methods
     void setup_k();
     void setup_fields();

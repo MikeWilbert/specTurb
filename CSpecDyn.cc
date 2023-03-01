@@ -128,6 +128,12 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   normal_eng = std::mt19937(42);
   normal = std::normal_distribution<double>(0.,1.);
   
+  // Energy Spectrum
+  energySpectrum = new double[N/2+1];
+  energySpectrum_loc = new double[N/2+1];
+  bin_counter    = new int[N/2+1];
+  bin_counter_loc    = new int[N/2+1];
+  
 }
 
 void CSpecDyn::setup_k()
@@ -301,6 +307,7 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
+  calc_EnergySpectrum();
   print_vti();
 
   while(time < end_simu)
@@ -310,6 +317,7 @@ void CSpecDyn::execute()
     
     if(out_time > out_interval)
     {
+      calc_EnergySpectrum();
       print_vti();
       out_time -= out_interval;
     }
@@ -457,26 +465,26 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
   }
   
-  //~ // Taylor-Green forcing
-  //~ if(setup==2)
-  //~ {
-    //~ for(int ix = 0; ix < size_R[0]; ix++){
-    //~ for(int iy = 0; iy < size_R[1]; iy++){
-    //~ for(int iz = 0; iz < size_R[2]; iz++){
+  // Taylor-Green forcing
+  if(setup==2)
+  {
+    for(int ix = 0; ix < size_R[0]; ix++){
+    for(int iy = 0; iy < size_R[1]; iy++){
+    for(int iz = 0; iz < size_R[2]; iz++){
     
-      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      //~ double x_val = (start_R[0]+ix)*dx+XB;
-      //~ double y_val = (start_R[1]+iy)*dx+XB;
-      //~ double z_val = (start_R[2]+iz)*dx+XB;
+      double x_val = (start_R[0]+ix)*dx+XB;
+      double y_val = (start_R[1]+iy)*dx+XB;
+      double z_val = (start_R[2]+iz)*dx+XB;
       
-      //~ double kf = 2.;
+      double kf = 2.;
       
-      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    //~ }}}
-  //~ }
+    }}}
+  }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -499,30 +507,30 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSV_X, RHSV_Y, RHSV_Z);
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  // Ornstein-Uhlenbeck forcing
-  double dk2 = dk*dk;
+  //~ // Ornstein-Uhlenbeck forcing
+  //~ double dk2 = dk*dk;
   
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-    {
+    //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+    //~ {
       
-      double k2_inv = 1./k2[id];
-      double k_x = kx[ix];
-      double k_y = ky[iy];
-      double k_z = kz[iz];
+      //~ double k2_inv = 1./k2[id];
+      //~ double k_x = kx[ix];
+      //~ double k_y = ky[iy];
+      //~ double k_z = kz[iz];
 
-      RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+      //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-    }
+    //~ }
     
-  }}}
+  //~ }}}
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -852,6 +860,54 @@ void CSpecDyn::OrnsteinUhlenbeck()
   
 }
 
+void CSpecDyn::calc_EnergySpectrum()
+{
+  int kmax = N/2+1;
+  
+  // clean containers
+  for(int i = 0; i < kmax; i++)
+  {
+    energySpectrum_loc[i] = 0.;
+    bin_counter_loc[i]    = 0;
+  }
+  
+  for(int id = 0; id < size_F_tot; id++){
+  
+    double dk2_inv = 1./(dk*dk);
+    
+    int id_k = int(round(sqrt(k2[id]*dk2_inv)));
+  
+    if(id_k < (N/2)+1)
+    {
+      energySpectrum_loc[id_k] += abs(Vx_F[id]*Vx_F[id]+Vy_F[id]*Vy_F[id]+Vz_F[id]*Vz_F[id]);
+      bin_counter_loc   [id_k] += 1;
+    }
+  }
+  
+  MPI_Reduce(energySpectrum_loc, energySpectrum, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(bin_counter_loc   , bin_counter   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  
+  if(myRank == 0)
+  {
+    std::string file_name  = out_dir + "/spectrum_" + std::to_string(vti_count) + ".csv";
+    std::ofstream os;
+    
+    os.open(file_name.c_str(), std::ios::out);
+    if(!os){
+      std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    }
+    
+    for(int i = 0; i < kmax; i++)
+    {
+      energySpectrum[i] /= bin_counter[i]; // divide by number of elements in bin
+      energySpectrum[i] *= PI2 * ( i*dk*dk ); // divide by Fourier surface elemets
+      os << i*dk << ", " << energySpectrum[i] << std::endl;
+    }
+    
+    os.close();
+  }MPI_Barrier(comm);
+  
+}
 
 
 
