@@ -129,10 +129,14 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   normal = std::normal_distribution<double>(0.,1.);
   
   // Energy Spectrum
-  energySpectrum = new double[N/2+1];
-  energySpectrum_loc = new double[N/2+1];
-  bin_counter    = new int[N/2+1];
-  bin_counter_loc    = new int[N/2+1];
+  energySpectrum_V = new double[N/2+1];
+  energySpectrum_V_loc = new double[N/2+1];
+  bin_counter_V    = new int[N/2+1];
+  bin_counter_V_loc    = new int[N/2+1];
+  energySpectrum_B = new double[N/2+1];
+  energySpectrum_B_loc = new double[N/2+1];
+  bin_counter_B    = new int[N/2+1];
+  bin_counter_B_loc    = new int[N/2+1];
   
 }
 
@@ -860,32 +864,47 @@ void CSpecDyn::OrnsteinUhlenbeck()
   
 }
 
+// inspired by https://bertvandenbroucke.netlify.app/2019/05/24/computing-a-power-spectrum-in-python/
 void CSpecDyn::calc_EnergySpectrum()
 {
   int kmax = N/2+1;
   
   // clean containers
-  for(int i = 0; i < kmax; i++)
+  for(int ik = 0; ik < kmax; ik++)
   {
-    energySpectrum_loc[i] = 0.;
-    bin_counter_loc[i]    = 0;
+    energySpectrum_V_loc[ik] = 0.;
+    bin_counter_V_loc[ik]    = 0;
+    energySpectrum_B_loc[ik] = 0.;
+    bin_counter_B_loc[ik]    = 0;
   }
   
+  double Vx, Vy, Vz;
+  double Bx, By, Bz;
+  
   for(int id = 0; id < size_F_tot; id++){
-  
-    double dk2_inv = 1./(dk*dk);
     
-    int id_k = int(round(sqrt(k2[id]*dk2_inv)));
+    int id_k = int(round(sqrt(k2[id])/dk));
   
-    if(id_k < (N/2)+1)
+    if(id_k < kmax)
     {
-      energySpectrum_loc[id_k] += abs(Vx_F[id]*Vx_F[id]+Vy_F[id]*Vy_F[id]+Vz_F[id]*Vz_F[id]);
-      bin_counter_loc   [id_k] += 1;
+      Vx = abs(Vx_F[id]);
+      Vy = abs(Vy_F[id]);
+      Vz = abs(Vz_F[id]);
+      Bx = abs(Bx_F[id]);
+      By = abs(By_F[id]);
+      Bz = abs(Bz_F[id]);
+      
+      energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
+      energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
+      bin_counter_V_loc   [id_k] += 1;
+      bin_counter_B_loc   [id_k] += 1;
     }
   }
   
-  MPI_Reduce(energySpectrum_loc, energySpectrum, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(bin_counter_loc   , bin_counter   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , kmax, MPI_INT   , MPI_SUM, 0, comm);
   
   if(myRank == 0)
   {
@@ -897,23 +916,16 @@ void CSpecDyn::calc_EnergySpectrum()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
     
-    for(int i = 0; i < kmax; i++)
+    for(int ik = 1; ik < kmax; ik++)
     {
-      energySpectrum[i] /= bin_counter[i]; // divide by number of elements in bin
-      energySpectrum[i] *= PI2 * ( i*dk*dk ); // divide by Fourier surface elemets
-      os << i*dk << ", " << energySpectrum[i] << std::endl;
+      energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin
+      energySpectrum_V[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) ); // multiply with Fourier surface elemets
+      energySpectrum_B[ik] /= double(bin_counter_B[ik]);
+      energySpectrum_B[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) );
+      os << ik*dk << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
     
     os.close();
   }MPI_Barrier(comm);
   
 }
-
-
-
-
-
-
-
-
-
