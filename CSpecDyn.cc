@@ -203,7 +203,7 @@ void CSpecDyn::setup_fields()
   std::uniform_real_distribution<double> phi(0.,PI2);
   double norm_loc = 0.;
   double norm;
-  double s = 5./3.+2;
+  double s = 11./6.;
   
   switch(setup)
   {
@@ -253,6 +253,17 @@ void CSpecDyn::setup_fields()
     case 2:
       /** random with energy spectrum **/
       
+      // get normalization
+      for(int id = 0; id < size_F_tot; id++){
+        if(k2[id] > 0.1*dk*dk)
+        {
+          norm_loc += 1./pow(1+k2[id],s);
+        }
+      }
+      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      norm = 1./norm;
+      
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
       for(int iy = 0; iy < size_F[1]; iy++){
@@ -260,7 +271,7 @@ void CSpecDyn::setup_fields()
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        double A = sqrt( pow(1+k2[id],-0.5*s) );
+        double A = sqrt( norm*1./pow(1+k2[id],s) );
         double k2_inv = 1./k2[id];
         double k_x = kx[ix];
         double k_y = ky[iy];
@@ -277,23 +288,23 @@ void CSpecDyn::setup_fields()
       }}}
       
       // normalize to |V|_max=1.
-      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      norm_loc = 0.;
-      for(int id = 0; id < size_R_tot; id++){
-        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
-      }
-      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
-      for(int id = 0; id < size_R_tot; id++){
-        Vx_R[id] /= norm;
-        Vy_R[id] /= norm;
-        Vz_R[id] /= norm;
-        Bx_R[id] /= norm;
-        By_R[id] /= norm;
-        Bz_R[id] /= norm;
-      }
-      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      //~ norm_loc = 0.;
+      //~ for(int id = 0; id < size_R_tot; id++){
+        //~ norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      //~ }
+      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
+      //~ for(int id = 0; id < size_R_tot; id++){
+        //~ Vx_R[id] /= norm;
+        //~ Vy_R[id] /= norm;
+        //~ Vz_R[id] /= norm;
+        //~ Bx_R[id] /= norm;
+        //~ By_R[id] /= norm;
+        //~ Bz_R[id] /= norm;
+      //~ }
+      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -470,25 +481,25 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }
   
   // Taylor-Green forcing
-  if(setup==2)
-  {
-    for(int ix = 0; ix < size_R[0]; ix++){
-    for(int iy = 0; iy < size_R[1]; iy++){
-    for(int iz = 0; iz < size_R[2]; iz++){
+  //~ if(setup==2)
+  //~ {
+    //~ for(int ix = 0; ix < size_R[0]; ix++){
+    //~ for(int iy = 0; iy < size_R[1]; iy++){
+    //~ for(int iz = 0; iz < size_R[2]; iz++){
     
-      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      double x_val = (start_R[0]+ix)*dx+XB;
-      double y_val = (start_R[1]+iy)*dx+XB;
-      double z_val = (start_R[2]+iz)*dx+XB;
+      //~ double x_val = (start_R[0]+ix)*dx+XB;
+      //~ double y_val = (start_R[1]+iy)*dx+XB;
+      //~ double z_val = (start_R[2]+iz)*dx+XB;
       
-      double kf = 2.;
+      //~ double kf = 2.;
       
-      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    }}}
-  }
+    //~ }}}
+  //~ }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -511,30 +522,30 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSV_X, RHSV_Y, RHSV_Z);
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  //~ // Ornstein-Uhlenbeck forcing
-  //~ double dk2 = dk*dk;
+  // Ornstein-Uhlenbeck forcing
+  double dk2 = dk*dk;
   
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-    //~ {
+    if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+    {
       
-      //~ double k2_inv = 1./k2[id];
-      //~ double k_x = kx[ix];
-      //~ double k_y = ky[iy];
-      //~ double k_z = kz[iz];
+      double k2_inv = 1./k2[id];
+      double k_x = kx[ix];
+      double k_y = ky[iy];
+      double k_z = kz[iz];
 
-      //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+      RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-    //~ }
+    }
     
-  //~ }}}
+  }}}
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -924,6 +935,15 @@ void CSpecDyn::calc_EnergySpectrum()
       energySpectrum_B[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) );
       os << ik*dk << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
+    
+    double E_v = 0.;
+    for(int ik = 1; ik < kmax; ik++)
+    {
+      E_v += energySpectrum_V[ik];
+    }
+    E_v *= dk;
+    
+    printf("Total Energy = %f\n", E_v);
     
     os.close();
   }MPI_Barrier(comm);
