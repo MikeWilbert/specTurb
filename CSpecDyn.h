@@ -136,6 +136,8 @@ class CSpecDyn
     CX f_OU_Z[3] = {0.,0.,0.};
     
     // Energy Spectrum
+    int N_bin = 50;
+    
     double* energySpectrum_V;
     double* energySpectrum_V_loc;
     int*   bin_counter_V;

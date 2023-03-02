@@ -129,14 +129,14 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   normal = std::normal_distribution<double>(0.,1.);
   
   // Energy Spectrum
-  energySpectrum_V = new double[N/2+1];
-  energySpectrum_V_loc = new double[N/2+1];
-  bin_counter_V    = new int[N/2+1];
-  bin_counter_V_loc    = new int[N/2+1];
-  energySpectrum_B = new double[N/2+1];
-  energySpectrum_B_loc = new double[N/2+1];
-  bin_counter_B    = new int[N/2+1];
-  bin_counter_B_loc    = new int[N/2+1];
+  energySpectrum_V = new double[N_bin];
+  energySpectrum_V_loc = new double[N_bin];
+  bin_counter_V    = new int[N_bin];
+  bin_counter_V_loc    = new int[N_bin];
+  energySpectrum_B = new double[N_bin];
+  energySpectrum_B_loc = new double[N_bin];
+  bin_counter_B    = new int[N_bin];
+  bin_counter_B_loc    = new int[N_bin];
   
 }
 
@@ -288,23 +288,23 @@ void CSpecDyn::setup_fields()
       }}}
       
       // normalize to |V|_max=1.
-      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      //~ norm_loc = 0.;
-      //~ for(int id = 0; id < size_R_tot; id++){
-        //~ norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
-      //~ }
-      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
-      //~ for(int id = 0; id < size_R_tot; id++){
-        //~ Vx_R[id] /= norm;
-        //~ Vy_R[id] /= norm;
-        //~ Vz_R[id] /= norm;
-        //~ Bx_R[id] /= norm;
-        //~ By_R[id] /= norm;
-        //~ Bz_R[id] /= norm;
-      //~ }
-      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      norm_loc = 0.;
+      for(int id = 0; id < size_R_tot; id++){
+        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      }
+      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
+      for(int id = 0; id < size_R_tot; id++){
+        Vx_R[id] /= norm;
+        Vy_R[id] /= norm;
+        Vz_R[id] /= norm;
+        Bx_R[id] /= norm;
+        By_R[id] /= norm;
+        Bz_R[id] /= norm;
+      }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -481,25 +481,25 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }
   
   // Taylor-Green forcing
-  //~ if(setup==2)
-  //~ {
-    //~ for(int ix = 0; ix < size_R[0]; ix++){
-    //~ for(int iy = 0; iy < size_R[1]; iy++){
-    //~ for(int iz = 0; iz < size_R[2]; iz++){
+  if(setup==2)
+  {
+    for(int ix = 0; ix < size_R[0]; ix++){
+    for(int iy = 0; iy < size_R[1]; iy++){
+    for(int iz = 0; iz < size_R[2]; iz++){
     
-      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      //~ double x_val = (start_R[0]+ix)*dx+XB;
-      //~ double y_val = (start_R[1]+iy)*dx+XB;
-      //~ double z_val = (start_R[2]+iz)*dx+XB;
+      double x_val = (start_R[0]+ix)*dx+XB;
+      double y_val = (start_R[1]+iy)*dx+XB;
+      double z_val = (start_R[2]+iz)*dx+XB;
       
-      //~ double kf = 2.;
+      double kf = 2.;
       
-      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    //~ }}}
-  //~ }
+    }}}
+  }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -523,29 +523,29 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
   // Ornstein-Uhlenbeck forcing
-  double dk2 = dk*dk;
+  //~ double dk2 = dk*dk;
   
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-    {
+    //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+    //~ {
       
-      double k2_inv = 1./k2[id];
-      double k_x = kx[ix];
-      double k_y = ky[iy];
-      double k_z = kz[iz];
+      //~ double k2_inv = 1./k2[id];
+      //~ double k_x = kx[ix];
+      //~ double k_y = ky[iy];
+      //~ double k_z = kz[iz];
 
-      RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+      //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+      //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+      //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-    }
+    //~ }
     
-  }}}
+  //~ }}}
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -876,12 +876,87 @@ void CSpecDyn::OrnsteinUhlenbeck()
 }
 
 // inspired by https://bertvandenbroucke.netlify.app/2019/05/24/computing-a-power-spectrum-in-python/
+//~ void CSpecDyn::calc_EnergySpectrum()
+//~ {
+  //~ int kmax = N/2+1;
+  
+  //~ // clean containers
+  //~ for(int ik = 0; ik < kmax; ik++)
+  //~ {
+    //~ energySpectrum_V_loc[ik] = 0.;
+    //~ bin_counter_V_loc[ik]    = 0;
+    //~ energySpectrum_B_loc[ik] = 0.;
+    //~ bin_counter_B_loc[ik]    = 0;
+  //~ }
+  
+  //~ double Vx, Vy, Vz;
+  //~ double Bx, By, Bz;
+  
+  //~ for(int id = 0; id < size_F_tot; id++){
+    
+    //~ int id_k = int(round(sqrt(k2[id])/dk));
+  
+    //~ if(id_k < kmax)
+    //~ {
+      //~ Vx = abs(Vx_F[id]);
+      //~ Vy = abs(Vy_F[id]);
+      //~ Vz = abs(Vz_F[id]);
+      //~ Bx = abs(Bx_F[id]);
+      //~ By = abs(By_F[id]);
+      //~ Bz = abs(Bz_F[id]);
+      
+      //~ energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
+      //~ energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
+      //~ bin_counter_V_loc   [id_k] += 1;
+      //~ bin_counter_B_loc   [id_k] += 1;
+    //~ }
+  //~ }
+  
+  //~ MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  //~ MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  
+  //~ if(myRank == 0)
+  //~ {
+    //~ std::string file_name  = out_dir + "/spectrum_" + std::to_string(vti_count) + ".csv";
+    //~ std::ofstream os;
+    
+    //~ os.open(file_name.c_str(), std::ios::out);
+    //~ if(!os){
+      //~ std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    //~ }
+    
+    //~ for(int ik = 1; ik < kmax; ik++)
+    //~ {
+      //~ energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin
+      //~ energySpectrum_V[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) ); // multiply with Fourier surface elemets
+      //~ energySpectrum_B[ik] /= double(bin_counter_B[ik]);
+      //~ energySpectrum_B[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) );
+      //~ os << ik*dk << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
+    //~ }
+    
+    //~ double E_v = 0.;
+    //~ for(int ik = 1; ik < kmax; ik++)
+    //~ {
+      //~ E_v += energySpectrum_V[ik];
+    //~ }
+    //~ E_v *= dk;
+    
+    //~ printf("Total Energy = %f\n", E_v);
+    
+    //~ os.close();
+  //~ }MPI_Barrier(comm);
+  
+//~ }
+
 void CSpecDyn::calc_EnergySpectrum()
 {
-  int kmax = N/2+1;
+  double kmax = N/2*dk;
+  double del_k = kmax/N_bin;
   
   // clean containers
-  for(int ik = 0; ik < kmax; ik++)
+  for(int ik = 0; ik < N_bin; ik++)
   {
     energySpectrum_V_loc[ik] = 0.;
     bin_counter_V_loc[ik]    = 0;
@@ -894,9 +969,10 @@ void CSpecDyn::calc_EnergySpectrum()
   
   for(int id = 0; id < size_F_tot; id++){
     
-    int id_k = int(round(sqrt(k2[id])/dk));
+    double k = sqrt(k2[id]);
+    int id_k = int(k/del_k);
   
-    if(id_k < kmax)
+    if(id_k < N_bin)
     {
       Vx = abs(Vx_F[id]);
       Vy = abs(Vy_F[id]);
@@ -905,7 +981,7 @@ void CSpecDyn::calc_EnergySpectrum()
       By = abs(By_F[id]);
       Bz = abs(Bz_F[id]);
       
-      energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
+      energySpectrum_V_loc[id_k] += Vx*Vx;//+Vy*Vy+Vz*Vz; // UWAGA!
       energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
       bin_counter_V_loc   [id_k] += 1;
       bin_counter_B_loc   [id_k] += 1;
@@ -927,13 +1003,16 @@ void CSpecDyn::calc_EnergySpectrum()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
     
-    for(int ik = 1; ik < kmax; ik++)
+    for(int ik = 1; ik < N_bin; ik++)
     {
-      energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin
-      energySpectrum_V[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) ); // multiply with Fourier surface elemets
-      energySpectrum_B[ik] /= double(bin_counter_B[ik]);
-      energySpectrum_B[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) );
-      os << ik*dk << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
+      energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin to get mean values
+      energySpectrum_V[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
+      
+      
+      energySpectrum_B[ik] /= double(bin_counter_B[ik]); // divide by number of elements in bin to get mean values
+      energySpectrum_B[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
+      
+      os << (ik+0.5)*del_k << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
     
     double E_v = 0.;

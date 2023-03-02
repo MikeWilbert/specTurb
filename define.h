@@ -29,9 +29,9 @@ const double DT = 0.005*(64./NUM);
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/PowerSpectrum";
 // output interval
-const double OUT_INTERVAL = 0.1;
+const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 3.;
+const double END_SIMU = 1.1;
 
 // choose initial setup: 
 // (0):all zero; 
