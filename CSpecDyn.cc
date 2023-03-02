@@ -264,6 +264,8 @@ void CSpecDyn::setup_fields()
       
       norm = 1./norm;
       
+      //~ norm = 1.;
+      
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
       for(int iy = 0; iy < size_F[1]; iy++){
@@ -288,23 +290,23 @@ void CSpecDyn::setup_fields()
       }}}
       
       // normalize to |V|_max=1.
-      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      norm_loc = 0.;
-      for(int id = 0; id < size_R_tot; id++){
-        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
-      }
-      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
-      for(int id = 0; id < size_R_tot; id++){
-        Vx_R[id] /= norm;
-        Vy_R[id] /= norm;
-        Vz_R[id] /= norm;
-        Bx_R[id] /= norm;
-        By_R[id] /= norm;
-        Bz_R[id] /= norm;
-      }
-      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      //~ norm_loc = 0.;
+      //~ for(int id = 0; id < size_R_tot; id++){
+        //~ norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      //~ }
+      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
+      //~ for(int id = 0; id < size_R_tot; id++){
+        //~ Vx_R[id] /= norm;
+        //~ Vy_R[id] /= norm;
+        //~ Vz_R[id] /= norm;
+        //~ Bx_R[id] /= norm;
+        //~ By_R[id] /= norm;
+        //~ Bz_R[id] /= norm;
+      //~ }
+      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -1006,9 +1008,9 @@ void CSpecDyn::calc_EnergySpectrum()
     for(int ik = 1; ik < N_bin; ik++)
     {
       energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin to get mean values
-      energySpectrum_V[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
+      energySpectrum_V[ik] *= 0.5 * 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
       energySpectrum_B[ik] /= double(bin_counter_B[ik]);
-      energySpectrum_B[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik );
+      energySpectrum_B[ik] *= 0.5 * 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik );
       
       os << (ik+0.5)*del_k << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
