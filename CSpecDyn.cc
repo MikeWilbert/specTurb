@@ -988,10 +988,10 @@ void CSpecDyn::calc_EnergySpectrum()
     }
   }
   
-  MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , kmax, MPI_INT   , MPI_SUM, 0, comm);
-  MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , kmax, MPI_INT   , MPI_SUM, 0, comm);
+  MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, N_bin, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , N_bin, MPI_INT   , MPI_SUM, 0, comm);
+  MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, N_bin, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , N_bin, MPI_INT   , MPI_SUM, 0, comm);
   
   if(myRank == 0)
   {
@@ -1007,20 +1007,18 @@ void CSpecDyn::calc_EnergySpectrum()
     {
       energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin to get mean values
       energySpectrum_V[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
-      
-      
-      energySpectrum_B[ik] /= double(bin_counter_B[ik]); // divide by number of elements in bin to get mean values
-      energySpectrum_B[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
+      energySpectrum_B[ik] /= double(bin_counter_B[ik]);
+      energySpectrum_B[ik] *= 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik );
       
       os << (ik+0.5)*del_k << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
     
     double E_v = 0.;
-    for(int ik = 1; ik < kmax; ik++)
+    for(int ik = 0; ik < N_bin; ik++)
     {
       E_v += energySpectrum_V[ik];
     }
-    E_v *= dk;
+    E_v *= del_k;
     
     printf("Total Energy = %f\n", E_v);
     
