@@ -31,18 +31,18 @@ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/PowerSpectrum";
 // output interval
 const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 1.1;
+const double END_SIMU = 8.;
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Random with energy spectrum [s=11/3]
-const int SETUP = 2;
+const int SETUP = 1;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.002;
+const double NU  = 0.02;
 // magnetic diffusivity
 const double ETA = NU;
 

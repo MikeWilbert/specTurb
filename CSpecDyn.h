@@ -146,7 +146,11 @@ class CSpecDyn
     double* energySpectrum_B_loc;
     int*   bin_counter_B;
     int*   bin_counter_B_loc;
-    void calc_EnergySpectrum();
+    
+    // Energy Dissipation
+    double energy_old = 0.;
+    double energy = 0.;
+    double dissipation = 0.;
     
     // private methods
     void setup_k();
@@ -163,6 +167,8 @@ class CSpecDyn
     void fFFT(double* IN_x, double* IN_y, double* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z);
     void bFFT(CX* IN_x, CX* IN_y, CX* IN_z, double* OUT_x, double* OUT_y, double* OUT_z);
     
+    void print_Energy();
+    void print_EnergySpectrum();
     void print_vti();
     void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
     void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);

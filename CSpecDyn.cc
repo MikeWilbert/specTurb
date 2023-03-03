@@ -254,17 +254,17 @@ void CSpecDyn::setup_fields()
       /** random with energy spectrum **/
       
       // get normalization
-      for(int id = 0; id < size_F_tot; id++){
-        if(k2[id] > 0.1*dk*dk)
-        {
-          norm_loc += 1./pow(1+k2[id],s);
-        }
-      }
-      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
+      //~ for(int id = 0; id < size_F_tot; id++){
+        //~ if(k2[id] > 0.1*dk*dk)
+        //~ {
+          //~ norm_loc += 1./pow(1+k2[id],s);
+        //~ }
+      //~ }
+      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
       
-      norm = 1./norm;
+      //~ norm = 1./norm;
       
-      //~ norm = 1.;
+      norm = 1.;
       
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
@@ -290,23 +290,23 @@ void CSpecDyn::setup_fields()
       }}}
       
       // normalize to |V|_max=1.
-      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      //~ norm_loc = 0.;
-      //~ for(int id = 0; id < size_R_tot; id++){
-        //~ norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
-      //~ }
-      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
-      //~ for(int id = 0; id < size_R_tot; id++){
-        //~ Vx_R[id] /= norm;
-        //~ Vy_R[id] /= norm;
-        //~ Vz_R[id] /= norm;
-        //~ Bx_R[id] /= norm;
-        //~ By_R[id] /= norm;
-        //~ Bz_R[id] /= norm;
-      //~ }
-      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      norm_loc = 0.;
+      for(int id = 0; id < size_R_tot; id++){
+        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      }
+      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
+      for(int id = 0; id < size_R_tot; id++){
+        Vx_R[id] /= norm;
+        Vy_R[id] /= norm;
+        Vz_R[id] /= norm;
+        Bx_R[id] /= norm;
+        By_R[id] /= norm;
+        Bz_R[id] /= norm;
+      }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -324,25 +324,28 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
-  calc_EnergySpectrum();
-  print_vti();
+  //~ print_EnergySpectrum();
+  //~ print_vti();
+  print_Energy();
 
   while(time < end_simu)
   {
     time_step();
     out_time += dt;
     
+    print_Energy();
+    
     if(out_time > out_interval)
     {
-      calc_EnergySpectrum();
+      print_EnergySpectrum();
       print_vti();
       out_time -= out_interval;
     }
     
   }
   
-  double print_time = MPI_Wtime() - start_time;
-  if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
+  //~ double print_time = MPI_Wtime() - start_time;
+  //~ if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
 }
 
 void CSpecDyn::time_step()
@@ -425,10 +428,10 @@ void CSpecDyn::time_step()
   // update time
   time += dt;
   
-  if(myRank == 0)
-	{
-		printf("  time step: time = %f, dt = %f\n", time, dt);
-	}MPI_Barrier(comm);
+  //~ if(myRank == 0)
+	//~ {
+		//~ printf("  time step: time = %f, dt = %f\n", time, dt);
+	//~ }MPI_Barrier(comm);
 }
 
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
@@ -483,25 +486,25 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }
   
   // Taylor-Green forcing
-  if(setup==2)
-  {
-    for(int ix = 0; ix < size_R[0]; ix++){
-    for(int iy = 0; iy < size_R[1]; iy++){
-    for(int iz = 0; iz < size_R[2]; iz++){
+  //~ if(setup==2)
+  //~ {
+    //~ for(int ix = 0; ix < size_R[0]; ix++){
+    //~ for(int iy = 0; iy < size_R[1]; iy++){
+    //~ for(int iz = 0; iz < size_R[2]; iz++){
     
-      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      double x_val = (start_R[0]+ix)*dx+XB;
-      double y_val = (start_R[1]+iy)*dx+XB;
-      double z_val = (start_R[2]+iz)*dx+XB;
+      //~ double x_val = (start_R[0]+ix)*dx+XB;
+      //~ double y_val = (start_R[1]+iy)*dx+XB;
+      //~ double z_val = (start_R[2]+iz)*dx+XB;
       
-      double kf = 2.;
+      //~ double kf = 2.;
       
-      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    }}}
-  }
+    //~ }}}
+  //~ }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -525,29 +528,34 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
   // Ornstein-Uhlenbeck forcing
-  //~ double dk2 = dk*dk;
+  if(setup==2)
+  {
   
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+    double dk2 = dk*dk;
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-    //~ {
+    for(int ix = 0; ix<size_F[0]; ix++){
+    for(int iy = 0; iy<size_F[1]; iy++){
+    for(int iz = 0; iz<size_F[2]; iz++){
       
-      //~ double k2_inv = 1./k2[id];
-      //~ double k_x = kx[ix];
-      //~ double k_y = ky[iy];
-      //~ double k_z = kz[iz];
+      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      
+      if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+      {
+        
+        double k2_inv = 1./k2[id];
+        double k_x = kx[ix];
+        double k_y = ky[iy];
+        double k_z = kz[iz];
 
-      //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-    //~ }
-    
-  //~ }}}
+      }
+      
+    }}}
+  
+  }
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -808,8 +816,8 @@ void CSpecDyn::print_mpi_scalar(double* field, int& N_bytes_scalar, const char* 
 void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
   // spherical truncation
-  double kmax  = sqrt(2)/3.*N/2.*dk;
-  double kmax2 = kmax*kmax;
+  //~ double kmax  = sqrt(2)/3.*N/2.*dk;
+  //~ double kmax2 = kmax*kmax;
   
   //~ for(int id = 0; id < size_F_tot; id++){
    
@@ -877,82 +885,7 @@ void CSpecDyn::OrnsteinUhlenbeck()
   
 }
 
-// inspired by https://bertvandenbroucke.netlify.app/2019/05/24/computing-a-power-spectrum-in-python/
-//~ void CSpecDyn::calc_EnergySpectrum()
-//~ {
-  //~ int kmax = N/2+1;
-  
-  //~ // clean containers
-  //~ for(int ik = 0; ik < kmax; ik++)
-  //~ {
-    //~ energySpectrum_V_loc[ik] = 0.;
-    //~ bin_counter_V_loc[ik]    = 0;
-    //~ energySpectrum_B_loc[ik] = 0.;
-    //~ bin_counter_B_loc[ik]    = 0;
-  //~ }
-  
-  //~ double Vx, Vy, Vz;
-  //~ double Bx, By, Bz;
-  
-  //~ for(int id = 0; id < size_F_tot; id++){
-    
-    //~ int id_k = int(round(sqrt(k2[id])/dk));
-  
-    //~ if(id_k < kmax)
-    //~ {
-      //~ Vx = abs(Vx_F[id]);
-      //~ Vy = abs(Vy_F[id]);
-      //~ Vz = abs(Vz_F[id]);
-      //~ Bx = abs(Bx_F[id]);
-      //~ By = abs(By_F[id]);
-      //~ Bz = abs(Bz_F[id]);
-      
-      //~ energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
-      //~ energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
-      //~ bin_counter_V_loc   [id_k] += 1;
-      //~ bin_counter_B_loc   [id_k] += 1;
-    //~ }
-  //~ }
-  
-  //~ MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
-  //~ MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , kmax, MPI_INT   , MPI_SUM, 0, comm);
-  //~ MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, kmax, MPI_DOUBLE, MPI_SUM, 0, comm);
-  //~ MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , kmax, MPI_INT   , MPI_SUM, 0, comm);
-  
-  //~ if(myRank == 0)
-  //~ {
-    //~ std::string file_name  = out_dir + "/spectrum_" + std::to_string(vti_count) + ".csv";
-    //~ std::ofstream os;
-    
-    //~ os.open(file_name.c_str(), std::ios::out);
-    //~ if(!os){
-      //~ std::cout << "Cannot write header to file '" << file_name << "'!\n";
-    //~ }
-    
-    //~ for(int ik = 1; ik < kmax; ik++)
-    //~ {
-      //~ energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin
-      //~ energySpectrum_V[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) ); // multiply with Fourier surface elemets
-      //~ energySpectrum_B[ik] /= double(bin_counter_B[ik]);
-      //~ energySpectrum_B[ik] *= 0.5*M_PI*dk*dk* ( (ik+0.5)*(ik+0.5) - (ik-0.5)*(ik-0.5) );
-      //~ os << ik*dk << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
-    //~ }
-    
-    //~ double E_v = 0.;
-    //~ for(int ik = 1; ik < kmax; ik++)
-    //~ {
-      //~ E_v += energySpectrum_V[ik];
-    //~ }
-    //~ E_v *= dk;
-    
-    //~ printf("Total Energy = %f\n", E_v);
-    
-    //~ os.close();
-  //~ }MPI_Barrier(comm);
-  
-//~ }
-
-void CSpecDyn::calc_EnergySpectrum()
+void CSpecDyn::print_EnergySpectrum()
 {
   double kmax = N/2*dk;
   double del_k = kmax/N_bin;
@@ -983,7 +916,7 @@ void CSpecDyn::calc_EnergySpectrum()
       By = abs(By_F[id]);
       Bz = abs(Bz_F[id]);
       
-      energySpectrum_V_loc[id_k] += Vx*Vx;//+Vy*Vy+Vz*Vz; // UWAGA!
+      energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
       energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
       bin_counter_V_loc   [id_k] += 1;
       bin_counter_B_loc   [id_k] += 1;
@@ -1015,14 +948,99 @@ void CSpecDyn::calc_EnergySpectrum()
       os << (ik+0.5)*del_k << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
     }
     
-    double E_v = 0.;
-    for(int ik = 0; ik < N_bin; ik++)
-    {
-      E_v += energySpectrum_V[ik];
-    }
-    E_v *= del_k;
+    os.close();
+  }MPI_Barrier(comm);
+  
+}
+
+void CSpecDyn::print_Energy()
+{
+  // In Real Space
+  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  
+  energy_old = energy;
+  energy = 0.;
+  double energy_loc = 0.;
+  double energy_B = 0.;
+  double energy_B_loc = 0.;
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    energy_loc   += (Vx_R[id]*Vx_R[id] + Vy_R[id]*Vy_R[id] + Vz_R[id]*Vz_R[id]);
+    energy_B_loc += (Bx_R[id]*Bx_R[id] + By_R[id]*By_R[id] + Bz_R[id]*Bz_R[id]);
+  }
+  energy_loc   *= 0.5/double(N*N*N); // mean Energy
+  energy_B_loc *= 0.5/double(N*N*N);
+  
+  MPI_Reduce(&energy_loc  , &energy  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  dissipation = (energy_old - energy)/dt;
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // In Fourier Space
+  double energy_loc_F = 0.;
+  double energy_F = 0.;
+  double energy_B_loc_F = 0.;
+  double energy_B_F = 0.;
+  double Vx, Vy, Vz;
+  double Bx, By, Bz;
+  double hs; // factor because of hermitian symmetry
+  
+  for(int ix = 0; ix < size_F[0]; ix++){
+  for(int iy = 0; iy < size_F[1]; iy++){
+  for(int iz = 0; iz < size_F[2]; iz++){
+      
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    printf("Total Energy = %f\n", E_v);
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
+    
+    Vx = abs(Vx_F[id]);
+    Vy = abs(Vy_F[id]);
+    Vz = abs(Vz_F[id]);
+    
+    energy_loc_F += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+
+  }}}
+  
+  energy_loc_F *= 0.5/double(N*N*N);
+  energy_loc_F *= 1. /double(N*N*N); // wg Fourier Trafo
+  MPI_Reduce(&energy_loc_F  , &energy_F  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  
+  energy_B_loc_F *= 0.5/double(N*N*N);
+  energy_B_loc_F *= 1. /double(N*N*N); // wg Fourier Trafo
+  MPI_Reduce(&energy_B_loc_F, &energy_B_F, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  
+  if(myRank==0)
+  {
+    printf("t = %f, E = %f, E_F = %f, epsilon = %f\n", time, energy, energy_F, dissipation);
+  }MPI_Barrier(comm);
+  
+  if(myRank == 0)
+  {
+    std::string file_name  = out_dir + "/energy.csv";
+    std::ofstream os;
+    
+    os.open(file_name.c_str(), std::ios::out | std::ios::app);
+    if(!os){
+      std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    }
+      
+    //~ os << time << ", " << energy << ", " << energy_B << std::endl;
+    //~ os << time << ", " << energy_F << ", " << energy_B_F << std::endl;
+    os << time << ", " << energy << ", " << energy_F << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
