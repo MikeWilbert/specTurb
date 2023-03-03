@@ -148,9 +148,10 @@ class CSpecDyn
     int*   bin_counter_B_loc;
     
     // Energy Dissipation
-    double energy_old = 0.;
+    //~ double energy_old = 0.;
     double energy = 0.;
-    double dissipation = 0.;
+    double energy_B = 0.;
+    //~ double dissipation = 0.;
     
     // private methods
     void setup_k();

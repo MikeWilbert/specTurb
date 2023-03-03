@@ -241,9 +241,9 @@ void CSpecDyn::setup_fields()
         
         double beta = 0.8;
         
-        Bx_R[id] = ( -2.*sin(y_val) + sin(z_val) )*beta;
-        By_R[id] = (  2.*sin(x_val) + sin(z_val) )*beta;
-        Bz_R[id] = (     sin(x_val) + sin(y_val) )*beta;
+        Bx_R[id] = ( -2.*sin(2*y_val) + sin(z_val) )*beta;
+        By_R[id] = (  2.*sin(  x_val) + sin(z_val) )*beta;
+        Bz_R[id] = (     sin(  x_val) + sin(y_val) )*beta;
     
       }}}
       fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
@@ -328,14 +328,14 @@ void CSpecDyn::execute()
   //~ print_vti();
   print_Energy();
 
-  while(time < end_simu)
+  while(time+dt < end_simu)
   {
     time_step();
     out_time += dt;
     
     print_Energy();
     
-    if(out_time > out_interval)
+    if(out_time > out_interval+dt)
     {
       print_EnergySpectrum();
       print_vti();
@@ -369,6 +369,15 @@ void CSpecDyn::time_step()
     Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
     By_F1[id] = By_F[id] + dt * RHS_By_F[id];
     Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
+    
+    //~ // Euler
+    //~ Vx_F[id] = Vx_F[id] + dt * RHS_Vx_F[id];
+    //~ Vy_F[id] = Vy_F[id] + dt * RHS_Vy_F[id];
+    //~ Vz_F[id] = Vz_F[id] + dt * RHS_Vz_F[id];
+    
+    //~ Bx_F[id] = Bx_F[id] + dt * RHS_Bx_F[id];
+    //~ By_F[id] = By_F[id] + dt * RHS_By_F[id];
+    //~ Bz_F[id] = Bz_F[id] + dt * RHS_Bz_F[id];
   }
   
   diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
@@ -428,10 +437,10 @@ void CSpecDyn::time_step()
   // update time
   time += dt;
   
-  //~ if(myRank == 0)
-	//~ {
-		//~ printf("  time step: time = %f, dt = %f\n", time, dt);
-	//~ }MPI_Barrier(comm);
+  if(myRank == 0)
+	{
+		printf("  time step: time = %f, dt = %f\n", time, dt);
+	}MPI_Barrier(comm);
 }
 
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
@@ -528,34 +537,34 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
   // Ornstein-Uhlenbeck forcing
-  if(setup==2)
-  {
+  //~ if(setup==2)
+  //~ {
   
-    double dk2 = dk*dk;
+    //~ double dk2 = dk*dk;
     
-    for(int ix = 0; ix<size_F[0]; ix++){
-    for(int iy = 0; iy<size_F[1]; iy++){
-    for(int iz = 0; iz<size_F[2]; iz++){
+    //~ for(int ix = 0; ix<size_F[0]; ix++){
+    //~ for(int iy = 0; iy<size_F[1]; iy++){
+    //~ for(int iz = 0; iz<size_F[2]; iz++){
       
-      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
       
-      if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-      {
+      //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+      //~ {
         
-        double k2_inv = 1./k2[id];
-        double k_x = kx[ix];
-        double k_y = ky[iy];
-        double k_z = kz[iz];
+        //~ double k2_inv = 1./k2[id];
+        //~ double k_x = kx[ix];
+        //~ double k_y = ky[iy];
+        //~ double k_z = kz[iz];
 
-        RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-      }
+      //~ }
       
-    }}}
+    //~ }}}
   
-  }
+  //~ }
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -580,35 +589,43 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     double exp_diff_V = exp(nu *k2[id]*del_t*dt);
     double exp_diff_B = exp(eta*k2[id]*del_t*dt);
     
-    RHSV_X[id] *= exp_diff_V;
-    RHSV_X[id] *= exp_diff_V;
-    RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
     
-    RHSB_X[id] *= exp_diff_B;
-    RHSB_X[id] *= exp_diff_B;
-    RHSB_X[id] *= exp_diff_B;
+    //~ RHSB_X[id] *= exp_diff_B;
+    //~ RHSB_X[id] *= exp_diff_B;
+    //~ RHSB_X[id] *= exp_diff_B;
+    
+    // explicit
+    RHSV_X[id] -= nu  * k2[id] * V_X[id];
+    RHSV_Y[id] -= nu  * k2[id] * V_Y[id];
+    RHSV_Z[id] -= nu  * k2[id] * V_Z[id];
+    RHSB_X[id] -= eta * k2[id] * B_X[id];
+    RHSB_Y[id] -= eta * k2[id] * B_Y[id];
+    RHSB_Z[id] -= eta * k2[id] * B_Z[id];
   }
 }
 
 void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
 {
 
-  double exp_diff_V;
-  double exp_diff_B;
+  //~ double exp_diff_V;
+  //~ double exp_diff_B;
 
-  for(int id = 0; id < size_F_tot; id++)
-  {
-    exp_diff_V = exp(- nu *k2[id]*del_t*dt);
-    exp_diff_B = exp(- eta*k2[id]*del_t*dt);
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ {
+    //~ exp_diff_V = exp(- nu *k2[id]*del_t*dt);
+    //~ exp_diff_B = exp(- eta*k2[id]*del_t*dt);
     
-    Vx[id] *= exp_diff_V;
-    Vy[id] *= exp_diff_V;
-    Vz[id] *= exp_diff_V;
+    //~ Vx[id] *= exp_diff_V;
+    //~ Vy[id] *= exp_diff_V;
+    //~ Vz[id] *= exp_diff_V;
     
-    Bx[id] *= exp_diff_B;
-    By[id] *= exp_diff_B;
-    Bz[id] *= exp_diff_B;
-  }
+    //~ Bx[id] *= exp_diff_B;
+    //~ By[id] *= exp_diff_B;
+    //~ Bz[id] *= exp_diff_B;
+  //~ }
 }
 
 void CSpecDyn::finalize()
@@ -955,36 +972,14 @@ void CSpecDyn::print_EnergySpectrum()
 
 void CSpecDyn::print_Energy()
 {
-  // In Real Space
-  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-  
-  energy_old = energy;
+  // Compute mean Energy in Fourier Space
+  double energy_old = energy;
+  double energy_B_old = energy_B;
   energy = 0.;
+  energy_B = 0.;
+  
   double energy_loc = 0.;
-  double energy_B = 0.;
   double energy_B_loc = 0.;
-  
-  for(int id = 0; id < size_R_tot; id++)
-  {
-    energy_loc   += (Vx_R[id]*Vx_R[id] + Vy_R[id]*Vy_R[id] + Vz_R[id]*Vz_R[id]);
-    energy_B_loc += (Bx_R[id]*Bx_R[id] + By_R[id]*By_R[id] + Bz_R[id]*Bz_R[id]);
-  }
-  energy_loc   *= 0.5/double(N*N*N); // mean Energy
-  energy_B_loc *= 0.5/double(N*N*N);
-  
-  MPI_Reduce(&energy_loc  , &energy  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  dissipation = (energy_old - energy)/dt;
-  
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  // In Fourier Space
-  double energy_loc_F = 0.;
-  double energy_F = 0.;
-  double energy_B_loc_F = 0.;
-  double energy_B_F = 0.;
   double Vx, Vy, Vz;
   double Bx, By, Bz;
   double hs; // factor because of hermitian symmetry
@@ -1008,25 +1003,22 @@ void CSpecDyn::print_Energy()
     Vx = abs(Vx_F[id]);
     Vy = abs(Vy_F[id]);
     Vz = abs(Vz_F[id]);
+    Bx = abs(Bx_F[id]);
+    By = abs(By_F[id]);
+    Bz = abs(Bz_F[id]);
     
-    energy_loc_F += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+    energy_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
 
   }}}
   
-  energy_loc_F *= 0.5/double(N*N*N);
-  energy_loc_F *= 1. /double(N*N*N); // wg Fourier Trafo
-  MPI_Reduce(&energy_loc_F  , &energy_F  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  energy_loc *= 0.5/double(N*N*N);
+  energy_loc *= 1. /double(N*N*N); // wg Fourier Space
+  MPI_Reduce(&energy_loc  , &energy  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
-  
-  energy_B_loc_F *= 0.5/double(N*N*N);
-  energy_B_loc_F *= 1. /double(N*N*N); // wg Fourier Trafo
-  MPI_Reduce(&energy_B_loc_F, &energy_B_F, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  
-  
-  if(myRank==0)
-  {
-    printf("t = %f, E = %f, E_F = %f, epsilon = %f\n", time, energy, energy_F, dissipation);
-  }MPI_Barrier(comm);
+  energy_B_loc *= 0.5/double(N*N*N);
+  energy_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
   if(myRank == 0)
   {
@@ -1038,9 +1030,8 @@ void CSpecDyn::print_Energy()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
       
-    //~ os << time << ", " << energy << ", " << energy_B << std::endl;
-    //~ os << time << ", " << energy_F << ", " << energy_B_F << std::endl;
-    os << time << ", " << energy << ", " << energy_F << std::endl;
+    os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
+    //~ os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
     
     os.close();
   }MPI_Barrier(comm);

@@ -25,6 +25,7 @@ const int NUM = 64;
 int const PDIMS[2] = {8,8};
 // CFL number
 const double DT = 0.005*(64./NUM);
+//~ const double DT = 0.001;
 
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/PowerSpectrum";
@@ -42,7 +43,7 @@ const int SETUP = 1;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.02;
+const double NU  = 0.01;
 // magnetic diffusivity
 const double ETA = NU;
 
