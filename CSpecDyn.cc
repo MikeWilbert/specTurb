@@ -324,21 +324,23 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
-  print_EnergySpectrum();
-  //~ print_vti();
-  print_Energy();
+  //~ print_Energy();
+  //~ print_EnergySpectrum();
+  print_scales();
+  print_vti();
 
   while(time+dt < end_simu)
   {
     time_step();
     out_time += dt;
     
-    print_EnergySpectrum();
-    print_Energy();
+    //~ print_EnergySpectrum();
+    //~ print_Energy();
     
     if(out_time > out_interval+dt)
     {
       //~ print_EnergySpectrum();
+      print_scales();
       print_vti();
       out_time -= out_interval;
     }
@@ -1049,6 +1051,150 @@ void CSpecDyn::print_Energy()
     }
       
     os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B << std::endl;
+    
+    os.close();
+  }MPI_Barrier(comm);
+  
+}
+
+void CSpecDyn::print_scales()
+{
+  // energy
+  double energy_V_loc = 0.;
+  double energy_B_loc = 0.;
+  double energy_V;
+  double energy_B;
+  
+  // dissipation
+  double diss_V_loc = 0.;
+  double diss_B_loc = 0.;
+  double diss_V;
+  double diss_B;
+  
+  // integral scale
+  double L_V_loc = 0.;
+  double L_B_loc = 0.;
+  double L_V;
+  double L_B;
+  
+  // further scales
+  double v0, b0;             // RMS
+  double lambda_V, lambda_B; // Taylor micro scale
+  double Re_V, Re_B;         // Taylor scale Re
+  double T_V, T_B;           // LE turnover time
+  double tau_V, tau_B;       // Kolmogorov time scale
+  double eta_V, eta_B;       // Kolmogorov length scale
+  
+  double Vx, Vy, Vz;
+  double Bx, By, Bz;
+  
+  double hs; // factor because of hermitian symmetry in z
+  
+  for(int ix = 0; ix < size_F[0]; ix++){
+  for(int iy = 0; iy < size_F[1]; iy++){
+  for(int iz = 0; iz < size_F[2]; iz++){
+      
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
+    
+    Vx = abs(Vx_F[id]);
+    Vy = abs(Vy_F[id]);
+    Vz = abs(Vz_F[id]);
+    Bx = abs(Bx_F[id]);
+    By = abs(By_F[id]);
+    Bz = abs(Bz_F[id]);
+    
+    energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+    
+    diss_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    diss_B_loc += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
+    
+    if(id!=0) // avoid dividing by zero
+    {
+      L_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) / sqrt(k2[id]);
+      L_B_loc += hs*(Bx*Bx+By*By+Bz*Bz) / sqrt(k2[id]);
+    }
+
+  }}}
+  
+  energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+  energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+  MPI_Reduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  energy_B_loc *= 0.5/double(N*N*N);
+  energy_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  diss_V_loc *= 0.5/double(N*N*N);
+  diss_V_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  diss_V *= 2.*nu;
+  
+  diss_B_loc *= 0.5/double(N*N*N);
+  diss_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  diss_B *= 2.*eta;
+  
+  v0 = sqrt(2./3.*energy_V);
+  b0 = sqrt(2./3.*energy_B);
+  
+  L_V_loc *= 0.5 /double(N*N*N);
+  L_V_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&L_V_loc, &L_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  L_V *= M_PI/(2.*v0*v0);
+  
+  L_B_loc *= 0.5 /double(N*N*N);
+  L_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&L_B_loc, &L_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  L_B *= M_PI/(2.*b0*b0);
+  
+  lambda_V = sqrt(15.*nu /diss_V)*v0;
+  lambda_B = sqrt(15.*eta/diss_B)*b0;
+  
+  Re_V = v0*lambda_V/nu ;
+  Re_B = b0*lambda_B/eta;
+  
+  T_V = L_V/v0;
+  T_B = L_B/b0;
+  
+  tau_V = sqrt(nu /diss_V);
+  tau_B = sqrt(eta/diss_B);
+  
+  eta_V = pow(nu *nu *nu / diss_V, 0.25);
+  eta_B = pow(eta*eta*eta/ diss_B, 0.25);
+  
+  // print
+  if(myRank==0)
+  {
+    std::string file_name  = out_dir + "/scales_" + std::to_string(vti_count) + ".csv";
+    std::ofstream os;
+    
+    os.open(file_name.c_str(), std::ios::out);
+    if(!os){
+      std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    }
+    
+    os << "Scale, Velocity, magnetic Field, Simulation Sizes, , resolved?" << std::endl;
+    os << "Energy, " << energy_V << ", " << energy_B << std::endl;
+    os << "Dissipation, " << diss_V << ", " << diss_B << std::endl;
+    os << "RMS, " << v0 << ", " << b0 << std::endl;
+    os << "micro scale Reynolds number, " << Re_V << ", " << Re_B << std::endl;
+    os << std::endl;
+    os << "Integral Scale, " << L_V << ", " << L_B << ", L, " << L << ", " << (L>L_V && L>L_B) << std::endl;
+    os << "LE turnover-time, " << T_V << ", " << T_B << ", t_out, " << out_interval << ", " << ((0.5*T_V)>out_interval && (0.5*T_B)>out_interval) << std::endl;
+    os << "Taylor micro scale, " << lambda_V << ", " << lambda_B << ", dx, " << dx << ", " << (lambda_V>dx && lambda_B>dx) << std::endl;
+    os << "Kolmogorov length scale, " << eta_V << ", " << eta_B  << ", dx, " << dx << ", " << (   eta_V>dx && eta_B   >dx) << std::endl;
+    os << "Kolmogorov time scale, "   << tau_V << ", " << tau_B  << ", dt, " << dt << ", " << (tau_V>dt && tau_B>dt) << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
