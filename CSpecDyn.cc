@@ -1020,6 +1020,77 @@ void CSpecDyn::print_Energy()
   energy_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
+  // energy dissipation from w and J
+  // W = rot(V)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    Wx_F[id] = IM * ( ky[iy]*Vz_F[id] - kz[iz]*Vy_F[id] );
+    Wy_F[id] = IM * ( kz[iz]*Vx_F[id] - kx[ix]*Vz_F[id] );
+    Wz_F[id] = IM * ( kx[ix]*Vy_F[id] - ky[iy]*Vx_F[id] );
+    
+  }}}
+  
+  // J = rot(B)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    Jx_F[id] = IM * ( ky[iy]*Bz_F[id] - kz[iz]*By_F[id] );
+    Jy_F[id] = IM * ( kz[iz]*Bx_F[id] - kx[ix]*Bz_F[id] );
+    Jz_F[id] = IM * ( kx[ix]*By_F[id] - ky[iy]*Bx_F[id] );
+    
+  }}}
+  
+  double diss;
+  double diss_B;
+  double diss_loc;
+  double diss_B_loc;
+  double Wx, Wy, Wz;
+  double Jx, Jy, Jz;
+  
+  for(int ix = 0; ix < size_F[0]; ix++){
+  for(int iy = 0; iy < size_F[1]; iy++){
+  for(int iz = 0; iz < size_F[2]; iz++){
+      
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
+    
+    Wx = abs(Wx_F[id]);
+    Wy = abs(Wy_F[id]);
+    Wz = abs(Wz_F[id]);
+    Jx = abs(Jx_F[id]);
+    Jy = abs(Jy_F[id]);
+    Jz = abs(Jz_F[id]);
+    
+    diss_loc   += hs*(Wx*Wx+Wy*Wy+Wz*Wz);
+    diss_B_loc += hs*(Jx*Jx+Jy*Jy+Jz*Jz);
+
+  }}}
+  
+  diss_loc *= nu/double(N*N*N);
+  diss_loc *= 1. /double(N*N*N); // wg Fourier Space
+  MPI_Reduce(&diss_loc  , &diss  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  diss_B_loc *= eta/double(N*N*N);
+  diss_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  // print
   if(myRank == 0)
   {
     std::string file_name  = out_dir + "/energy.csv";
@@ -1030,7 +1101,8 @@ void CSpecDyn::print_Energy()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
       
-    os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
+    os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << 
+                  ", " << diss + diss_B << std::endl;
     //~ os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
     
     os.close();
