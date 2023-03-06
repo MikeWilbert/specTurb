@@ -28,7 +28,7 @@ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.001;
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/PowerSpectrum";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OT_nu0p01";
 // output interval
 const double OUT_INTERVAL = 1.;
 // simulation time

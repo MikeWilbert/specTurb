@@ -324,7 +324,7 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
-  //~ print_EnergySpectrum();
+  print_EnergySpectrum();
   //~ print_vti();
   print_Energy();
 
@@ -333,11 +333,12 @@ void CSpecDyn::execute()
     time_step();
     out_time += dt;
     
+    print_EnergySpectrum();
     print_Energy();
     
     if(out_time > out_interval+dt)
     {
-      print_EnergySpectrum();
+      //~ print_EnergySpectrum();
       print_vti();
       out_time -= out_interval;
     }
@@ -955,7 +956,7 @@ void CSpecDyn::print_EnergySpectrum()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
     
-    for(int ik = 1; ik < N_bin; ik++)
+    for(int ik = 0; ik < N_bin; ik++)
     {
       energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin to get mean values
       energySpectrum_V[ik] *= 0.5 * 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
@@ -1090,6 +1091,36 @@ void CSpecDyn::print_Energy()
   diss_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
+  // energy dissipation from spectrum
+  double diss_spectrum;
+  double diss_spec_V, diss_spec_B;
+  double energy_spec_V, energy_spec_B;
+  double kmax = N/2*dk;
+  double del_k = kmax/N_bin;
+  if(myRank==0)
+  {
+    for(int ik = 1; ik < N_bin; ik++)
+    {
+    
+      diss_spec_V += 2.*nu * ik*ik *energySpectrum_V[ik] * del_k;
+      diss_spec_B += 2.*eta* ik*ik *energySpectrum_B[ik] * del_k;
+      
+      //~ energy_spec_V += energySpectrum_V[ik] * del_k;
+      //~ energy_spec_B += energySpectrum_B[ik] * del_k;
+      energy_spec_V += energySpectrum_V[ik];
+      energy_spec_B += energySpectrum_B[ik];
+    }
+    
+    diss_spectrum = diss_spec_V/energy_spec_V + diss_spec_B/energy_spec_B; 
+    energy_spec_V /= N*N*N;
+    energy_spec_B /= N*N*N;
+    //~ energy_spec_V /= N_bin*N*N*N;
+    //~ energy_spec_B /= N_bin*N*N*N;
+    //~ energy_spec_V /= 4./3.*M_PI*kmax*kmax*kmax*(N*N*N);
+    //~ energy_spec_B /= 4./3.*M_PI*kmax*kmax*kmax*(N*N*N);
+
+  }
+  
   // print
   if(myRank == 0)
   {
@@ -1102,7 +1133,7 @@ void CSpecDyn::print_Energy()
     }
       
     os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << 
-                  ", " << diss + diss_B << std::endl;
+                  ", " << diss + diss_B << ", " << diss_spectrum <<  ", " << energy_spec_V <<  ", " << energy_spec_B << std::endl;
     //~ os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
     
     os.close();
