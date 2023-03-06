@@ -212,6 +212,23 @@ void CSpecDyn::setup_fields()
   double norm;
   double s = 11./6.;
   
+  double energy_V_loc = 0.;
+  double energy_B_loc = 0.;
+  double energy_V;
+  double energy_B;
+  
+  double diss_V_loc = 0.;
+  double diss_B_loc = 0.;
+  double diss_V;
+  double diss_B;
+  
+  double Vx, Vy, Vz;
+  double Bx, By, Bz;
+  
+  double hs; // factor because of hermitian symmetry in z
+  
+  double norm_V, norm_B;
+  
   switch(setup)
   {
     case 0:
@@ -258,20 +275,8 @@ void CSpecDyn::setup_fields()
       break;
     
     case 2:
-      /** random with energy spectrum **/
-      
-      // get normalization
-      //~ for(int id = 0; id < size_F_tot; id++){
-        //~ if(k2[id] > 0.1*dk*dk)
-        //~ {
-          //~ norm_loc += 1./pow(1+k2[id],s);
-        //~ }
-      //~ }
-      //~ MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_SUM, comm);
-      
-      //~ norm = 1./norm;
-      
-      norm = 1.;
+    case 3:
+      /** random with energy spectrum normalized to unit kinetic energy **/
       
       // produce energy spectrum
       for(int ix = 0; ix < size_F[0]; ix++){
@@ -280,40 +285,82 @@ void CSpecDyn::setup_fields()
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        double A = sqrt( norm*1./pow(1+k2[id],s) );
+        double A = sqrt( 1./pow(1+k2[id],s) );
         double k2_inv = 1./k2[id];
         double k_x = kx[ix];
         double k_y = ky[iy];
         double k_z = kz[iz];
         
-        Vx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
-        Vy_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
-        Vz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        //~ Vx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
+        //~ Vy_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
+        //~ Vz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
         
-        Bx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
-        By_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
-        Bz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        //~ Bx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
+        //~ By_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
+        //~ Bz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        
+        Vx_F[id] = A *exp(IM*phi(eng));
+        Vy_F[id] = A *exp(IM*phi(eng));
+        Vz_F[id] = A *exp(IM*phi(eng));
+        Bx_F[id] = A *exp(IM*phi(eng));
+        By_F[id] = A *exp(IM*phi(eng));
+        Bz_F[id] = A *exp(IM*phi(eng));
         
       }}}
+
+      projection(Vx_F, Vy_F, Vz_F);
+      projection(Bx_F, By_F, Bz_F);
       
-      // normalize to |V|_max=1.
-      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      norm_loc = 0.;
-      for(int id = 0; id < size_R_tot; id++){
-        norm_loc = std::max(sqrt(Vx_R[id]*Vx_R[id]+Vy_R[id]*Vy_R[id]+Vz_R[id]*Vz_R[id]), norm_loc);
+      for(int ix = 0; ix < size_F[0]; ix++){
+      for(int iy = 0; iy < size_F[1]; iy++){
+      for(int iz = 0; iz < size_F[2]; iz++){
+          
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        
+        int kz_id = int(kz[iz]/dk);
+        if( 0 < kz_id && kz_id < N/2 )
+        {
+          hs = 2.;
+        }
+        else
+        {
+          hs = 1.;
+        }
+        
+        Vx = abs(Vx_F[id]);
+        Vy = abs(Vy_F[id]);
+        Vz = abs(Vz_F[id]);
+        Bx = abs(Bx_F[id]);
+        By = abs(By_F[id]);
+        Bz = abs(Bz_F[id]);
+        
+        energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+        energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+
+      }}}
+      
+      energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+      energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+      MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      energy_B_loc *= 0.5/double(N*N*N);
+      energy_B_loc *= 1. /double(N*N*N);
+      MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+          
+      norm_V = 1./sqrt(energy_V);    
+      norm_B = 1./sqrt(energy_B);    
+      
+      for(int id = 0; id < size_F_tot; id++)
+      {    
+       
+        Vx_F[id] *= norm_V;
+        Vy_F[id] *= norm_V;
+        Vz_F[id] *= norm_V;
+        Bx_F[id] *= norm_B;
+        By_F[id] *= norm_B;
+        Bz_F[id] *= norm_B;
+        
       }
-      MPI_Allreduce(&norm_loc, &norm, 1, MPI_DOUBLE, MPI_MAX, comm);
-      for(int id = 0; id < size_R_tot; id++){
-        Vx_R[id] /= norm;
-        Vy_R[id] /= norm;
-        Vz_R[id] /= norm;
-        Bx_R[id] /= norm;
-        By_R[id] /= norm;
-        Bz_R[id] /= norm;
-      }
-      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -375,14 +422,6 @@ void CSpecDyn::time_step()
     By_F1[id] = By_F[id] + dt * RHS_By_F[id];
     Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
     
-    //~ // Euler
-    //~ Vx_F[id] = Vx_F[id] + dt * RHS_Vx_F[id];
-    //~ Vy_F[id] = Vy_F[id] + dt * RHS_Vy_F[id];
-    //~ Vz_F[id] = Vz_F[id] + dt * RHS_Vz_F[id];
-    
-    //~ Bx_F[id] = Bx_F[id] + dt * RHS_Bx_F[id];
-    //~ By_F[id] = By_F[id] + dt * RHS_By_F[id];
-    //~ Bz_F[id] = Bz_F[id] + dt * RHS_Bz_F[id];
   }
   
   diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
@@ -500,25 +539,25 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }
   
   // Taylor-Green forcing
-  //~ if(setup==2)
-  //~ {
-    //~ for(int ix = 0; ix < size_R[0]; ix++){
-    //~ for(int iy = 0; iy < size_R[1]; iy++){
-    //~ for(int iz = 0; iz < size_R[2]; iz++){
+  if(setup==2)
+  {
+    for(int ix = 0; ix < size_R[0]; ix++){
+    for(int iy = 0; iy < size_R[1]; iy++){
+    for(int iz = 0; iz < size_R[2]; iz++){
     
-      //~ int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
+      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
       
-      //~ double x_val = (start_R[0]+ix)*dx+XB;
-      //~ double y_val = (start_R[1]+iy)*dx+XB;
-      //~ double z_val = (start_R[2]+iz)*dx+XB;
+      double x_val = (start_R[0]+ix)*dx+XB;
+      double y_val = (start_R[1]+iy)*dx+XB;
+      double z_val = (start_R[2]+iz)*dx+XB;
       
-      //~ double kf = 2.;
+      double kf = 2.;
       
-      //~ RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      //~ RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
-    //~ }}}
-  //~ }
+    }}}
+  }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
@@ -542,34 +581,34 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
   // Ornstein-Uhlenbeck forcing
-  //~ if(setup==2)
-  //~ {
+  if(setup==3)
+  {
   
-    //~ double dk2 = dk*dk;
+    double dk2 = dk*dk;
     
-    //~ for(int ix = 0; ix<size_F[0]; ix++){
-    //~ for(int iy = 0; iy<size_F[1]; iy++){
-    //~ for(int iz = 0; iz<size_F[2]; iz++){
+    for(int ix = 0; ix<size_F[0]; ix++){
+    for(int iy = 0; iy<size_F[1]; iy++){
+    for(int iz = 0; iz<size_F[2]; iz++){
       
-      //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
       
-      //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-      //~ {
+      if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+      {
         
-        //~ double k2_inv = 1./k2[id];
-        //~ double k_x = kx[ix];
-        //~ double k_y = ky[iy];
-        //~ double k_z = kz[iz];
+        double k2_inv = 1./k2[id];
+        double k_x = kx[ix];
+        double k_y = ky[iy];
+        double k_z = kz[iz];
 
-        //~ RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        //~ RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        //~ RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
-      //~ }
+      }
       
-    //~ }}}
+    }}}
   
-  //~ }
+  }
   
   // RHS_B = rot(VxB)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -594,43 +633,35 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     double exp_diff_V = exp(nu *k2[id]*del_t*dt);
     double exp_diff_B = exp(eta*k2[id]*del_t*dt);
     
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
     
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-    
-    // explicit
-    RHSV_X[id] -= nu  * k2[id] * V_X[id];
-    RHSV_Y[id] -= nu  * k2[id] * V_Y[id];
-    RHSV_Z[id] -= nu  * k2[id] * V_Z[id];
-    RHSB_X[id] -= eta * k2[id] * B_X[id];
-    RHSB_Y[id] -= eta * k2[id] * B_Y[id];
-    RHSB_Z[id] -= eta * k2[id] * B_Z[id];
+    RHSB_X[id] *= exp_diff_B;
+    RHSB_X[id] *= exp_diff_B;
+    RHSB_X[id] *= exp_diff_B;
   }
 }
 
 void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
 {
 
-  //~ double exp_diff_V;
-  //~ double exp_diff_B;
+  double exp_diff_V;
+  double exp_diff_B;
 
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ {
-    //~ exp_diff_V = exp(- nu *k2[id]*del_t*dt);
-    //~ exp_diff_B = exp(- eta*k2[id]*del_t*dt);
+  for(int id = 0; id < size_F_tot; id++)
+  {
+    exp_diff_V = exp(- nu *k2[id]*del_t*dt);
+    exp_diff_B = exp(- eta*k2[id]*del_t*dt);
     
-    //~ Vx[id] *= exp_diff_V;
-    //~ Vy[id] *= exp_diff_V;
-    //~ Vz[id] *= exp_diff_V;
+    Vx[id] *= exp_diff_V;
+    Vy[id] *= exp_diff_V;
+    Vz[id] *= exp_diff_V;
     
-    //~ Bx[id] *= exp_diff_B;
-    //~ By[id] *= exp_diff_B;
-    //~ Bz[id] *= exp_diff_B;
-  //~ }
+    Bx[id] *= exp_diff_B;
+    By[id] *= exp_diff_B;
+    Bz[id] *= exp_diff_B;
+  }
 }
 
 void CSpecDyn::finalize()

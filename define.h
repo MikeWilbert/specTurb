@@ -27,17 +27,18 @@ int const PDIMS[2] = {8,8};
 const double DT = 0.005*(64./NUM);
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OT_nu0p01";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OU_TestScales";
 // output interval
-const double OUT_INTERVAL = 1.;
+const double OUT_INTERVAL = 0.5;
 // simulation time
 const double END_SIMU = 8.;
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
-// (2):Random with energy spectrum [s=11/3]
-const int SETUP = 1;
+// (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
+// (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
+const int SETUP = 4;
 
 // domain size
 const double LENGTH = PI2;
