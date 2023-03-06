@@ -42,7 +42,7 @@ const int SETUP = 1;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.01;
+const double NU  = 0.005;
 // magnetic diffusivity
 const double ETA = NU;
 

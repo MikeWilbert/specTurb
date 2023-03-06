@@ -136,7 +136,7 @@ class CSpecDyn
     CX f_OU_Z[3] = {0.,0.,0.};
     
     // Energy Spectrum
-    int N_bin = 32;
+    int N_bin = 50;
     //~ int N_bin = 32;
     
     double* energySpectrum_V;
@@ -147,12 +147,6 @@ class CSpecDyn
     double* energySpectrum_B_loc;
     int*   bin_counter_B;
     int*   bin_counter_B_loc;
-    
-    // Energy Dissipation
-    //~ double energy_old = 0.;
-    double energy = 0.;
-    double energy_B = 0.;
-    //~ double dissipation = 0.;
     
     // private methods
     void setup_k();

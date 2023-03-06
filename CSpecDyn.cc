@@ -973,23 +973,22 @@ void CSpecDyn::print_EnergySpectrum()
 
 void CSpecDyn::print_Energy()
 {
-  // Compute mean Energy in Fourier Space
-  
+  // Compute mean Energy and Dissipation in Fourier Space
   /** Energie und Dissipation direkt **/
-  double energy_old = energy;
-  double energy_B_old = energy_B;
-  energy = 0.;
-  energy_B = 0.;
-  
-  double energy_loc = 0.;
+  double energy_V_loc = 0.;
   double energy_B_loc = 0.;
-  double diss_V_spec_loc = 0.;
-  double diss_B_spec_loc = 0.;
-  double diss_V_spec;
-  double diss_B_spec;
+  double energy_V;
+  double energy_B;
+  
+  double diss_V_loc = 0.;
+  double diss_B_loc = 0.;
+  double diss_V;
+  double diss_B;
+  
   double Vx, Vy, Vz;
   double Bx, By, Bz;
-  double hs; // factor because of hermitian symmetry
+  
+  double hs; // factor because of hermitian symmetry in z
   
   for(int ix = 0; ix < size_F[0]; ix++){
   for(int iy = 0; iy < size_F[1]; iy++){
@@ -1014,103 +1013,29 @@ void CSpecDyn::print_Energy()
     By = abs(By_F[id]);
     Bz = abs(Bz_F[id]);
     
-    energy_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+    energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
     energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
     
-    diss_V_spec_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
-    diss_B_spec_loc += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
+    diss_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    diss_B_loc += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
 
   }}}
   
-  energy_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-  energy_loc *= 1. /double(N*N*N); // wg Fourier Space
-  MPI_Reduce(&energy_loc  , &energy  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+  energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+  MPI_Reduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
   energy_B_loc *= 0.5/double(N*N*N);
   energy_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
-  diss_V_spec_loc *= nu /double(N*N*N);
-  diss_V_spec_loc *= 1. /double(N*N*N);
-  MPI_Reduce(&diss_V_spec_loc, &diss_V_spec, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  
-  diss_B_spec_loc *= eta/double(N*N*N);
-  diss_B_spec_loc *= 1. /double(N*N*N);
-  MPI_Reduce(&diss_B_spec_loc, &diss_B_spec, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  
-  /** energy dissipation from w and J **/
-  // W = rot(V)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    Wx_F[id] = IM * ( ky[iy]*Vz_F[id] - kz[iz]*Vy_F[id] );
-    Wy_F[id] = IM * ( kz[iz]*Vx_F[id] - kx[ix]*Vz_F[id] );
-    Wz_F[id] = IM * ( kx[ix]*Vy_F[id] - ky[iy]*Vx_F[id] );
-    
-  }}}
-  
-  // J = rot(B)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    Jx_F[id] = IM * ( ky[iy]*Bz_F[id] - kz[iz]*By_F[id] );
-    Jy_F[id] = IM * ( kz[iz]*Bx_F[id] - kx[ix]*Bz_F[id] );
-    Jz_F[id] = IM * ( kx[ix]*By_F[id] - ky[iy]*Bx_F[id] );
-    
-  }}}
-  
-  double diss;
-  double diss_B;
-  double diss_loc;
-  double diss_B_loc;
-  double Wx, Wy, Wz;
-  double Jx, Jy, Jz;
-  
-  for(int ix = 0; ix < size_F[0]; ix++){
-  for(int iy = 0; iy < size_F[1]; iy++){
-  for(int iz = 0; iz < size_F[2]; iz++){
-      
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    int kz_id = int(kz[iz]/dk);
-    if( 0 < kz_id && kz_id < N/2 )
-    {
-      hs = 2.;
-    }
-    else
-    {
-      hs = 1.;
-    }
-    
-    Wx = abs(Wx_F[id]);
-    Wy = abs(Wy_F[id]);
-    Wz = abs(Wz_F[id]);
-    Jx = abs(Jx_F[id]);
-    Jy = abs(Jy_F[id]);
-    Jz = abs(Jz_F[id]);
-    
-    diss_loc   += hs*(Wx*Wx+Wy*Wy+Wz*Wz);
-    diss_B_loc += hs*(Jx*Jx+Jy*Jy+Jz*Jz);
-
-  }}}
-  
-  diss_loc *= nu/double(N*N*N);
-  diss_loc *= 1. /double(N*N*N); // wg Fourier Space
-  MPI_Reduce(&diss_loc  , &diss  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  diss_V_loc *= nu /double(N*N*N);
+  diss_V_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
   diss_B_loc *= eta/double(N*N*N);
   diss_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  
-  /** Energy Dissipation aus Spectrum **/
-  
-  
   
   // print
   if(myRank == 0)
@@ -1123,8 +1048,7 @@ void CSpecDyn::print_Energy()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
       
-    os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << 
-                  ", " << diss + diss_B << ", " << diss_V_spec + diss_B_spec << std::endl;
+    os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
