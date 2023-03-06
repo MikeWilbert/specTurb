@@ -25,7 +25,6 @@ const int NUM = 64;
 int const PDIMS[2] = {8,8};
 // CFL number
 const double DT = 0.005*(64./NUM);
-//~ const double DT = 0.001;
 
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OT_nu0p01";

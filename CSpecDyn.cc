@@ -974,6 +974,8 @@ void CSpecDyn::print_EnergySpectrum()
 void CSpecDyn::print_Energy()
 {
   // Compute mean Energy in Fourier Space
+  
+  /** Energie und Dissipation direkt **/
   double energy_old = energy;
   double energy_B_old = energy_B;
   energy = 0.;
@@ -981,6 +983,10 @@ void CSpecDyn::print_Energy()
   
   double energy_loc = 0.;
   double energy_B_loc = 0.;
+  double diss_V_spec_loc = 0.;
+  double diss_B_spec_loc = 0.;
+  double diss_V_spec;
+  double diss_B_spec;
   double Vx, Vy, Vz;
   double Bx, By, Bz;
   double hs; // factor because of hermitian symmetry
@@ -1010,10 +1016,13 @@ void CSpecDyn::print_Energy()
     
     energy_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
     energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+    
+    diss_V_spec_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    diss_B_spec_loc += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
 
   }}}
   
-  energy_loc *= 0.5/double(N*N*N);
+  energy_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
   energy_loc *= 1. /double(N*N*N); // wg Fourier Space
   MPI_Reduce(&energy_loc  , &energy  , 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
@@ -1021,7 +1030,15 @@ void CSpecDyn::print_Energy()
   energy_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
-  // energy dissipation from w and J
+  diss_V_spec_loc *= nu /double(N*N*N);
+  diss_V_spec_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_V_spec_loc, &diss_V_spec, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  diss_B_spec_loc *= eta/double(N*N*N);
+  diss_B_spec_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&diss_B_spec_loc, &diss_B_spec, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  /** energy dissipation from w and J **/
   // W = rot(V)
   for(int ix = 0; ix<size_F[0]; ix++){
   for(int iy = 0; iy<size_F[1]; iy++){
@@ -1091,35 +1108,9 @@ void CSpecDyn::print_Energy()
   diss_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
-  // energy dissipation from spectrum
-  double diss_spectrum;
-  double diss_spec_V, diss_spec_B;
-  double energy_spec_V, energy_spec_B;
-  double kmax = N/2*dk;
-  double del_k = kmax/N_bin;
-  if(myRank==0)
-  {
-    for(int ik = 1; ik < N_bin; ik++)
-    {
-    
-      diss_spec_V += 2.*nu * ik*ik *energySpectrum_V[ik] * del_k;
-      diss_spec_B += 2.*eta* ik*ik *energySpectrum_B[ik] * del_k;
-      
-      //~ energy_spec_V += energySpectrum_V[ik] * del_k;
-      //~ energy_spec_B += energySpectrum_B[ik] * del_k;
-      energy_spec_V += energySpectrum_V[ik];
-      energy_spec_B += energySpectrum_B[ik];
-    }
-    
-    diss_spectrum = diss_spec_V/energy_spec_V + diss_spec_B/energy_spec_B; 
-    energy_spec_V /= N*N*N;
-    energy_spec_B /= N*N*N;
-    //~ energy_spec_V /= N_bin*N*N*N;
-    //~ energy_spec_B /= N_bin*N*N*N;
-    //~ energy_spec_V /= 4./3.*M_PI*kmax*kmax*kmax*(N*N*N);
-    //~ energy_spec_B /= 4./3.*M_PI*kmax*kmax*kmax*(N*N*N);
-
-  }
+  /** Energy Dissipation aus Spectrum **/
+  
+  
   
   // print
   if(myRank == 0)
@@ -1133,8 +1124,7 @@ void CSpecDyn::print_Energy()
     }
       
     os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << 
-                  ", " << diss + diss_B << ", " << diss_spectrum <<  ", " << energy_spec_V <<  ", " << energy_spec_B << std::endl;
-    //~ os << time << ", " << energy << ", " << energy_B << ", " << (energy_old - energy + energy_B_old - energy_B)/dt << std::endl;
+                  ", " << diss + diss_B << ", " << diss_V_spec + diss_B_spec << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
