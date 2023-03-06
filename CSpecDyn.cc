@@ -110,7 +110,14 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   // create output directory
   if(myRank == 0)
 	{
+    std::string vti_dir = out_dir + "/vti";
+    std::string scale_dir = out_dir + "/scales";
+    std::string spectra_dir = out_dir + "/spectra";
+    
     mkdir(out_dir.c_str(), 0777);
+    mkdir(vti_dir.c_str(), 0777);
+    mkdir(scale_dir.c_str(), 0777);
+    mkdir(spectra_dir.c_str(), 0777);
 	}MPI_Barrier(comm);
   
   // create derived MPI_datatypes for vti output
@@ -324,31 +331,26 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
-  //~ print_Energy();
-  //~ print_EnergySpectrum();
-  print_scales();
-  print_vti();
+  print_Energy();
+  print();
 
   while(time+dt < end_simu)
   {
     time_step();
     out_time += dt;
     
-    //~ print_EnergySpectrum();
-    //~ print_Energy();
+    print_Energy();
     
     if(out_time > out_interval+dt)
     {
-      //~ print_EnergySpectrum();
-      print_scales();
-      print_vti();
+      print();
       out_time -= out_interval;
     }
     
   }
   
-  //~ double print_time = MPI_Wtime() - start_time;
-  //~ if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
+  double print_time = MPI_Wtime() - start_time;
+  if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
 }
 
 void CSpecDyn::time_step()
@@ -678,7 +680,7 @@ void CSpecDyn::print_vti()
   bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
   bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
   
-  std::string file_name  = out_dir + "/step_" + std::to_string(vti_count) + ".vti";
+  std::string file_name  = out_dir + "/vti/step_" + std::to_string(print_count) + ".vti";
   std::ofstream os;
   
   int offset = 0;
@@ -691,8 +693,6 @@ void CSpecDyn::print_vti()
   // header
   if(myRank==0)
   {
-    printf("Printing vti # %d!\n", vti_count);
-    
     os.open(file_name.c_str(), std::ios::out);
     if(!os){
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
@@ -760,8 +760,6 @@ void CSpecDyn::print_vti()
 	
     os.close();
   }MPI_Barrier(comm);
-  
-  vti_count++;
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
@@ -950,7 +948,7 @@ void CSpecDyn::print_EnergySpectrum()
   
   if(myRank == 0)
   {
-    std::string file_name  = out_dir + "/spectrum_" + std::to_string(vti_count) + ".csv";
+    std::string file_name  = out_dir + "/spectra/spectrum_" + std::to_string(print_count) + ".csv";
     std::ofstream os;
     
     os.open(file_name.c_str(), std::ios::out);
@@ -1176,7 +1174,7 @@ void CSpecDyn::print_scales()
   // print
   if(myRank==0)
   {
-    std::string file_name  = out_dir + "/scales_" + std::to_string(vti_count) + ".csv";
+    std::string file_name  = out_dir + "/scales/scales_" + std::to_string(print_count) + ".csv";
     std::ofstream os;
     
     os.open(file_name.c_str(), std::ios::out);
@@ -1199,4 +1197,18 @@ void CSpecDyn::print_scales()
     os.close();
   }MPI_Barrier(comm);
   
+}
+
+void CSpecDyn::print()
+{
+  print_vti();
+  print_scales();
+  print_EnergySpectrum();
+  
+  if(myRank==0)
+  {
+    printf("Printing # %d!\n", print_count);
+  }MPI_Barrier(comm);
+  
+  print_count++;
 }

@@ -49,7 +49,7 @@ class CSpecDyn
     int size_F_tot;  
     
     // output
-    int vti_count = 0;
+    int print_count = 0;
     
     // random
     std::mt19937 normal_eng;
@@ -163,6 +163,7 @@ class CSpecDyn
     void fFFT(double* IN_x, double* IN_y, double* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z);
     void bFFT(CX* IN_x, CX* IN_y, CX* IN_z, double* OUT_x, double* OUT_y, double* OUT_z);
     
+    void print();
     void print_Energy();
     void print_EnergySpectrum();
     void print_scales();
