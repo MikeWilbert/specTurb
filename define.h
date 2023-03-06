@@ -29,7 +29,7 @@ const double DT = 0.005*(64./NUM);
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/OU_TestScales";
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.1;
 // simulation time
 const double END_SIMU = 8.;
 
@@ -38,7 +38,7 @@ const double END_SIMU = 8.;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
-const int SETUP = 4;
+const int SETUP = 3;
 
 // domain size
 const double LENGTH = PI2;

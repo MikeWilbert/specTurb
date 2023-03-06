@@ -308,6 +308,12 @@ void CSpecDyn::setup_fields()
         
       }}}
 
+      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+
       projection(Vx_F, Vy_F, Vz_F);
       projection(Bx_F, By_F, Bz_F);
       
@@ -1232,9 +1238,18 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
+  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  
+  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  //~ print_scales();
+  
   print_vti();
   print_scales();
-  print_EnergySpectrum();
+  
+  //~ print_EnergySpectrum();
   
   if(myRank==0)
   {
