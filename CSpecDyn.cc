@@ -1219,17 +1219,18 @@ void CSpecDyn::print_scales()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
     
-    os << "Scale, Velocity, magnetic Field, Simulation Sizes, , resolved?" << std::endl;
-    os << "Energy, " << energy_V << ", " << energy_B << std::endl;
-    os << "Dissipation, " << diss_V << ", " << diss_B << std::endl;
-    os << "RMS, " << v0 << ", " << b0 << std::endl;
-    os << "micro scale Reynolds number, " << Re_V << ", " << Re_B << std::endl;
+    os << std::scientific;
+    os << "Scale                  , Velocity     , magnetic Field , Simulation Sizes , , resolved?" << std::endl;
+    os << "Energy                 , " << energy_V << " , " << energy_B << std::endl;
+    os << "Dissipation            , " << diss_V   << " , " << diss_B   << std::endl;
+    os << "RMS                    , " << v0       << " , " << b0       << std::endl;
+    os << "micro scale Re         , " << Re_V     << " , " << Re_B     << std::endl;
     os << std::endl;
-    os << "Integral Scale, " << L_V << ", " << L_B << ", L, " << L << ", " << (L>L_V && L>L_B) << std::endl;
-    os << "LE turnover-time, " << T_V << ", " << T_B << ", t_out, " << out_interval << ", " << ((0.5*T_V)>out_interval && (0.5*T_B)>out_interval) << std::endl;
-    os << "Taylor micro scale, " << lambda_V << ", " << lambda_B << ", dx, " << dx << ", " << (lambda_V>dx && lambda_B>dx) << std::endl;
-    os << "Kolmogorov length scale, " << eta_V << ", " << eta_B  << ", dx, " << dx << ", " << (   eta_V>dx && eta_B   >dx) << std::endl;
-    os << "Kolmogorov time scale, "   << tau_V << ", " << tau_B  << ", dt, " << dt << ", " << (tau_V>dt && tau_B>dt) << std::endl;
+    os << "Integral Scale         , " << L_V      << " , " << L_B      << "  , L    , " << L            << " , " << (L>L_V && L>L_B)                                   << std::endl;
+    os << "LE turnover-time       , " << T_V      << " , " << T_B      << "  , t_out, " << out_interval << " , " << ((0.5*T_V)>out_interval && (0.5*T_B)>out_interval) << std::endl;
+    os << "Taylor micro scale     , " << lambda_V << " , " << lambda_B << "  , dx   , " << dx           << " , " << (lambda_V>dx && lambda_B>dx)                       << std::endl;
+    os << "Kolmogorov length scale, " << eta_V    << " , " << eta_B    << "  , dx   , " << dx           << " , " << (   eta_V>dx && eta_B   >dx)                       << std::endl;
+    os << "Kolmogorov time scale  , "   << tau_V  << " , " << tau_B    << "  , dt   , " << dt           << " , " << (tau_V>dt && tau_B>dt)                             << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
@@ -1238,18 +1239,9 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
-  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-  
-  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  //~ print_scales();
-  
   print_vti();
-  print_scales();
-  
-  //~ print_EnergySpectrum();
+  print_scales();  
+  print_EnergySpectrum();
   
   if(myRank==0)
   {
@@ -1258,3 +1250,8 @@ void CSpecDyn::print()
   
   print_count++;
 }
+
+/*
+ * TODOs:
+ *    - Spektrum normieren
+ * */
