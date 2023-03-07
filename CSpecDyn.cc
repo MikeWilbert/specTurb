@@ -1250,8 +1250,3 @@ void CSpecDyn::print()
   
   print_count++;
 }
-
-/*
- * TODOs:
- *    - Spektrum normieren
- * */
