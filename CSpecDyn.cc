@@ -285,88 +285,127 @@ void CSpecDyn::setup_fields()
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        double A = sqrt( 1./pow(1+k2[id],s) );
+        double A = 1.;//sqrt( 1./pow(1+k2[id],s) );
         double k2_inv = 1./k2[id];
         double k_x = kx[ix];
         double k_y = ky[iy];
         double k_z = kz[iz];
+    
+        Vx_F[id] = 0.;//A *exp(IM*phi(eng));
+        Vy_F[id] = 0.;//A *exp(IM*phi(eng));
+        Vz_F[id] = 0.;//A *exp(IM*phi(eng));
+        Bx_F[id] = 0.;//A *exp(IM*phi(eng));
+        By_F[id] = 0.;//A *exp(IM*phi(eng));
+        Bz_F[id] = 0.;//A *exp(IM*phi(eng));
         
-        //~ Vx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
-        //~ Vy_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
-        //~ Vz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        int kx_id = int(k_x);
+        int ky_id = int(k_y);
+        int kz_id = int(k_z);
         
-        //~ Bx_F[id] = A * ( + ( 1. - k_x*k_x*k2_inv )*exp(IM*phi(eng)) -        k_x*k_y*k2_inv  *exp(IM*phi(eng)) -        k_x*k_z*k2_inv  *exp(IM*phi(eng)) );
-        //~ By_F[id] = A * ( -        k_y*k_x*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_y*k_y*k2_inv )*exp(IM*phi(eng)) -        k_y*k_z*k2_inv  *exp(IM*phi(eng)) );
-        //~ Bz_F[id] = A * ( -        k_z*k_x*k2_inv  *exp(IM*phi(eng)) -        k_z*k_y*k2_inv  *exp(IM*phi(eng)) + ( 1. - k_z*k_z*k2_inv )*exp(IM*phi(eng)) );
+        if(kx_id==1 &&
+           ky_id==0 &&
+           kz_id==0)
+        {
+          Vx_F[id] = 1.*IM;
+        }
         
-        Vx_F[id] = A *exp(IM*phi(eng));
-        Vy_F[id] = A *exp(IM*phi(eng));
-        Vz_F[id] = A *exp(IM*phi(eng));
-        Bx_F[id] = A *exp(IM*phi(eng));
-        By_F[id] = A *exp(IM*phi(eng));
-        Bz_F[id] = A *exp(IM*phi(eng));
+        if(kx_id==-1 &&
+           ky_id== 0 &&
+           kz_id== 0)
+        {
+          Vx_F[id] = -3.*IM;
+        }
         
       }}}
-
+      
       bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
       bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      
       fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
       fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-
-      projection(Vx_F, Vy_F, Vz_F);
-      projection(Bx_F, By_F, Bz_F);
       
       for(int ix = 0; ix < size_F[0]; ix++){
       for(int iy = 0; iy < size_F[1]; iy++){
       for(int iz = 0; iz < size_F[2]; iz++){
-          
+      
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        int kz_id = int(kz[iz]/dk);
-        if( 0 < kz_id && kz_id < N/2 )
+        double k_x = kx[ix];
+        double k_y = ky[iy];
+        double k_z = kz[iz];
+        
+        int kx_id = int(k_x);
+        int ky_id = int(k_y);
+        int kz_id = int(k_z);
+        
+        if(kx_id==1 &&
+           ky_id==0 &&
+           kz_id==0)
         {
-          hs = 2.;
-        }
-        else
-        {
-          hs = 1.;
+          printf("V( 1,0,0) = %f\n",abs(Vx_F[id]));
         }
         
-        Vx = abs(Vx_F[id]);
-        Vy = abs(Vy_F[id]);
-        Vz = abs(Vz_F[id]);
-        Bx = abs(Bx_F[id]);
-        By = abs(By_F[id]);
-        Bz = abs(Bz_F[id]);
+        if(kx_id==-1 &&
+           ky_id== 0 &&
+           kz_id== 0)
+        {
+          printf("V(-1,0,0) = %f\n",abs(Vx_F[id]));
+        }
         
-        energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
-        energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
-
       }}}
+
+      //~ projection(Vx_F, Vy_F, Vz_F);
+      //~ projection(Bx_F, By_F, Bz_F);
       
-      energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-      energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
-      MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
-      
-      energy_B_loc *= 0.5/double(N*N*N);
-      energy_B_loc *= 1. /double(N*N*N);
-      MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+      //~ for(int ix = 0; ix < size_F[0]; ix++){
+      //~ for(int iy = 0; iy < size_F[1]; iy++){
+      //~ for(int iz = 0; iz < size_F[2]; iz++){
           
-      norm_V = 1./sqrt(energy_V);    
-      norm_B = 1./sqrt(energy_B);    
-      
-      for(int id = 0; id < size_F_tot; id++)
-      {    
-       
-        Vx_F[id] *= norm_V;
-        Vy_F[id] *= norm_V;
-        Vz_F[id] *= norm_V;
-        Bx_F[id] *= norm_B;
-        By_F[id] *= norm_B;
-        Bz_F[id] *= norm_B;
+        //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-      }
+        //~ int kz_id = int(kz[iz]/dk);
+        //~ if( 0 < kz_id && kz_id < N/2 )
+        //~ {
+          //~ hs = 2.;
+        //~ }
+        //~ else
+        //~ {
+          //~ hs = 1.;
+        //~ }
+        
+        //~ Vx = abs(Vx_F[id]);
+        //~ Vy = abs(Vy_F[id]);
+        //~ Vz = abs(Vz_F[id]);
+        //~ Bx = abs(Bx_F[id]);
+        //~ By = abs(By_F[id]);
+        //~ Bz = abs(Bz_F[id]);
+        
+        //~ energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+        //~ energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+
+      //~ }}}
+      
+      //~ energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+      //~ energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+      //~ MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      //~ energy_B_loc *= 0.5/double(N*N*N);
+      //~ energy_B_loc *= 1. /double(N*N*N);
+      //~ MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+          
+      //~ norm_V = 1./sqrt(energy_V);    
+      //~ norm_B = 1./sqrt(energy_B);    
+      
+      //~ for(int id = 0; id < size_F_tot; id++)
+      //~ {    
+       
+        //~ Vx_F[id] *= norm_V;
+        //~ Vy_F[id] *= norm_V;
+        //~ Vz_F[id] *= norm_V;
+        //~ Bx_F[id] *= norm_B;
+        //~ By_F[id] *= norm_B;
+        //~ Bz_F[id] *= norm_B;
+        
+      //~ }
       
       break;
     
@@ -384,23 +423,32 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = time;
   
-  print_Energy();
+  //~ print_Energy();
   print();
+  //~ print();
+  
+  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  
+  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  //~ print();
 
-  while(time+dt < end_simu)
-  {
-    time_step();
-    out_time += dt;
+  //~ while(time+dt < end_simu)
+  //~ {
+    //~ time_step();
+    //~ out_time += dt;
     
-    print_Energy();
+    //~ print_Energy();
     
-    if(out_time > out_interval+dt)
-    {
-      print();
-      out_time -= out_interval;
-    }
+    //~ if(out_time > out_interval+dt)
+    //~ {
+      //~ print();
+      //~ out_time -= out_interval;
+    //~ }
     
-  }
+  //~ }
   
   double print_time = MPI_Wtime() - start_time;
   if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
@@ -1085,7 +1133,8 @@ void CSpecDyn::print_Energy()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
       
-    os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B << std::endl;
+    //~ os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B << std::endl;
+    os << time << ", " << energy_V << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
@@ -1239,9 +1288,29 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
+  //~ print_vti();
+  //~ print_scales();
+  //~ print_EnergySpectrum();
+  //~ print_Energy();
+  //~ print_vti();
+  //~ print_count++;
+  //~ print_vti();
+  
+  //~ print_Energy();
+  //~ print_vti();
+  
+  print_Energy();
+  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  print_Energy();
+  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  print_Energy();
   print_vti();
-  print_scales();  
-  print_EnergySpectrum();
   
   if(myRank==0)
   {
