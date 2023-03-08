@@ -149,6 +149,7 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
 
 void CSpecDyn::setup_k()
 {
+
   // kx
   for(int ix = 0; ix < size_F[0]; ix++)
 	{
@@ -208,6 +209,7 @@ void CSpecDyn::setup_fields()
 {
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
+  std::uniform_real_distribution<double> rand_real(1.,2.);
   double norm_loc = 0.;
   double norm;
   double s = 11./6.;
@@ -285,39 +287,53 @@ void CSpecDyn::setup_fields()
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
         
-        double A = 1.;//sqrt( 1./pow(1+k2[id],s) );
+        double A = sqrt( 1./pow(1+k2[id],s) );
         double k2_inv = 1./k2[id];
         double k_x = kx[ix];
         double k_y = ky[iy];
         double k_z = kz[iz];
-    
-        Vx_F[id] = 0.;//A *exp(IM*phi(eng));
-        Vy_F[id] = 0.;//A *exp(IM*phi(eng));
-        Vz_F[id] = 0.;//A *exp(IM*phi(eng));
-        Bx_F[id] = 0.;//A *exp(IM*phi(eng));
-        By_F[id] = 0.;//A *exp(IM*phi(eng));
-        Bz_F[id] = 0.;//A *exp(IM*phi(eng));
         
-        int kx_id = int(k_x);
-        int ky_id = int(k_y);
-        int kz_id = int(k_z);
-        
-        if(kx_id==1 &&
-           ky_id==0 &&
-           kz_id==0)
+        if(int(round(k2[id])) != 0)
         {
-          Vx_F[id] = 1.*IM;
+          Vx_F[id] = A *exp(IM*phi(eng));
+          Vy_F[id] = A *exp(IM*phi(eng));
+          Vz_F[id] = A *exp(IM*phi(eng));
+          Bx_F[id] = A *exp(IM*phi(eng));
+          By_F[id] = A *exp(IM*phi(eng));
+          Bz_F[id] = A *exp(IM*phi(eng));
         }
-        
-        if(kx_id==-1 &&
-           ky_id== 0 &&
-           kz_id== 0)
+        else
         {
-          Vx_F[id] = -3.*IM;
+          Vx_F[id] = 0.;
+          Vy_F[id] = 0.;
+          Vz_F[id] = 0.;
+          Bx_F[id] = 0.;
+          By_F[id] = 0.;
+          Bz_F[id] = 0.;
         }
         
       }}}
       
+      //~ projection(Vx_F, Vy_F, Vz_F);
+      //~ projection(Bx_F, By_F, Bz_F);
+  
+      if(myRank==0){printf("\n");}MPI_Barrier(comm);
+      for(int ix = 0; ix < size_F[0]; ix++){
+      for(int iy = 0; iy < size_F[1]; iy++){
+      for(int iz = 0; iz < size_F[2]; iz++){
+      
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        double k_x = kx[ix];
+        double k_y = ky[iy];
+        double k_z = kz[iz];
+        
+        if(int(round(k2[id])== 4))
+        {
+          printf("[1] = %f, (kx,ky,kz)=(%f,%f,%f)\n", abs(Vx_F[id]), k_x, k_y, k_z);
+        }
+      }}}MPI_Barrier(MPI_COMM_WORLD);
+      if(myRank==0){printf("\n");}MPI_Barrier(comm);
+  
       bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
       bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
       fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
@@ -328,86 +344,122 @@ void CSpecDyn::setup_fields()
       for(int iz = 0; iz < size_F[2]; iz++){
       
         int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-        
         double k_x = kx[ix];
         double k_y = ky[iy];
         double k_z = kz[iz];
         
-        int kx_id = int(k_x);
-        int ky_id = int(k_y);
-        int kz_id = int(k_z);
-        
-        if(kx_id==1 &&
-           ky_id==0 &&
-           kz_id==0)
+        if(int(round(k2[id])== 4))
         {
-          printf("V( 1,0,0) = %f\n",abs(Vx_F[id]));
+          printf("[2] = %f, (kx,ky,kz)=(%f,%f,%f)\n", abs(Vx_F[id]), k_x, k_y, k_z);
+        }
+      }}}MPI_Barrier(comm);
+      if(myRank==0){printf("\n");}
+      
+      for(int ix = 0; ix < size_F[0]; ix++){
+      for(int iy = 0; iy < size_F[1]; iy++){
+      for(int iz = 0; iz < size_F[2]; iz++){
+          
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        
+        int kz_id = int(kz[iz]/dk);
+        if( 0 < kz_id && kz_id < N/2 )
+        {
+          hs = 2.;
+        }
+        else
+        {
+          hs = 1.;
         }
         
-        if(kx_id==-1 &&
-           ky_id== 0 &&
-           kz_id== 0)
-        {
-          printf("V(-1,0,0) = %f\n",abs(Vx_F[id]));
-        }
+        Vx = abs(Vx_F[id]);
+        Vy = abs(Vy_F[id]);
+        Vz = abs(Vz_F[id]);
+        Bx = abs(Bx_F[id]);
+        By = abs(By_F[id]);
+        Bz = abs(Bz_F[id]);
         
+        energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+        energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+
       }}}
-
-      //~ projection(Vx_F, Vy_F, Vz_F);
-      //~ projection(Bx_F, By_F, Bz_F);
       
-      //~ for(int ix = 0; ix < size_F[0]; ix++){
-      //~ for(int iy = 0; iy < size_F[1]; iy++){
-      //~ for(int iz = 0; iz < size_F[2]; iz++){
+      energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+      energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+      MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      energy_B_loc *= 0.5/double(N*N*N);
+      energy_B_loc *= 1. /double(N*N*N);
+      MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
           
-        //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-        
-        //~ int kz_id = int(kz[iz]/dk);
-        //~ if( 0 < kz_id && kz_id < N/2 )
-        //~ {
-          //~ hs = 2.;
-        //~ }
-        //~ else
-        //~ {
-          //~ hs = 1.;
-        //~ }
-        
-        //~ Vx = abs(Vx_F[id]);
-        //~ Vy = abs(Vy_F[id]);
-        //~ Vz = abs(Vz_F[id]);
-        //~ Bx = abs(Bx_F[id]);
-        //~ By = abs(By_F[id]);
-        //~ Bz = abs(Bz_F[id]);
-        
-        //~ energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
-        //~ energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
-
-      //~ }}}
+      norm_V = 1./sqrt(energy_V);    
+      norm_B = 1./sqrt(energy_B);    
       
-      //~ energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-      //~ energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
-      //~ MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
-      
-      //~ energy_B_loc *= 0.5/double(N*N*N);
-      //~ energy_B_loc *= 1. /double(N*N*N);
-      //~ MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
-          
-      //~ norm_V = 1./sqrt(energy_V);    
-      //~ norm_B = 1./sqrt(energy_B);    
-      
-      //~ for(int id = 0; id < size_F_tot; id++)
-      //~ {    
+      for(int id = 0; id < size_F_tot; id++)
+      {    
        
-        //~ Vx_F[id] *= norm_V;
-        //~ Vy_F[id] *= norm_V;
-        //~ Vz_F[id] *= norm_V;
-        //~ Bx_F[id] *= norm_B;
-        //~ By_F[id] *= norm_B;
-        //~ Bz_F[id] *= norm_B;
+        if(int(round(k2[id])) != 0)
+        {
+        Vx_F[id] *= norm_V;
+        Vy_F[id] *= norm_V;
+        Vz_F[id] *= norm_V;
+        Bx_F[id] *= norm_B;
+        By_F[id] *= norm_B;
+        Bz_F[id] *= norm_B;
+        }
+        else
+        {
+          Vx_F[id] = 0.;
+          Vy_F[id] = 0.;
+          Vz_F[id] = 0.;
+          Bx_F[id] = 0.;
+          By_F[id] = 0.;
+          Bz_F[id] = 0.;
+        }
         
-      //~ }
+      }
+      
+      
+      
+      
+      
+      
       
       break;
+      
+    case 4:
+    
+    // Zufallsfeld in R
+    for(int id = 0; id < size_R_tot; id++)
+    {    
+      Vx_R[id] = rand_real(eng);
+      Vy_R[id] = rand_real(eng);
+      Vz_R[id] = rand_real(eng);
+      
+      Bx_R[id] = rand_real(eng);
+      By_R[id] = rand_real(eng);
+      Bz_R[id] = rand_real(eng);
+    }
+    fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+    fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+    
+    for(int id = 0; id < size_F_tot; id++)
+    {
+      double A = sqrt( 1./pow(1+k2[id],s) );
+      
+      Vx_F[id] *= A/abs(Vx_F[id]);
+      Vy_F[id] *= A/abs(Vy_F[id]);
+      Vz_F[id] *= A/abs(Vz_F[id]);
+      Bx_F[id] *= A/abs(Bx_F[id]);
+      By_F[id] *= A/abs(By_F[id]);
+      Bz_F[id] *= A/abs(Bz_F[id]);
+    }
+    
+    projection(Vx_F, Vy_F, Vz_F);
+    projection(Bx_F, By_F, Bz_F);
+    
+      
+    break;
+
     
     default: 
       if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
@@ -424,7 +476,46 @@ void CSpecDyn::execute()
   double out_time = time;
   
   //~ print_Energy();
-  print();
+  //~ print_EnergySpectrum();
+  
+  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  //~ print_Energy();
+  //~ print_EnergySpectrum();
+  
+  //~ print_Energy();
+  //~ print_EnergySpectrum();
+  
+  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  //~ print_Energy();
+  
+  //~ print_count++;
+  //~ print_EnergySpectrum();
+  
+  //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  //~ print_count++;
+  //~ print_EnergySpectrum();
+  
+  /***************/
+  
+  print_vti();
+  print_count++;
+  
+  /***************/
+  
+  //~ print_Energy();
+  //~ print();
   //~ print();
   
   //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);

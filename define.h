@@ -38,7 +38,7 @@ const double END_SIMU = 8.;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
-const int SETUP = 3;
+const int SETUP = 4;
 
 // domain size
 const double LENGTH = PI2;
