@@ -38,12 +38,12 @@ const double END_SIMU = 8.;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
-const int SETUP = 4;
+const int SETUP = 3;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.01;
+const double NU  = 0.02;
 // magnetic diffusivity
 const double ETA = NU;
 
