@@ -207,6 +207,9 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
+  double E0_V = 0.077;
+  double E0_B = 0.085;
+  
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
   std::uniform_real_distribution<double> rand_real(1.,2.);
@@ -363,9 +366,9 @@ void CSpecDyn::setup_fields()
     energy_B_loc *= 0.5/double(N*N*N);
     energy_B_loc *= 1. /double(N*N*N);
     MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
-        
-    norm_V = 1./sqrt(energy_V);    
-    norm_B = 1./sqrt(energy_B);    
+    
+    norm_V = sqrt(E0_V/energy_V);    
+    norm_B = sqrt(E0_B/energy_B);    
     
     for(int id = 0; id < size_F_tot; id++)
     {    
@@ -557,6 +560,8 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Taylor-Green forcing
   if(setup==2)
   {
+    double amp = 0.25;
+    
     for(int ix = 0; ix < size_R[0]; ix++){
     for(int iy = 0; iy < size_R[1]; iy++){
     for(int iz = 0; iz < size_R[2]; iz++){
@@ -569,8 +574,8 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
       
       double kf = 2.;
       
-      RHS_Vx_R[id] += 0.125 * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      RHS_Vy_R[id] -= 0.125 * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
+      RHS_Vx_R[id] += amp * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
+      RHS_Vy_R[id] -= amp * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
       
     }}}
   }
@@ -600,8 +605,6 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   if(setup==3)
   {
   
-    double amp = 1.;
-  
     double dk2 = dk*dk;
     
     for(int ix = 0; ix<size_F[0]; ix++){
@@ -618,9 +621,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
         double k_y = ky[iy];
         double k_z = kz[iz];
 
-        RHSV_X[id] += amp * f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        RHSV_Y[id] += amp * f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        RHSV_Z[id] += amp * f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
       }
       

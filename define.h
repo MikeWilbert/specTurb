@@ -27,23 +27,23 @@ int const PDIMS[2] = {8,8};
 const double DT = 0.005*(64./NUM);
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/FFT";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/TestProduction/OT_E01";
 // output interval
-const double OUT_INTERVAL = 0.1;
+const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 8.;
+const double END_SIMU = 20.;
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
-const int SETUP = 3;
+const int SETUP = 2;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.02;
+const double NU  = 0.026;
 // magnetic diffusivity
 const double ETA = NU;
 
