@@ -207,7 +207,7 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
-  double E0_V = 2./3.*u0*u0;
+  double E0_V = 3./2.*u0*u0;
   double E0_B = E0_V;
   
   std::mt19937 eng(myRank);
@@ -605,6 +605,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Ornstein-Uhlenbeck forcing
   if(setup==3)
   {
+    double amp = 1.e5;
   
     double dk2 = dk*dk;
     
@@ -622,9 +623,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
         double k_y = ky[iy];
         double k_z = kz[iz];
 
-        RHSV_X[id] += f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        RHSV_Y[id] += f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        RHSV_Z[id] += f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        RHSV_X[id] += amp * f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        RHSV_Y[id] += amp * f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        RHSV_Z[id] += amp * f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
 
       }
       
@@ -1280,7 +1281,7 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
-  //~ print_vti();
+  print_vti();
   print_scales();
   print_EnergySpectrum();
   
