@@ -24,12 +24,14 @@ const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
-const double DT = 0.005*(64./NUM);
+//~ const double DT = 0.005*(64./NUM);
+const double u0 = 0.48*500;
+const double DT = 0.1*PI2/NUM/u0;
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/TestProduction/OT_E01";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/Enstrophy";
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.01;
 // simulation time
 const double END_SIMU = 20.;
 
@@ -38,12 +40,13 @@ const double END_SIMU = 20.;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with TOrnstein-Uhlenbeck Forcing
-const int SETUP = 2;
+// (4):Energy spectrum [s=11/3] without forcing
+const int SETUP = 4;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.026;
+const double NU  = 0.5;
 // magnetic diffusivity
 const double ETA = NU;
 

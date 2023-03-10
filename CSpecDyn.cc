@@ -207,8 +207,8 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
-  double E0_V = 0.077;
-  double E0_B = 0.085;
+  double E0_V = 2./3.*u0*u0;
+  double E0_B = E0_V;
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -281,6 +281,7 @@ void CSpecDyn::setup_fields()
     
     case 2:
     case 3:
+    case 4:
       /** random with energy spectrum normalized to unit kinetic energy **/
     
     // Zufallsfeld in R
@@ -1037,8 +1038,15 @@ void CSpecDyn::print_Energy()
   double diss_V;
   double diss_B;
   
+  double ens_V_loc = 0.;
+  double ens_B_loc = 0.;
+  double ens_V;
+  double ens_B;
+  
   double Vx, Vy, Vz;
   double Bx, By, Bz;
+  double Wx, Wy, Wz;
+  double Jx, Jy, Jz;
   
   double hs; // factor because of hermitian symmetry in z
   
@@ -1064,12 +1072,21 @@ void CSpecDyn::print_Energy()
     Bx = abs(Bx_F[id]);
     By = abs(By_F[id]);
     Bz = abs(Bz_F[id]);
+    Wx = abs(ky[iy] * Vz_F[id] - kz[iz] * Vy_F[id]);
+    Wy = abs(kz[iz] * Vx_F[id] - kx[ix] * Vz_F[id]);
+    Wz = abs(kx[ix] * Vy_F[id] - ky[iy] * Vx_F[id]);
+    Jx = abs(ky[iy] * Bz_F[id] - kz[iz] * By_F[id]);
+    Jy = abs(kz[iz] * Bx_F[id] - kx[ix] * Bz_F[id]);
+    Jz = abs(kx[ix] * By_F[id] - ky[iy] * Bx_F[id]);
     
     energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
     energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
     
-    diss_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
-    diss_B_loc += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
+    diss_V_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    diss_B_loc   += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
+    
+    ens_V_loc    += hs*(Wx*Wx+Wy*Wy+Wz*Wz);
+    ens_B_loc    += hs*(Jx*Jx+Jy*Jy+Jz*Jz);
 
   }}}
   
@@ -1089,6 +1106,14 @@ void CSpecDyn::print_Energy()
   diss_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
   
+  ens_V_loc *= 2. /double(N*N*N);
+  ens_V_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&ens_V_loc, &ens_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
+  ens_B_loc *= 2. /double(N*N*N);
+  ens_B_loc *= 1. /double(N*N*N);
+  MPI_Reduce(&ens_B_loc, &ens_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  
   // print
   if(myRank == 0)
   {
@@ -1100,7 +1125,8 @@ void CSpecDyn::print_Energy()
       std::cout << "Cannot write header to file '" << file_name << "'!\n";
     }
       
-    os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B << std::endl;
+    os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B 
+               << ", " << ens_V    << ", " <<  ens_B    << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
@@ -1254,7 +1280,7 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
-  print_vti();
+  //~ print_vti();
   print_scales();
   print_EnergySpectrum();
   
