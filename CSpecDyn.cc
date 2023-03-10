@@ -561,7 +561,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Taylor-Green forcing
   if(setup==2)
   {
-    double amp = 0.25;
+    double amp = 0.25*2.; // GG für N = 64
     
     for(int ix = 0; ix < size_R[0]; ix++){
     for(int iy = 0; iy < size_R[1]; iy++){
@@ -605,7 +605,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Ornstein-Uhlenbeck forcing
   if(setup==3)
   {
-    double amp = 1.e5;
+    double amp = 1.e9;
   
     double dk2 = dk*dk;
     
@@ -924,10 +924,10 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 
 void CSpecDyn::OrnsteinUhlenbeck()
 {
-  double kf    = 2.;
-  double T     = 0.1;
+  double T     = 0.25;
   double T_inv = 1./T;
-  double sigma = 0.25*sqrt(2.*T_inv);
+  //~ double sigma = 0.25*sqrt(2.*T_inv);
+  double sigma = 0.00001*sqrt(2.*T_inv);
  
   CX rand[2];
   
