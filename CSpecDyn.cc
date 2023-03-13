@@ -100,6 +100,10 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   Jy_F = FFT.malloc_C();
   Jz_F = FFT.malloc_C();
   
+  Force_OU_x = FFT.malloc_C();
+  Force_OU_y = FFT.malloc_C();
+  Force_OU_z = FFT.malloc_C();
+  
   float_array        = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
   
@@ -605,7 +609,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Ornstein-Uhlenbeck forcing
   if(setup==3)
   {
-    double amp = 1.e9;
+    double amp = 0.25;
   
     double dk2 = dk*dk;
     
@@ -615,21 +619,80 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
       
       int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
       
-      if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+      //~ if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
+      if( int(round(k2[id])) == 4) // force first few modes 
       {
         
-        double k2_inv = 1./k2[id];
-        double k_x = kx[ix];
-        double k_y = ky[iy];
-        double k_z = kz[iz];
+        //~ double k2_inv = 1./k2[id];
+        //~ double k_x = kx[ix];
+        //~ double k_y = ky[iy];
+        //~ double k_z = kz[iz];
 
-        RHSV_X[id] += amp * f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        RHSV_Y[id] += amp * f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        RHSV_Z[id] += amp * f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        //~ RHSV_X[id] += amp * f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
+        //~ RHSV_Y[id] += amp * f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
+        //~ RHSV_Z[id] += amp * f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
+        
+        Force_OU_x[id] = f_OU_X[substep];
+        Force_OU_y[id] = f_OU_Y[substep];
+        Force_OU_z[id] = f_OU_Z[substep];
 
       }
       
     }}}
+    
+    projection(Force_OU_x, Force_OU_y, Force_OU_z);
+  
+    // OU-Forcing normieren
+    // energy
+    double amp_OU_loc = 0.;
+    double amp_OU;
+  
+    double amp_x, amp_y, amp_z;
+    
+    double hs; // factor because of hermitian symmetry in z
+  
+    for(int ix = 0; ix < size_F[0]; ix++){
+    for(int iy = 0; iy < size_F[1]; iy++){
+    for(int iz = 0; iz < size_F[2]; iz++){
+        
+      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      
+      int kz_id = int(kz[iz]/dk);
+      if( 0 < kz_id && kz_id < N/2 )
+      {
+        hs = 2.;
+      }
+      else
+      {
+        hs = 1.;
+      }
+      
+      amp_x = abs(Force_OU_x[id]);
+      amp_y = abs(Force_OU_y[id]);
+      amp_z = abs(Force_OU_z[id]);
+      
+      amp_OU_loc += hs*(amp_x*amp_x + amp_y*amp_y + amp_z*amp_z);
+
+    }}}
+  
+    amp_OU_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+    amp_OU_loc *= 1. /double(N*N*N); // wg Fourier Space
+    MPI_Allreduce(&amp_OU_loc, &amp_OU, 1, MPI_DOUBLE, MPI_SUM, comm);
+    
+    double norm = 1./sqrt(amp_OU); 
+    if(norm > 1.e10){norm = 1.;}
+    norm *= amp;
+    
+    //~ if(myRank==0){printf("norm = %f\n", norm);}
+    
+    for(int id = 0; id < size_F_tot; id++)
+    {
+    
+      RHSV_X[id] += norm * Force_OU_x[id];
+      RHSV_Y[id] += norm * Force_OU_y[id];
+      RHSV_Z[id] += norm * Force_OU_z[id];
+    
+    }
   
   }
   
@@ -924,10 +987,9 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 
 void CSpecDyn::OrnsteinUhlenbeck()
 {
-  double T     = 0.25;
+  double T     = 0.1*3.;
   double T_inv = 1./T;
-  //~ double sigma = 0.25*sqrt(2.*T_inv);
-  double sigma = 0.00001*sqrt(2.*T_inv);
+  double sigma = 0.25*sqrt(2.*T_inv);
  
   CX rand[2];
   

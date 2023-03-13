@@ -127,6 +127,10 @@ class CSpecDyn
     CX* Jy_F;  
     CX* Jz_F;
     
+    CX* Force_OU_x;
+    CX* Force_OU_y;
+    CX* Force_OU_z;
+    
     float* float_array;
     float* float_array_vector;
     

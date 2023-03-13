@@ -45,7 +45,7 @@ const double END_SIMU = 20.;
 // (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
 // (3):Energy spectrum [s=11/3] with Ornstein-Uhlenbeck Forcing
 // (4):Energy spectrum [s=11/3] without forcing
-const int SETUP = 2;
+const int SETUP = 3;
 
 // domain size
 const double LENGTH = PI2;
