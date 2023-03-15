@@ -24,6 +24,7 @@ const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
+//~ const double DT = 0.0025*(64./NUM);
 //~ const double DT = 0.005*(64./NUM);
 const double DT = 0.01*(64./NUM);
 //~ const double u0 = 0.48;
@@ -35,9 +36,9 @@ const double u0 = 0.25;
 //~ const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/TG_N512_Nu5em4_u0p25_F1";
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/TestProduction/Forcing";
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 20.;
+const double END_SIMU = 40.*4.;
 
 // choose initial setup: 
 // (0):all zero; 
