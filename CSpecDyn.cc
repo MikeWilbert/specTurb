@@ -630,8 +630,14 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   if(setup==2)
   {
     // Parameters
-    double G  = 20.;  // Zeitskala für Forcing [in Einheiten der Kolmogorv time scale tau]: 1 < G < dt/tau (G sollte so groß wie möglich gewählt werden)
     double k0 = 0.09; // gewünschte kinetische Energie
+    double G  = 50.;  // inverse Zeitskala des Forcings -> im Paper (G/T)
+                      // Wollen G so wählen, dass das Forcing zeitlich aufgelöst ist (1/G > dt)
+                      // und gleichzeitig kleiner als die Kolmogorov time scale um nicht in den
+                      // Turbulenz-Process zu fuschen (tau > 1/G)
+                      // In dem Interval (1/tau < G < 1/dt) wollen wir G so groß wie möglich wählen
+                      // [T  : Large-Eddy-Turnover-Time im Gleichgewicht]
+                      // [tau: Kolmogorov time scale    im Gleichgewicht]
     
     // get Forcing constant A
     double k;   // kinetic energy
@@ -639,7 +645,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
     calc_Energy(k, eps);
 
-    double A = ( eps - G * ( k - k0 ) ) / ( 2 * k ); // Bassenne (2013)
+    double A = ( eps - G * ( k - k0 ) ) / ( 2 * k ); // Bassenne (2016)
 
     // apply Force
     for(int id = 0; id < size_F_tot; id++)
