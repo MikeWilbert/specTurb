@@ -100,14 +100,6 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   Jy_F = FFT.malloc_C();
   Jz_F = FFT.malloc_C();
   
-  Force_OU_x = FFT.malloc_C();
-  Force_OU_y = FFT.malloc_C();
-  Force_OU_z = FFT.malloc_C();
-  
-  Force_OU_R_x = FFT.malloc_R();
-  Force_OU_R_y = FFT.malloc_R();
-  Force_OU_R_z = FFT.malloc_R();
-  
   float_array        = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
   
@@ -215,6 +207,7 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
+  double u0 = 0.25;
   double E0_V = 3./2.*u0*u0;
   double E0_B = E0_V;
   
@@ -288,9 +281,7 @@ void CSpecDyn::setup_fields()
       break;
     
     case 2:
-    case 3:
-    case 4:
-      /** random with energy spectrum normalized to unit kinetic energy **/
+    /** random with energy spectrum normalized to desired kinetic energy **/
     
     // Zufallsfeld in R
     for(int id = 0; id < size_R_tot; id++)
@@ -334,7 +325,7 @@ void CSpecDyn::setup_fields()
     projection(Vx_F, Vy_F, Vz_F);
     projection(Bx_F, By_F, Bz_F);
     
-    bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R); // elimiert kleinen Energie-Fehler durch erste FFT
+    bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R); // eleminiert kleinen Energie-Fehler durch erste FFT
     bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
     fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
     fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
@@ -388,28 +379,6 @@ void CSpecDyn::setup_fields()
       By_F[id] *= norm_B*0.;
       Bz_F[id] *= norm_B*0.;
     }
-    
-    // spatial structure of Orstein-Uhlenbeck Forcing
-    for(int ix = 0; ix < size_R[0]; ix++){
-    for(int iy = 0; iy < size_R[1]; iy++){
-    for(int iz = 0; iz < size_R[2]; iz++){
-    
-      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
-      
-      double x_val = (start_R[0]+ix)*dx+XB;
-      double y_val = (start_R[1]+iy)*dx+XB;
-      double z_val = (start_R[2]+iz)*dx+XB;
-   
-      //~ Force_OU_R_x[id] = cos(1*x_val);
-      Force_OU_R_x[id] = (cos(2*x_val) + cos(2*y_val) + cos(2*z_val)
-                       + cos(x_val)*cos(y_val) + cos(x_val)*cos(z_val) + cos(y_val)*cos(z_val))/6.;
-      Force_OU_R_y[id] = Force_OU_R_x[id];
-      Force_OU_R_z[id] = Force_OU_R_x[id];
-    
-    }}}
-    
-    // FFT R -> F
-    fFFT(Force_OU_R_x, Force_OU_R_y, Force_OU_R_z, Force_OU_x, Force_OU_y, Force_OU_z);
       
     break;
 
@@ -452,18 +421,14 @@ void CSpecDyn::execute()
 
 void CSpecDyn::time_step()
 {
-  OrnsteinUhlenbeck();
   
   double del_t;
-  
-  //~ calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          //~ ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t, 0);
   
   // step 1
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t, 0);
+          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
   
   for(int id = 0; id < size_F_tot; id++)
   { 
@@ -486,7 +451,7 @@ void CSpecDyn::time_step()
   del_t = 0.5;
   
   calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t, 1);
+          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
    
   double dt_025 = 0.25*dt; 
           
@@ -510,7 +475,7 @@ void CSpecDyn::time_step()
   del_t = 1.;
   
   calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t, 2);
+          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
   double dt_6 = dt/6.;
   
@@ -540,9 +505,58 @@ void CSpecDyn::time_step()
 	}MPI_Barrier(comm);
 }
 
+// calc Energy and Dissipation
+void CSpecDyn::calc_Energy(double& energy_V, double& diss_V)
+{
+  
+    double energy_V_loc = 0.;
+    double diss_V_loc = 0.;
+    double Vx, Vy, Vz;
+    
+    double hs; // factor because of hermitian symmetry in z
+  
+    for(int ix = 0; ix < size_F[0]; ix++){
+    for(int iy = 0; iy < size_F[1]; iy++){
+    for(int iz = 0; iz < size_F[2]; iz++){
+      
+      // globale id  
+      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      
+      // Zählen positive Moden in z doppelt
+      int kz_id = int(kz[iz]/dk);
+      if( 0 < kz_id && kz_id < N/2 )
+      {
+        hs = 2.;
+      }
+      else
+      {
+        hs = 1.;
+      }
+      
+      Vx = abs(Vx_F[id]);
+      Vy = abs(Vy_F[id]);
+      Vz = abs(Vz_F[id]);
+      
+      energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+      diss_V_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+
+    }}}
+  
+    // berechnen globale Größen
+    energy_V_loc *= 0.5/double(N*N*N); // 1/N^3: Ortsmittelung, 0.5: aus Definition der Energie/Definition Energy Spectrum
+    energy_V_loc *= 1. /double(N*N*N); // wg DFT Normierung
+    MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+    diss_V_loc *= 0.5/double(N*N*N);
+    diss_V_loc *= 1. /double(N*N*N);
+    MPI_Allreduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+    diss_V *= 2.*nu;
+    
+}
+
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                        double del_t, int substep)
+                        double del_t)
 {
   // W = rot(V)
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -591,29 +605,6 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
   }
   
-  // Taylor-Green forcing
-  if(setup==2)
-  {
-    double amp = 0.25*2.; // GG für N = 64
-    
-    for(int ix = 0; ix < size_R[0]; ix++){
-    for(int iy = 0; iy < size_R[1]; iy++){
-    for(int iz = 0; iz < size_R[2]; iz++){
-    
-      int id = ix * size_R[1]*size_R[2] + iy * size_R[2] + iz;
-      
-      double x_val = (start_R[0]+ix)*dx+XB;
-      double y_val = (start_R[1]+iy)*dx+XB;
-      double z_val = (start_R[2]+iz)*dx+XB;
-      
-      double kf = 2.;
-      
-      RHS_Vx_R[id] += amp * ( sin(kf*x_val)*cos(kf*y_val)*cos(kf*z_val) );
-      RHS_Vy_R[id] -= amp * ( cos(kf*x_val)*sin(kf*y_val)*cos(kf*z_val) );
-      
-    }}}
-  }
-  
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
     
@@ -635,210 +626,28 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSV_X, RHSV_Y, RHSV_Z);
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  /*
-  // Ornstein-Uhlenbeck forcing
-  if(setup==3)
-  {
-    double amp = 0.2;
-  
-    double dk2 = dk*dk;
-    
-    for(int ix = 0; ix<size_F[0]; ix++){
-    for(int iy = 0; iy<size_F[1]; iy++){
-    for(int iz = 0; iz<size_F[2]; iz++){
-      
-      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-      
-      if(0.1*dk2 < k2[id] && k2[id] < 9.1*dk2) // force first few modes 
-      //~ if( int(round(k2[id])) == 4) // force first few modes 
-      //~ if( int(round(k2[id])) == 1) // force first few modes 
-      {
-        
-        double k2_inv = 1./k2[id];
-        double k_x = kx[ix];
-        double k_y = ky[iy];
-        double k_z = kz[iz];
-
-        //~ RHSV_X[id] += amp * f_OU_X[substep] * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-        //~ RHSV_Y[id] += amp * f_OU_Y[substep] * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-        //~ RHSV_Z[id] += amp * f_OU_Z[substep] * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
-        
-        Force_OU_x[id] = f_OU_X[substep];
-        Force_OU_y[id] = f_OU_Y[substep];
-        Force_OU_z[id] = f_OU_Z[substep];
-
-      }
-      else
-      {
-        Force_OU_x[id] = 0.;
-        Force_OU_y[id] = 0.;
-        Force_OU_z[id] = 0.;
-      }
-      
-    }}}
-    
-    projection(Force_OU_x, Force_OU_y, Force_OU_z);
-  
-    // OU-Forcing normieren
-    // energy
-    double amp_OU_loc = 0.;
-    double amp_OU;
-  
-    double amp_x, amp_y, amp_z;
-    
-    double hs; // factor because of hermitian symmetry in z
-  
-    for(int ix = 0; ix < size_F[0]; ix++){
-    for(int iy = 0; iy < size_F[1]; iy++){
-    for(int iz = 0; iz < size_F[2]; iz++){
-        
-      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-      
-      int kz_id = int(kz[iz]/dk);
-      if( 0 < kz_id && kz_id < N/2 )
-      {
-        hs = 2.;
-      }
-      else
-      {
-        hs = 1.;
-      }
-      
-      amp_x = abs(Force_OU_x[id]);
-      amp_y = abs(Force_OU_y[id]);
-      amp_z = abs(Force_OU_z[id]);
-      
-      amp_OU_loc += hs*(amp_x*amp_x + amp_y*amp_y + amp_z*amp_z);
-
-    }}}
-  
-    amp_OU_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-    amp_OU_loc *= 1. /double(N*N*N); // wg Fourier Space
-    MPI_Allreduce(&amp_OU_loc, &amp_OU, 1, MPI_DOUBLE, MPI_SUM, comm);
-    
-    double norm = 1./sqrt(amp_OU); 
-    if(norm > 1.e10){norm = 1.;}
-    norm *= amp;
-    
-    //~ if(myRank==0){printf("norm = %f\n", norm);}
-    
-    for(int id = 0; id < size_F_tot; id++)
-    {
-    
-      RHSV_X[id] += norm * Force_OU_x[id];
-      RHSV_Y[id] += norm * Force_OU_y[id];
-      RHSV_Z[id] += norm * Force_OU_z[id];
-    
-    }
-  
-  }
-  */
-  
-  /*
-  // Ornstein-Uhlenbeck forcing
-  if(setup==3)
-  {
-    
-    double amp = 1.;
-    
-    for(int ix = 0; ix<size_F[0]; ix++){
-    for(int iy = 0; iy<size_F[1]; iy++){
-    for(int iz = 0; iz<size_F[2]; iz++){
-      
-      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-      
-      double k2_inv = 1./k2[id];
-      double k_x = kx[ix];
-      double k_y = ky[iy];
-      double k_z = kz[iz];
-  
-      //~ RHSV_X[id] += amp * exp(f_OU_X[IM*substep].real()/f_OU_X[substep].complex()) * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      //~ RHSV_Y[id] += amp * exp(f_OU_Y[IM*substep].real()/f_OU_Y[substep].complex()) * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      //~ RHSV_Z[id] += amp * exp(f_OU_Z[IM*substep].real()/f_OU_Z[substep].complex()) * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
-      
-      V_X[id] = amp * Force_OU_x[id] * exp(IM*f_OU_X[substep].real()/f_OU_X[substep].imag()) * (+ ( 1. - k_x*k_x*k2_inv ) -        k_x*k_y*k2_inv   -        k_x*k_z*k2_inv  );
-      V_Y[id] = amp * Force_OU_y[id] * exp(IM*f_OU_Y[substep].real()/f_OU_Y[substep].imag()) * (-        k_y*k_x*k2_inv   + ( 1. - k_y*k_y*k2_inv ) -        k_y*k_z*k2_inv  );
-      V_Z[id] = amp * Force_OU_z[id] * exp(IM*f_OU_Z[substep].real()/f_OU_Z[substep].imag()) * (-        k_z*k_x*k2_inv   -        k_z*k_y*k2_inv   + ( 1. - k_z*k_z*k2_inv ));
-      
-      double shift_x = atan2(f_OU_X[substep].real(),f_OU_X[substep].imag());
-      double shift_y = atan2(f_OU_Y[substep].real(),f_OU_Y[substep].imag());
-      double shift_z = atan2(f_OU_Z[substep].real(),f_OU_Z[substep].imag());
-      
-      //~ V_X[id] = Force_OU_x[id]  * exp(IM*k_x*shift_x);
-      V_X[id] = Force_OU_x[id]  * exp(IM*(k_x*shift_x+k_y*shift_y+k_z*shift_z));
-      
-    }}}
-    
-    if(myRank==0){printf("Phi = %f\n", f_OU_X[substep].real()/f_OU_X[substep].imag()/PI2);}
-  }
-  */
-  
   // Linear Turbulence Foring
+  if(setup==2)
   {
     // Parameters
-    //~ double k0 = 0.09;
-    double A = 0.13; // eps/3u_0^2 (Rosales & Meneveau, 2005)
+    double G  = 20.;  // Zeitskala für Forcing [in Einheiten der Kolmogorv time scale tau]: 1 < G < dt/tau (G sollte so groß wie möglich gewählt werden)
+    double k0 = 0.09; // gewünschte kinetische Energie
     
-    // calc Energy
-    double energy_V_loc = 0.;
-    double energy_V;
-    double diss_V_loc = 0.;
-    double diss_V;
-    double Vx, Vy, Vz;
+    // get Forcing constant A
+    double k;   // kinetic energy
+    double eps; // dissipation
     
-    double hs; // factor because of hermitian symmetry in z
-  
-    for(int ix = 0; ix < size_F[0]; ix++){
-    for(int iy = 0; iy < size_F[1]; iy++){
-    for(int iz = 0; iz < size_F[2]; iz++){
-        
-      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-      
-      int kz_id = int(kz[iz]/dk);
-      if( 0 < kz_id && kz_id < N/2 )
-      {
-        hs = 2.;
-      }
-      else
-      {
-        hs = 1.;
-      }
-      
-      Vx = abs(Vx_F[id]);
-      Vy = abs(Vy_F[id]);
-      Vz = abs(Vz_F[id]);
-      
-      energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
-      diss_V_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    calc_Energy(k, eps);
 
-    }}}
-  
-    energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-    energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
-    MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
-
-    diss_V_loc *= 0.5/double(N*N*N);
-    diss_V_loc *= 1. /double(N*N*N);
-    MPI_Allreduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, comm);
-    diss_V *= 2.*nu;
-
-    double u_l = sqrt(2./3.*energy_V);
-    double l   = u_l*u_l*u_l / diss_V;
-    double t_l = l / u_l;
-    
-    double G = 20.;
-    double k0 = 0.09;
-
-    //~ double factor = A * k0/energy_V; // Caroll
-    double factor = ( diss_V - G * ( energy_V - k0 ) ) / ( 2 * energy_V ); // Bassenne
+    double A = ( eps - G * ( k - k0 ) ) / ( 2 * k ); // Bassenne (2013)
 
     // apply Force
     for(int id = 0; id < size_F_tot; id++)
     {
   
-      RHSV_X[id] += factor * V_X[id];
-      RHSV_Y[id] += factor * V_Y[id];
-      RHSV_Z[id] += factor * V_Z[id];
+      RHSV_X[id] += A * V_X[id];
+      RHSV_Y[id] += A * V_Y[id];
+      RHSV_Z[id] += A * V_Z[id];
     
     }
   }
@@ -1130,40 +939,6 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
     //~ }
     
   //~ }}}
-}
-
-void CSpecDyn::OrnsteinUhlenbeck()
-{
-  double T     = 0.1*3.;
-  double T_inv = 1./T;
-  double sigma = 0.25*sqrt(2.*T_inv);
- 
-  CX rand[2];
-  
-  // X
-  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
-  
-  f_OU_X[0] = f_OU_X[2];
-  f_OU_X[1] = f_OU_X[0] - 0.5*dt*T_inv*f_OU_X[0] + sqrt(0.5*dt)*sigma*rand[0];
-  f_OU_X[2] = f_OU_X[1] - 0.5*dt*T_inv*f_OU_X[1] + sqrt(0.5*dt)*sigma*rand[1];
-  
-  // Y
-  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
-  
-  f_OU_Y[0] = f_OU_Y[2];
-  f_OU_Y[1] = f_OU_Y[0] - 0.5*dt*T_inv*f_OU_Y[0] + sqrt(0.5*dt)*sigma*rand[0];
-  f_OU_Y[2] = f_OU_Y[1] - 0.5*dt*T_inv*f_OU_Y[1] + sqrt(0.5*dt)*sigma*rand[1];
-  
-  // Z
-  rand[0] = normal(normal_eng) + IM * normal(normal_eng);
-  rand[1] = normal(normal_eng) + IM * normal(normal_eng);
-  
-  f_OU_Z[0] = f_OU_Z[2];
-  f_OU_Z[1] = f_OU_Z[0] - 0.5*dt*T_inv*f_OU_Z[0] + sqrt(0.5*dt)*sigma*rand[0];
-  f_OU_Z[2] = f_OU_Z[1] - 0.5*dt*T_inv*f_OU_Z[1] + sqrt(0.5*dt)*sigma*rand[1];
-  
 }
 
 void CSpecDyn::print_EnergySpectrum()

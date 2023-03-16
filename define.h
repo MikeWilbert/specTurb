@@ -24,12 +24,7 @@ const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
-//~ const double DT = 0.0025*(64./NUM);
-//~ const double DT = 0.005*(64./NUM);
 const double DT = 0.01*(64./NUM);
-//~ const double u0 = 0.48;
-const double u0 = 0.25;
-//~ const double DT = 0.05*PI2/NUM/u0;
 
 // output directory
 //~ const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/NoForce_N512_Nu5em4_u0p25_F1e5";
@@ -43,10 +38,8 @@ const double END_SIMU = 40.*4.;
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
-// (2):Energy spectrum [s=11/3] with Taylor-Green Forcing
-// (3):Energy spectrum [s=11/3] with Ornstein-Uhlenbeck Forcing
-// (4):Energy spectrum [s=11/3] without forcing
-const int SETUP = 3;
+// (2):Energy spectrum [s=11/3] with linear Forcing
+const int SETUP = 2;
 
 // domain size
 const double LENGTH = PI2;

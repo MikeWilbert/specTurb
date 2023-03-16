@@ -127,25 +127,12 @@ class CSpecDyn
     CX* Jy_F;  
     CX* Jz_F;
     
-    CX* Force_OU_x;
-    CX* Force_OU_y;
-    CX* Force_OU_z;
-    
-    double* Force_OU_R_x;
-    double* Force_OU_R_y;
-    double* Force_OU_R_z;
-    
+    // vti output
     float* float_array;
     float* float_array_vector;
     
-    // time amplitude for Orstein-Uhlenbeck forcing
-    CX f_OU_X[3] = {0.,0.,0.};
-    CX f_OU_Y[3] = {0.,0.,0.};
-    CX f_OU_Z[3] = {0.,0.,0.};
-    
     // Energy Spectrum
     int N_bin = 50;
-    //~ int N_bin = 32;
     
     double* energySpectrum_V;
     double* energySpectrum_V_loc;
@@ -163,7 +150,7 @@ class CSpecDyn
     void time_step();
     void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                   CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                  double del_t, int substep);
+                  double del_t);
     void diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t);
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);
@@ -179,7 +166,7 @@ class CSpecDyn
     void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
     void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);
     
-    void OrnsteinUhlenbeck();
+    void calc_Energy(double& energy_V, double& diss_V);
     
   public:
   
