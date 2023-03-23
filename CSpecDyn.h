@@ -167,6 +167,8 @@ class CSpecDyn
     void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);
     
     void calc_Energy(double& energy_V, double& diss_V);
+    void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);
+    void calc_crossHelicity(double& h);
     
   public:
   

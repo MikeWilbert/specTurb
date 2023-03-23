@@ -207,9 +207,11 @@ void CSpecDyn::setup_k()
 
 void CSpecDyn::setup_fields()
 {
-  double u0 = 0.25;
-  double E0_V = 3./2.*u0*u0;
+  
+  double k0 = 12.5;
+  double E0_V = 17.1;
   double E0_B = E0_V;
+  
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -300,7 +302,9 @@ void CSpecDyn::setup_fields()
     // Amplituden für Energie-Spektrum
     for(int id = 0; id < size_F_tot; id++)
     {
-      double A = sqrt( 1./pow(1+k2[id],s) );
+      //~ double A = sqrt( 1./pow(1+k2[id],s) );
+      
+      double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
       
       if(int(round(k2[id])) != 0)
       {
@@ -375,9 +379,15 @@ void CSpecDyn::setup_fields()
       Vx_F[id] *= norm_V;
       Vy_F[id] *= norm_V;
       Vz_F[id] *= norm_V;
-      Bx_F[id] *= norm_B*0.;
-      By_F[id] *= norm_B*0.;
-      Bz_F[id] *= norm_B*0.;
+      Bx_F[id] *= norm_B;
+      By_F[id] *= norm_B;
+      Bz_F[id] *= norm_B;
+      
+      #ifdef NS
+      Bx_F[id] = 0.;
+      By_F[id] = 0.;
+      Bz_F[id] = 0.;
+      #endif
     }
       
     break;
@@ -554,6 +564,93 @@ void CSpecDyn::calc_Energy(double& energy_V, double& diss_V)
     
 }
 
+void CSpecDyn::calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B)
+{
+  
+    double energy_V_loc = 0.;
+    double diss_V_loc = 0.;
+    double Vx, Vy, Vz;
+    double energy_B_loc = 0.;
+    double diss_B_loc = 0.;
+    double Bx, By, Bz;
+    
+    double hs; // factor because of hermitian symmetry in z
+  
+    for(int ix = 0; ix < size_F[0]; ix++){
+    for(int iy = 0; iy < size_F[1]; iy++){
+    for(int iz = 0; iz < size_F[2]; iz++){
+      
+      // globale id  
+      int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+      
+      // Zählen positive Moden in z doppelt
+      int kz_id = int(kz[iz]/dk);
+      if( 0 < kz_id && kz_id < N/2 )
+      {
+        hs = 2.;
+      }
+      else
+      {
+        hs = 1.;
+      }
+      
+      Vx = abs(Vx_F[id]);
+      Vy = abs(Vy_F[id]);
+      Vz = abs(Vz_F[id]);
+      
+      energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+      diss_V_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+
+      Bx = abs(Bx_F[id]);
+      By = abs(By_F[id]);
+      Bz = abs(Bz_F[id]);
+      
+      energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+      diss_B_loc   += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
+
+    }}}
+  
+    // berechnen globale Größen
+    energy_V_loc *= 0.5/double(N*N*N); // 1/N^3: Ortsmittelung, 0.5: aus Definition der Energie/Definition Energy Spectrum
+    energy_V_loc *= 1. /double(N*N*N); // wg DFT Normierung
+    MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+    diss_V_loc *= 0.5/double(N*N*N);
+    diss_V_loc *= 1. /double(N*N*N);
+    MPI_Allreduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+    diss_V *= 2.*nu;
+    
+    energy_B_loc *= 0.5/double(N*N*N); // 1/N^3: Ortsmittelung, 0.5: aus Definition der Energie/Definition Energy Spectrum
+    energy_B_loc *= 1. /double(N*N*N); // wg DFT Normierung
+    MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+    diss_B_loc *= 0.5/double(N*N*N);
+    diss_B_loc *= 1. /double(N*N*N);
+    MPI_Allreduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+    diss_B *= 2.*eta;
+    
+}
+
+void CSpecDyn::calc_crossHelicity(double& h)
+{
+  double h_loc = 0.;
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    double Vx = Vx_R[id];
+    double Vy = Vy_R[id];
+    double Vz = Vz_R[id];
+    double Bx = Bx_R[id];
+    double By = By_R[id];
+    double Bz = Bz_R[id];
+    
+    h_loc += Vx*Bx + Vy*By + Vz*Bz;
+  }
+  
+  h_loc *= 0.5/double(N*N*N);
+  MPI_Allreduce(&h_loc, &h, 1, MPI_DOUBLE, MPI_SUM, comm);
+}
+
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
                         double del_t)
@@ -596,6 +693,9 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
   bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
+  double h;
+  calc_crossHelicity(h);
+  
   // RHS_V = VxW + JxB
   for(int id = 0; id < size_R_tot; id++){
     
@@ -626,12 +726,14 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   dealias(RHSV_X, RHSV_Y, RHSV_Z);
   dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
+  /*
   // Linear Turbulence Foring
   if(setup==2)
   {
     // Parameters
-    double k0 = 0.09; // gewünschte kinetische Energie
-    double G  = 50.;  // inverse Zeitskala des Forcings -> im Paper (G/T)
+    double k0 = 0.09; // gewünschte kinetische  Energie
+    double m0 = k0;   // gewünschte magnetische Energie
+    double G  = 20.;  // inverse Zeitskala des Forcings -> im Paper (G/T)
                       // Wollen G so wählen, dass das Forcing zeitlich aufgelöst ist (1/G > dt)
                       // und gleichzeitig kleiner als die Kolmogorov time scale um nicht in den
                       // Turbulenz-Process zu fuschen (tau > 1/G)
@@ -640,22 +742,106 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
                       // [tau: Kolmogorov time scale    im Gleichgewicht]
     
     // get Forcing constant A
-    double k;   // kinetic energy
-    double eps; // dissipation
-    
-    calc_Energy(k, eps);
+    double k;     // kinetic energy
+    double eps;   // dissipation
+    double m;     // magnetic enery
+    double eps_B; // magnetic dissipation
 
-    double A = ( eps - G * ( k - k0 ) ) / ( 2 * k ); // Bassenne (2016)
+    calc_Energy(k, eps, m, eps_B);
+    if(myRank==0)
+    {
+      printf("k=%f, m=%f, h=%f\n", k, m, h);
+    }
+
+    //~ h = 0.; // UWAGA!
+    h = 2.*h; // UWAGA!
+
+    double factor = 1.;
+    //~ double A = factor * ( eps   - G * ( k - k0 ) ) / ( 2 * (k-h) ); // Bassenne (2016)
+    //~ double C = factor * ( eps_B - G * ( m - m0 ) ) / ( 2 * (h-m) );
+
+    double A = factor * ( eps   - G * ( k - k0 ) ) / ( 2 * (k-h) ); // Bassenne (2016)
+    double C = factor * ( eps_B - G * ( m - m0 ) ) / ( 2 * (h-m) );
 
     // apply Force
     for(int id = 0; id < size_F_tot; id++)
     {
   
-      RHSV_X[id] += A * V_X[id];
-      RHSV_Y[id] += A * V_Y[id];
-      RHSV_Z[id] += A * V_Z[id];
+      RHSV_X[id] += A * (V_X[id] - B_X[id]);
+      RHSV_Y[id] += A * (V_Y[id] - B_Y[id]);
+      RHSV_Z[id] += A * (V_Z[id] - B_Z[id]);
+      RHSB_X[id] += C * (B_X[id] - V_X[id]);
+      RHSB_Y[id] += C * (B_Y[id] - V_Y[id]);
+      RHSB_Z[id] += C * (B_Z[id] - V_Z[id]);
     
     }
+  }
+  */
+  
+  // Linear Turbulence Foring
+  if(setup==2)
+  {
+    // Parameters
+    double k0    = 17.1;
+    double m0    = 0.00937;
+    double eps0V = 32.2;
+    double eps0B = 0.00937;
+    double h0    = -0.000075;
+    
+    
+    double G    = 20.;// inverse Zeitskala des Forcings -> im Paper (G/T)
+                      // Wollen G so wählen, dass das Forcing zeitlich aufgelöst ist (1/G > dt)
+                      // und gleichzeitig kleiner als die Kolmogorov time scale um nicht in den
+                      // Turbulenz-Process zu fuschen (tau > 1/G)
+                      // In dem Interval (1/tau < G < 1/dt) wollen wir G so groß wie möglich wählen
+                      // [T  : Large-Eddy-Turnover-Time im Gleichgewicht]
+                      // [tau: Kolmogorov time scale    im Gleichgewicht]
+    
+    // get Forcing constant A
+    double k;     // kinetic energy
+    double eps;   // dissipation
+    double m;     // magnetic enery
+    double eps_B; // magnetic dissipation
+
+    calc_Energy(k, eps, m, eps_B);
+
+    // different Forcing schemes
+    double A,C;
+    /*** NS ***/
+    // Lundgren
+    //~ A = 0.5*eps0/k0; //(A = 0.5 * eps0/k0 [k0,eps0: Anfangswerte])
+    // Caroll
+    //~ A = 0.5*eps0/k0 * k0/k; // (Wie Lundgren mit Faktor k0/k)
+    // Bassenne
+    //~ A = ( eps - G * ( k - k0) ) / (2. * k);
+    
+    /*** MHD ***/
+    double km  = k+m;
+    double km0 = k0+m0;
+    double epsVB = eps + eps_B;
+    double epsVB0 = eps0V + eps0B;
+    
+    // Lundgren
+    A = eps0V/(2*k0)*k0/k;
+    C = 0.;//*(epsVB0 - 2. * A * km0) / (4.*h);
+
+    // apply Force
+    for(int id = 0; id < size_F_tot; id++)
+    {
+  
+      RHSV_X[id] += A * V_X[id] - C * B_X[id];
+      RHSV_Y[id] += A * V_Y[id] - C * B_Y[id];
+      RHSV_Z[id] += A * V_Z[id] - C * B_Z[id];
+      //~ RHSB_X[id] += A * B_X[id] + C * V_X[id];
+      //~ RHSB_Y[id] += A * B_Y[id] + C * V_Y[id];
+      //~ RHSB_Z[id] += A * B_Z[id] + C * V_Z[id];
+    
+    }
+    
+    //~ if(myRank==0)
+    //~ {
+      //~ printf("k = %f, m = %f, h = %f, eps_V = %f, eps_B = %f\n", k, m, h, eps, eps_B);
+    //~ }
   }
   
   // RHS_B = rot(VxB)

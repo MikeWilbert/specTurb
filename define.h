@@ -20,20 +20,26 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 64;
+const int NUM = 128;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
-const double DT = 0.01*(64./NUM);
+//~ const double DT = 0.005*(64./NUM);
+//~ const double DT = 0.01*(64./NUM);
+const double DT = 5.e-4; 
 
 // output directory
-//~ const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/NoForce_N512_Nu5em4_u0p25_F1e5";
-//~ const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/TG_N512_Nu5em4_u0p25_F1";
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/TestProduction/Forcing";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Lundgren";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Carrol";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Bassenne";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Lundgren";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Carrol";
+//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Bassenne";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Mike";
 // output interval
 const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 40.*4.;
+const double END_SIMU = 10.*6.;
 
 // choose initial setup: 
 // (0):all zero; 
@@ -44,13 +50,14 @@ const int SETUP = 2;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 5.e-4;
+//~ const double NU  = 5.e-4;
+const double NU  = 0.005;
 // magnetic diffusivity
 const double ETA = NU;
 
 /** DEFINES **/
 
-// nothing
+#define NS
 
 /** Resolutions **/
 /*
