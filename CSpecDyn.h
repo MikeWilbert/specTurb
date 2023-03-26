@@ -11,7 +11,7 @@ class CSpecDyn
     //parameters
     const int N;
     const int* pdims;
-    const double dt;
+          double dt;
 
     const std::string out_dir;
     const double out_interval;
@@ -148,6 +148,7 @@ class CSpecDyn
     void setup_fields();
     
     void time_step();
+    void set_dt();
     void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                   CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
                   double del_t);

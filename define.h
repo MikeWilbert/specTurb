@@ -12,6 +12,8 @@
 #include <mpi.h>
 #include <sys/stat.h> // mkdir
 #include <sys/types.h>   
+#include <algorithm> // both for max of several numbers
+#include <initializer_list>
 
 /** CONSTANTS **/
 const double PI2 = 2.*M_PI;
@@ -20,13 +22,13 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 128;
+const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {8,8};
 // CFL number
 //~ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.01*(64./NUM);
-const double DT = 5.e-4; 
+const double DT = 1.e-3; 
 
 // output directory
 //~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Lundgren";
@@ -39,7 +41,7 @@ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Mike";
 // output interval
 const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 10.*6.;
+const double END_SIMU = 150.;
 
 // choose initial setup: 
 // (0):all zero; 
@@ -51,7 +53,9 @@ const int SETUP = 2;
 const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 5.e-4;
-const double NU  = 0.005;
+//~ const double NU  = 0.0065; # klappt!
+const double NU  = 0.019;
+//~ const double NU  = 0.01;
 // magnetic diffusivity
 const double ETA = NU;
 
