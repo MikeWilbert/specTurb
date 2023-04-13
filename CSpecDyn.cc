@@ -205,6 +205,110 @@ void CSpecDyn::setup_k()
   
 }
 
+void CSpecDyn::setup_B()
+{
+  double E0_B = 1.e-5;
+  double k0 = 2.*M_PI;
+  
+  std::mt19937 eng(myRank);
+  std::uniform_real_distribution<double> phi(0.,PI2);
+  std::uniform_real_distribution<double> rand_real(1.,2.);
+  double norm_loc = 0.;
+  double norm;
+  double s = 11./6.;
+  
+  double energy_B_loc = 0.;
+  double energy_B;
+  
+  double diss_B_loc = 0.;
+  double diss_B;
+  
+  double Bx, By, Bz;
+  
+  double hs; // factor because of hermitian symmetry in z
+  
+  double norm_V, norm_B;
+    
+  /** random with energy spectrum normalized to desired kinetic energy **/
+  
+  // Zufallsfeld in R
+  for(int id = 0; id < size_R_tot; id++)
+  {    
+    
+    Bx_R[id] = rand_real(eng);
+    By_R[id] = rand_real(eng);
+    Bz_R[id] = rand_real(eng);
+  }
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // Amplituden für Energie-Spektrum
+  for(int id = 0; id < size_F_tot; id++)
+  {
+    double A = sqrt( 1./pow(1+k2[id],s) );
+    
+    //~ double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
+    
+    if(int(round(k2[id])) != 0)
+    {
+      Bx_F[id] *= A/abs(Bx_F[id]);
+      By_F[id] *= A/abs(By_F[id]);
+      Bz_F[id] *= A/abs(Bz_F[id]);
+    }
+    else
+    {
+      Bx_F[id] = 0.;
+      By_F[id] = 0.;
+      Bz_F[id] = 0.;
+    }
+  }
+  
+  projection(Bx_F, By_F, Bz_F);
+
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // Energie normieren
+  for(int ix = 0; ix < size_F[0]; ix++){
+  for(int iy = 0; iy < size_F[1]; iy++){
+  for(int iz = 0; iz < size_F[2]; iz++){
+      
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
+    
+    Bx = abs(Bx_F[id]);
+    By = abs(By_F[id]);
+    Bz = abs(Bz_F[id]);
+    
+    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+
+  }}}
+  
+  energy_B_loc *= 0.5/double(N*N*N);
+  energy_B_loc *= 1. /double(N*N*N);
+  MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+     
+  norm_B = sqrt(E0_B/energy_B);    
+  
+  for(int id = 0; id < size_F_tot; id++)
+  {    
+    Bx_F[id] *= norm_B;
+    By_F[id] *= norm_B;
+    Bz_F[id] *= norm_B;
+  }
+      
+  
+}
+
 void CSpecDyn::setup_fields()
 {
   
@@ -408,9 +512,13 @@ void CSpecDyn::execute()
   
   print_Energy();
   print();
+  
+  bool b_not_set = true;
 
   while(time+dt < end_simu)
   {
+    if(time > 5. && b_not_set){setup_B();b_not_set=false;}
+    
     time_step();
     out_time += dt;
     
@@ -716,15 +824,15 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
   bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
-  double h;
-  calc_crossHelicity(h);
+  //~ double h;
+  //~ calc_crossHelicity(h);
   
   // RHS_V = VxW + JxB
   for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + Jy_R[id]*Bz_R[id]-Jz_R[id]*By_R[id];
-    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + Jz_R[id]*Bx_R[id]-Jx_R[id]*Bz_R[id];
-    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + Jx_R[id]*By_R[id]-Jy_R[id]*Bx_R[id];
+    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*Bz_R[id]-Jz_R[id]*By_R[id]);
+    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*Bx_R[id]-Jx_R[id]*Bz_R[id]);
+    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*By_R[id]-Jy_R[id]*Bx_R[id]);
     
   }
   
@@ -769,30 +877,65 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // Linear Turbulence Foring
   if(setup==2)
   {
-    double k, e;
-    calc_Energy(k, e);
+    double k, e, m, n;
+    calc_Energy(k, e, m, n);
     
     // Parameters
-    double k0 = 2.1378; // final kinetic energy
-    double e0 = 1.425; // final dissipation
+    //~ double k0 = 2.1378; // final kinetic energy
+    //~ double e0 = 1.425; // final dissipation
+    double k0 = 9.4748; // final kinetic energy
+    double e0 = 6.3166; // final dissipation
 
-    double A;
+    double A, C;
     
     // Lundgren
     //~ A = e0/(2*k0);
+    //~ A = e/(2*k);
     // Caroll
     //~ A = e0/(2.*k0)*k0/k;
     // Bassenne
     A = ( e - 20. * (k - k0) ) / (2.*k);
+    // Mike
+    C = 1.;
 
     // apply Force
     for(int id = 0; id < size_F_tot; id++)
     {
-  
-      RHSV_X[id] += A * V_X[id];
-      RHSV_Y[id] += A * V_Y[id];
-      RHSV_Z[id] += A * V_Z[id];
+      int k2_int = int(round(k2[id]));
+      
+      if(0 < k2_int && k2_int <= 4)
+      {
+        
+        RHSV_X[id] += A * V_X[id];
+        RHSV_Y[id] += A * V_Y[id];
+        RHSV_Z[id] += A * V_Z[id];
+        
+        //~ RHSB_X[id] += A * V_X[id];
+        //~ RHSB_Y[id] += A * V_Y[id];
+        //~ RHSB_Z[id] += A * V_Z[id];
     
+        //~ RHSV_X[id] += A * V_X[id];
+        //~ RHSV_Y[id] += A * V_Y[id];
+        //~ RHSV_Z[id] += A * V_Z[id];
+        //~ RHSB_X[id] += C * B_X[id];
+        //~ RHSB_Y[id] += C * B_Y[id];
+        //~ RHSB_Z[id] += C * B_Z[id];
+        
+        //~ RHSV_X[id] += A * (V_X[id] - B_X[id]);
+        //~ RHSV_Y[id] += A * (V_Y[id] - B_X[id]);
+        //~ RHSV_Z[id] += A * (V_Z[id] - B_X[id]);
+        //~ RHSB_X[id] += A * (B_X[id] - V_X[id]);
+        //~ RHSB_Y[id] += A * (B_Y[id] - V_X[id]);
+        //~ RHSB_Z[id] += A * (B_Z[id] - V_X[id]);
+        
+        //~ RHSV_X[id] += A * V_X[id] - C * B_X[id];
+        //~ RHSV_Y[id] += A * V_Y[id] - C * B_X[id];
+        //~ RHSV_Z[id] += A * V_Z[id] - C * B_X[id];
+        //~ RHSB_X[id] += C * V_X[id] - A * B_X[id];
+        //~ RHSB_Y[id] += C * V_X[id] - A * B_X[id];
+        //~ RHSB_Z[id] += C * V_X[id] - A * B_X[id];
+      
+      }
     }
   }
   
@@ -1034,38 +1177,38 @@ void CSpecDyn::print_mpi_scalar(double* field, int& N_bytes_scalar, const char* 
 void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
   // spherical truncation
-  //~ double kmax  = sqrt(2)/3.*N;
-  //~ double kmax2 = kmax*kmax;
+  double kmax  = sqrt(2)/3.*N;
+  double kmax2 = kmax*kmax;
   
-  //~ for(int id = 0; id < size_F_tot; id++){
+  for(int id = 0; id < size_F_tot; id++){
    
-    //~ if(k2[id] >= kmax2)
-    //~ {
-      //~ fieldX[id] = 0.;
-      //~ fieldY[id] = 0.;
-      //~ fieldZ[id] = 0.;
-    //~ }
-    
-  //~ }
-  
-  // 2/3 rule
-  double kmax = N/2.*dk;
-  double kmax_23 = N/2.*dk*2./3.;
-  
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
+    if(k2[id] >= kmax2)
     {
       fieldX[id] = 0.;
       fieldY[id] = 0.;
       fieldZ[id] = 0.;
     }
     
-  }}}
+  }
+  
+  // 2/3 rule
+  //~ double kmax = N/2.*dk;
+  //~ double kmax_23 = N/2.*dk*2./3.;
+  
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
+    
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    //~ if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
+    //~ {
+      //~ fieldX[id] = 0.;
+      //~ fieldY[id] = 0.;
+      //~ fieldZ[id] = 0.;
+    //~ }
+    
+  //~ }}}
 }
 
 void CSpecDyn::print_EnergySpectrum()

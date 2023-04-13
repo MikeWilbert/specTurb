@@ -127,6 +127,14 @@ class CSpecDyn
     CX* Jy_F;  
     CX* Jz_F;
     
+    // Velocity Gradient for Forcing Tests
+    CX *VF_xx, *VF_xy, *VF_xz;
+    CX *VF_yx, *VF_yy, *VF_yz;
+    CX *VF_zx, *VF_zy, *VF_zz;
+    double *VR_xx, *VR_xy, *VR_xz;
+    double *VR_yx, *VR_yy, *VR_yz;
+    double *VR_zx, *VR_zy, *VR_zz;
+    
     // vti output
     float* float_array;
     float* float_array_vector;
@@ -146,6 +154,7 @@ class CSpecDyn
     // private methods
     void setup_k();
     void setup_fields();
+    void setup_B();
     
     void time_step();
     void set_dt();

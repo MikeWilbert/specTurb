@@ -31,17 +31,11 @@ int const PDIMS[2] = {8,8};
 const double DT = 1.e-3; 
 
 // output directory
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Lundgren";
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Carrol";
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/NS_Bassenne";
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Lundgren";
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Carrol";
-//~ const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Bassenne";
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/MHD_Mike";
 // output interval
-const double OUT_INTERVAL = 1.;
+const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 150.;
+const double END_SIMU = 300.;
 
 // choose initial setup: 
 // (0):all zero; 
@@ -52,12 +46,9 @@ const int SETUP = 2;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-//~ const double NU  = 5.e-4;
-//~ const double NU  = 0.0065; # klappt!
-const double NU  = 0.019;
-//~ const double NU  = 0.01;
+const double NU  = 0.034;
 // magnetic diffusivity
-const double ETA = NU;
+const double ETA = NU*1.e-3;
 
 /** DEFINES **/
 
