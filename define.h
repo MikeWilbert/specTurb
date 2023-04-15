@@ -31,9 +31,9 @@ int const PDIMS[2] = {8,8};
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_MHD";
 // output interval
-const double OUT_INTERVAL = 0.1;
+const double OUT_INTERVAL = 1.;
 // simulation time
 const double END_SIMU = 100;
 
@@ -41,13 +41,13 @@ const double END_SIMU = 100;
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
-const int SETUP = 1;
+const int SETUP = 0;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-//~ const double NU  = 0.034;
-const double NU  = 0.02;
+const double NU  = 0.034;
+//~ const double NU  = 0.02;
 // magnetic diffusivity
 const double ETA = NU*1.e0;
 

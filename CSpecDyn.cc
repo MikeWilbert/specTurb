@@ -256,6 +256,22 @@ void CSpecDyn::setup_fields()
   
   switch(setup)
   {
+    case 0:
+      /** u = 0, B = 0 **/
+      for(int id = 0; id < size_R_tot; id++)
+      {    
+        Vx_R[id] = 0.;
+        Vy_R[id] = 0.;
+        Vz_R[id] = 0.;
+        
+        Bx_R[id] = 0.;
+        By_R[id] = 0.;
+        Bz_R[id] = 0.;
+      }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      break;
+
     case 1:
       /** Orszag-Tang **/
       for(int ix = 0; ix < size_R[0]; ix++){
@@ -326,7 +342,7 @@ void CSpecDyn::time_step()
 {
   
   set_dt();
-  //~ Alvelius();
+  Alvelius();
   
   double del_t;
   
@@ -533,62 +549,77 @@ void CSpecDyn::set_dt()
 void CSpecDyn::Alvelius()
 {
   
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ int k_int  = int(round(sqrt(k2[id])));
-    //~ int kz_int = int(round(kz[iz]));
+    int k_int  = int(round(sqrt(k2[id])));
     
-    //~ if(1 <= k_int && k_int <= 3)
-    //~ {
+    if(1 <= k_int && k_int <= 3)
+    {
     
-      //~ double kxx = kx[ix];
-      //~ double kyy = ky[iy];
-      //~ double kzz = kz[iz];
-      //~ double k   = sqrt(k2[id]);
+      double kxx = kx[ix];
+      double kyy = ky[iy];
+      double kzz = kz[iz];
+      double k   = sqrt(k2[id]);
       
-      //~ double phi   = atan2(kxx,kzz);
-      //~ double theta = atan2(hypot(kxx,kzz), kyy);
+      double phi   = atan2(kxx,kzz);
+      double theta = atan2(hypot(kxx,kzz), kyy);
       
-      //~ double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
-      //~ double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
+      double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
+      double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
       
-      //~ CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
-      //~ CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
+      CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
+      CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
       
-      //~ double alp = angle(angle_eng);
-      //~ double psi = angle(angle_eng);
-      //~ double gA = sin(2.*alp);
-      //~ double gB = cos(2.*alp);
+      double alp = angle(angle_eng);
+      double psi = angle(angle_eng);
+      double gA = sin(2.*alp);
+      double gB = cos(2.*alp);
       
-      //~ double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
-                             //~ -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
+      double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
+                             -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
                            
-      //~ double theta_2 = theta_1 + psi;
+      double theta_2 = theta_1 + psi;
       
-      // double theta_1 = angle(angle_eng);
-      // double theta_2 = angle(angle_eng);
+      //~ // double theta_1 = angle(angle_eng);
+      //~ // double theta_2 = angle(angle_eng);
       
       //~ double C =  1.e11/dt* 1./2.41;
+      //~ double c =  1.; 
+      double C =  1.e12/dt* 1./2.41;
+      double c =  0.05; 
       
-      //~ CX A = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
-      //~ CX B = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
+      CX A = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
+      CX B = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
       
-      //~ Force_X[id] = (A * e1[0]  + B * e2[0]); 
-      //~ Force_Y[id] = (A * e1[1]  + B * e2[1]); 
-      //~ Force_Z[id] = (A * e1[2]  + B * e2[2]); 
+      Force_X[id] = (A * e1[0]  + B * e2[0]); 
+      Force_Y[id] = (A * e1[1]  + B * e2[1]); 
+      Force_Z[id] = (A * e1[2]  + B * e2[2]); 
     
-    //~ }
-    //~ else
-    //~ {
-      //~ Force_X[id] = 0.;
-      //~ Force_Y[id] = 0.;
-      //~ Force_Z[id] = 0.;
-    //~ }
-  //~ }}}
+    }
+    else
+    {
+      Force_X[id] = 0.;
+      Force_Y[id] = 0.;
+      Force_Z[id] = 0.;
+    }
+  }}}
+  
+  // only keep real part
+  bFFT(Force_X, Force_Y, Force_Z, Jx_R, Jy_R, Jz_R);
+  
+  for(int id = 0; id<size_F_tot; id++)
+  {
+    Jx_R[id] = CX( Jx_R[id].real() );
+    Jy_R[id] = CX( Jy_R[id].real() );
+    Jz_R[id] = CX( Jz_R[id].real() );
+  }
+  
+  fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
+  
 }
 
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
