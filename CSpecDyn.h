@@ -151,7 +151,6 @@ class CSpecDyn
     // private methods
     void setup_k();
     void setup_fields();
-    void setup_B();
     
     void time_step();
     void set_dt();
@@ -175,7 +174,6 @@ class CSpecDyn
     
     void calc_Energy(double& energy_V, double& diss_V);
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);
-    void calc_crossHelicity(double& h);
     
     void Alvelius();
     

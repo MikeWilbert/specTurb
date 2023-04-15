@@ -33,7 +33,7 @@ const double DT = 1.e-3;
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius";
 // output interval
-const double OUT_INTERVAL = 2.;
+const double OUT_INTERVAL = 0.1;
 // simulation time
 const double END_SIMU = 100;
 
@@ -46,9 +46,10 @@ const int SETUP = 1;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.034;
+//~ const double NU  = 0.034;
+const double NU  = 0.02;
 // magnetic diffusivity
-const double ETA = NU*1.e-4;
+const double ETA = NU*1.e0;
 
 /** DEFINES **/
 
