@@ -100,6 +100,10 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   Jy_F = FFT.malloc_C();
   Jz_F = FFT.malloc_C();
   
+  Force_X = FFT.malloc_C();
+  Force_Y = FFT.malloc_C();
+  Force_Z = FFT.malloc_C();
+  
   float_array        = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
   
@@ -132,8 +136,8 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   MPI_Type_commit(&vti_subarray_vector);
 
   // random
-  normal_eng = std::mt19937(42);
-  normal = std::normal_distribution<double>(0.,1.);
+  angle_eng = std::mt19937(myRank);
+  angle = std::uniform_real_distribution<double>(0.,PI2);
   
   // Energy Spectrum
   energySpectrum_V = new double[N_bin];
@@ -517,7 +521,7 @@ void CSpecDyn::execute()
 
   while(time+dt < end_simu)
   {
-    if(time > 5. && b_not_set){setup_B();b_not_set=false;}
+    if(time > 10. && b_not_set){setup_B();b_not_set=false;}
     
     time_step();
     out_time += dt;
@@ -540,6 +544,7 @@ void CSpecDyn::time_step()
 {
   
   set_dt();
+  Alvelius();
   
   double del_t;
   
@@ -551,6 +556,7 @@ void CSpecDyn::time_step()
   
   for(int id = 0; id < size_F_tot; id++)
   { 
+    
     Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
     Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
     Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
@@ -782,6 +788,67 @@ void CSpecDyn::set_dt()
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
 
+void CSpecDyn::Alvelius()
+{
+  
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int k_int  = int(round(sqrt(k2[id])));
+    int kz_int = int(round(kz[iz]));
+    
+    if(1 <= k_int && k_int <= 3)
+    {
+    
+      double kxx = kx[ix];
+      double kyy = ky[iy];
+      double kzz = kz[iz];
+      double k   = sqrt(k2[id]);
+      
+      double phi   = atan2(kxx,kzz);
+      double theta = atan2(hypot(kxx,kzz), kyy);
+      
+      double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
+      double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
+      
+      CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
+      CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
+      
+      double alp = angle(angle_eng);
+      double psi = angle(angle_eng);
+      double gA = sin(2.*alp);
+      double gB = cos(2.*alp);
+      
+      double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
+                             -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
+                           
+      double theta_2 = theta_1 + psi;
+      
+      //~ double theta_1 = angle(angle_eng);
+      //~ double theta_2 = angle(angle_eng);
+      
+      double C =  1.e11/dt* 1./2.41;
+      
+      CX A = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
+      CX B = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
+      
+      Force_X[id] = (A * e1[0]  + B * e2[0]); 
+      Force_Y[id] = (A * e1[1]  + B * e2[1]); 
+      Force_Z[id] = (A * e1[2]  + B * e2[2]); 
+    
+    }
+    else
+    {
+      Force_X[id] = 0.;
+      Force_Y[id] = 0.;
+      Force_Z[id] = 0.;
+    }
+  }}}
+}
+
 void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
                         double del_t)
@@ -874,6 +941,19 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
     
   }}}
   
+  /************ ALVELIUS - 1999 **********/
+  
+  for(int id = 0; id < size_F_tot; id++){
+   
+    RHSV_X[id] += Force_X[id];
+    RHSV_Y[id] += Force_Y[id];
+    RHSV_Z[id] += Force_Z[id];
+    
+  }
+  
+  /***************************************/
+  
+  /*
   // Linear Turbulence Foring
   if(setup==2)
   {
@@ -938,6 +1018,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
       }
     }
   }
+  */
   
   // diffusion
   for(int id = 0; id < size_F_tot; id++)

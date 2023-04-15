@@ -19,7 +19,6 @@ plan_z_r2c( plan_z_r2c_),  plan_z_c2r( plan_z_c2r_)
   // nothing
 }
 
-//~ MikeFFT::MikeFFT(int N_, int pdims_[2]) :
 MikeFFT::MikeFFT(int N_, const int* pdims_) :
 N(N_), pdims(pdims_)
 {

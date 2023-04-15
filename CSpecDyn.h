@@ -52,8 +52,8 @@ class CSpecDyn
     int print_count = 0;
     
     // random
-    std::mt19937 normal_eng;
-    std::normal_distribution<double> normal;
+    std::mt19937 angle_eng;
+    std::uniform_real_distribution<double> angle;
     
     // fields
     double* kx;
@@ -127,6 +127,11 @@ class CSpecDyn
     CX* Jy_F;  
     CX* Jz_F;
     
+    // random Forces
+    CX* Force_X;
+    CX* Force_Y;
+    CX* Force_Z;
+    
     // Velocity Gradient for Forcing Tests
     CX *VF_xx, *VF_xy, *VF_xz;
     CX *VF_yx, *VF_yy, *VF_yz;
@@ -179,6 +184,8 @@ class CSpecDyn
     void calc_Energy(double& energy_V, double& diss_V);
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);
     void calc_crossHelicity(double& h);
+    
+    void Alvelius();
     
   public:
   
