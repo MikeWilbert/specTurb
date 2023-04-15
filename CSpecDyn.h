@@ -61,13 +61,13 @@ class CSpecDyn
 		double* kz;
 		double* k2;
     
-    double* Vx_R;  
-    double* Vy_R;  
-    double* Vz_R;
+    CX* Vx_R;  
+    CX* Vy_R;  
+    CX* Vz_R;
     
-    double* Bx_R;  
-    double* By_R;  
-    double* Bz_R;
+    CX* Bx_R;  
+    CX* By_R;  
+    CX* Bz_R;
     
     // help field for RK3
     CX* Vx_F;  
@@ -107,19 +107,19 @@ class CSpecDyn
     CX* RHS_By_F2;
     CX* RHS_Bz_F2;
     
-    double* RHS_Vx_R;
-    double* RHS_Vy_R;
-    double* RHS_Vz_R;
-    double* RHS_Bx_R;
-    double* RHS_By_R;
-    double* RHS_Bz_R;
+    CX* RHS_Vx_R;
+    CX* RHS_Vy_R;
+    CX* RHS_Vz_R;
+    CX* RHS_Bx_R;
+    CX* RHS_By_R;
+    CX* RHS_Bz_R;
     
-    double* Wx_R;  
-    double* Wy_R;  
-    double* Wz_R;
-    double* Jx_R;  
-    double* Jy_R;  
-    double* Jz_R;
+    CX* Wx_R;  
+    CX* Wy_R;  
+    CX* Wz_R;
+    CX* Jx_R;  
+    CX* Jy_R;  
+    CX* Jz_R;
     CX* Wx_F;  
     CX* Wy_F;  
     CX* Wz_F;
@@ -131,14 +131,6 @@ class CSpecDyn
     CX* Force_X;
     CX* Force_Y;
     CX* Force_Z;
-    
-    // Velocity Gradient for Forcing Tests
-    CX *VF_xx, *VF_xy, *VF_xz;
-    CX *VF_yx, *VF_yy, *VF_yz;
-    CX *VF_zx, *VF_zy, *VF_zz;
-    double *VR_xx, *VR_xy, *VR_xz;
-    double *VR_yx, *VR_yy, *VR_yz;
-    double *VR_zx, *VR_zy, *VR_zz;
     
     // vti output
     float* float_array;
@@ -170,16 +162,16 @@ class CSpecDyn
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);
     
-    void fFFT(double* IN_x, double* IN_y, double* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z);
-    void bFFT(CX* IN_x, CX* IN_y, CX* IN_z, double* OUT_x, double* OUT_y, double* OUT_z);
+    void fFFT(CX* IN_x, CX* IN_y, CX* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z);
+    void bFFT(CX* IN_x, CX* IN_y, CX* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z);
     
     void print();
     void print_Energy();
     void print_EnergySpectrum();
     void print_scales();
     void print_vti();
-    void print_mpi_scalar(double* field, int& N_bytes_scalar, const char* file_name);
-    void print_mpi_vector(double* field_X, double* field_Y, double* field_Z, int& N_bytes_vector, const char* file_name);
+    void print_mpi_scalar(CX* field, int& N_bytes_scalar, const char* file_name);
+    void print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, int& N_bytes_vector, const char* file_name);
     
     void calc_Energy(double& energy_V, double& diss_V);
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);

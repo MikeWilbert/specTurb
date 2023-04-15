@@ -41,7 +41,7 @@ const double END_SIMU = 100;
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
-const int SETUP = 0;
+const int SETUP = 1;
 
 // domain size
 const double LENGTH = PI2;
