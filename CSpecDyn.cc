@@ -223,12 +223,119 @@ void CSpecDyn::setup_k()
   
 }
 
+void CSpecDyn::setup_B()
+{
+  double E0_B = 1.e-5;
+  double k0 = 2.*M_PI;
+  
+  std::mt19937 eng(myRank);
+  std::uniform_real_distribution<double> phi(0.,PI2);
+  std::uniform_real_distribution<double> rand_real(1.,2.);
+  double norm_loc = 0.;
+  double norm;
+  double s = 11./6.;
+  
+  double energy_B_loc = 0.;
+  double energy_B;
+  
+  double diss_B_loc = 0.;
+  double diss_B;
+  
+  double Bx, By, Bz;
+  
+  double hs; // factor because of hermitian symmetry in z
+  
+  double norm_V, norm_B;
+    
+  /** random with energy spectrum normalized to desired kinetic energy **/
+  
+  // Zufallsfeld in R
+  for(int id = 0; id < size_R_tot; id++)
+  {    
+    
+    Bx_R[id] = rand_real(eng);
+    By_R[id] = rand_real(eng);
+    Bz_R[id] = rand_real(eng);
+  }
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // Amplituden für Energie-Spektrum
+  for(int id = 0; id < size_F_tot; id++)
+  {
+    double A = sqrt( 1./pow(1+k2[id],s) );
+    
+    //~ double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
+    
+    if(int(round(k2[id])) != 0)
+    {
+      Bx_F[id] *= A/abs(Bx_F[id]);
+      By_F[id] *= A/abs(By_F[id]);
+      Bz_F[id] *= A/abs(Bz_F[id]);
+    }
+    else
+    {
+      Bx_F[id] = 0.;
+      By_F[id] = 0.;
+      Bz_F[id] = 0.;
+    }
+  }
+  
+  projection(Bx_F, By_F, Bz_F);
+
+  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // Energie normieren
+  for(int ix = 0; ix < size_F[0]; ix++){
+  for(int iy = 0; iy < size_F[1]; iy++){
+  for(int iz = 0; iz < size_F[2]; iz++){
+      
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
+    
+    Bx = abs(Bx_F[id]);
+    By = abs(By_F[id]);
+    Bz = abs(Bz_F[id]);
+    
+    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
+
+  }}}
+  
+  energy_B_loc *= 0.5/double(N*N*N);
+  energy_B_loc *= 1. /double(N*N*N);
+  MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+     
+  norm_B = sqrt(E0_B/energy_B);    
+  
+  for(int id = 0; id < size_F_tot; id++)
+  {    
+    Bx_F[id] *= norm_B;
+    By_F[id] *= norm_B;
+    Bz_F[id] *= norm_B;
+  }
+      
+  
+}
+
+
 void CSpecDyn::setup_fields()
 {
   
-  double E0_V = 2.;
-  double E0_B = E0_V;
+  double E0_V = 0.5;
+  double E0_B = 0.25;
   double k0 = 2.*M_PI;
+  double Eu = 2.;
+  double Eb = 3.;
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -300,6 +407,166 @@ void CSpecDyn::setup_fields()
       fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
+      
+    case 2:
+    /** random with energy spectrum normalized to desired kinetic energy **/
+    
+      // Zufallsfeld in R
+      for(int id = 0; id < size_R_tot; id++)
+      {    
+        Vx_R[id] = rand_real(eng);
+        Vy_R[id] = rand_real(eng);
+        Vz_R[id] = rand_real(eng);
+        
+        Bx_R[id] = rand_real(eng);
+        By_R[id] = rand_real(eng);
+        Bz_R[id] = rand_real(eng);
+      }
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      
+      // Amplituden für Energie-Spektrum
+      for(int id = 0; id < size_F_tot; id++)
+      {
+        double A = sqrt( 1./pow(1+k2[id],s) );
+        
+        //~ double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
+        
+        if(int(round(k2[id])) != 0)
+        {
+          Vx_F[id] *= A/abs(Vx_F[id]);
+          Vy_F[id] *= A/abs(Vy_F[id]);
+          Vz_F[id] *= A/abs(Vz_F[id]);
+          Bx_F[id] *= A/abs(Bx_F[id]);
+          By_F[id] *= A/abs(By_F[id]);
+          Bz_F[id] *= A/abs(Bz_F[id]);
+        }
+        else
+        {
+          Vx_F[id] = 0.;
+          Vy_F[id] = 0.;
+          Vz_F[id] = 0.;
+          Bx_F[id] = 0.;
+          By_F[id] = 0.;
+          Bz_F[id] = 0.;
+        }
+      }
+      
+      projection(Vx_F, Vy_F, Vz_F);
+      projection(Bx_F, By_F, Bz_F);
+      
+      // Energie normieren
+      for(int ix = 0; ix < size_F[0]; ix++){
+      for(int iy = 0; iy < size_F[1]; iy++){
+      for(int iz = 0; iz < size_F[2]; iz++){
+          
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        
+        Vx = abs(Vx_F[id]);
+        Vy = abs(Vy_F[id]);
+        Vz = abs(Vz_F[id]);
+        Bx = abs(Bx_F[id]);
+        By = abs(By_F[id]);
+        Bz = abs(Bz_F[id]);
+        
+        energy_V_loc += (Vx*Vx+Vy*Vy+Vz*Vz);
+        energy_B_loc += (Bx*Bx+By*By+Bz*Bz);
+
+      }}}
+      
+      energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+      energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+      MPI_Allreduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      energy_B_loc *= 0.5/double(N*N*N);
+      energy_B_loc *= 1. /double(N*N*N);
+      MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      norm_V = sqrt(E0_V/energy_V);    
+      norm_B = sqrt(E0_B/energy_B);    
+      
+      for(int id = 0; id < size_F_tot; id++)
+      {    
+        Vx_F[id] *= norm_V;
+        Vy_F[id] *= norm_V;
+        Vz_F[id] *= norm_V;
+        Bx_F[id] *= norm_B;
+        By_F[id] *= norm_B;
+        Bz_F[id] *= norm_B;
+        
+        #ifdef NS
+        Bx_F[id] = 0.;
+        By_F[id] = 0.;
+        Bz_F[id] = 0.;
+        #endif
+      }
+        
+      break;
+      
+    case 3:
+      
+      for(int ix = 0; ix<size_F[0]; ix++){
+      for(int iy = 0; iy<size_F[1]; iy++){
+      for(int iz = 0; iz<size_F[2]; iz++){
+        
+        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+        
+        int k_int  = int(round(sqrt(k2[id])));
+        
+        if(k_int > 0)
+        {
+        
+          double kxx = kx[ix];
+          double kyy = ky[iy];
+          double kzz = kz[iz];
+          double k   = sqrt(k2[id]);
+          
+          double phi   = atan2(kxx,kzz);
+          double theta = atan2(hypot(kxx,kzz), kyy);
+          
+          double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
+          double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
+          
+          double phi_1 = angle(angle_eng);
+          double phi_2 = angle(angle_eng);
+          double phi_3 = angle(angle_eng);
+          double phi_4 = angle(angle_eng);
+          
+          CX u1 = sqrt(Eu/(N*N*N)) * IM * ( exp(IM * phi_1) - exp(IM * phi_2) );
+          CX u2 = sqrt(Eu/(N*N*N))      * ( exp(IM * phi_1) + exp(IM * phi_2) );
+          CX b1 = sqrt(Eb/(N*N*N)) * IM * ( exp(IM * phi_3) - exp(IM * phi_4) );
+          CX b2 = sqrt(Eb/(N*N*N))      * ( exp(IM * phi_3) + exp(IM * phi_4) );
+          
+          double factor = N*N*N;
+          
+          Vx_F[id] = factor*(u1*e1[0] + u2*e2[0]);
+          Vy_F[id] = factor*(u1*e1[1] + u2*e2[1]);
+          Vz_F[id] = factor*(u1*e1[2] + u2*e2[2]);
+          Bx_F[id] = factor*(b1*e1[0] + b2*e2[0]);
+          By_F[id] = factor*(b1*e1[1] + b2*e2[1]);
+          Bz_F[id] = factor*(b1*e1[2] + b2*e2[2]);
+        }
+      }}}
+      
+      //~ // Keep only real part
+      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      //~ // clean up imaginary part
+      //~ for(int id = 0; id < size_R_tot; id++){
+       
+        //~ Vx_R[id] = Vx_R[id].real();
+        //~ Vy_R[id] = Vy_R[id].real();
+        //~ Vz_R[id] = Vz_R[id].real();
+        //~ Bx_R[id] = Bx_R[id].real();
+        //~ By_R[id] = By_R[id].real();
+        //~ Bz_R[id] = Bz_R[id].real();
+        
+      //~ }
+      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+      
+      
+      break;
     
     default: 
       if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
@@ -318,8 +585,11 @@ void CSpecDyn::execute()
   print_Energy();
   print();
   
+  bool b_not_set = true;
+  
   while(time+dt < end_simu)
   {
+    //~ if(time > 10. && b_not_set){setup_B();b_not_set=false;}
     
     time_step();
     out_time += dt;
@@ -557,7 +827,7 @@ void CSpecDyn::Alvelius()
     
     int k_int  = int(round(sqrt(k2[id])));
     
-    if(1 <= k_int && k_int <= 3)
+    if(0 < k_int)
     {
     
       double kxx = kx[ix];
@@ -584,20 +854,26 @@ void CSpecDyn::Alvelius()
                            
       double theta_2 = theta_1 + psi;
       
-      //~ // double theta_1 = angle(angle_eng);
-      //~ // double theta_2 = angle(angle_eng);
+      double P =  1.;
+      double kf = 2.;
       
-      //~ double C =  1.e11/dt* 1./2.41;
-      //~ double c =  1.; 
-      double C =  1.e12/dt* 1./2.41;
-      double c =  0.05; 
+      double F =  P/dt * (k_int==kf)/3.;// * exp(-((k-kf)*(k-kf))/c);
       
-      CX A = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
-      CX B = sqrt( C * exp(-(k-2.)*(k-2.)/1.) ) * sqrt( 1. / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
+      //~ double c =  0.05; 
+      // double C =  15*P/dt* 1./0.396;
+      // double F =  C * exp(-((k-kf)*(k-kf))/c);
       
-      Force_X[id] = (A * e1[0]  + B * e2[0]); 
-      Force_Y[id] = (A * e1[1]  + B * e2[1]); 
-      Force_Z[id] = (A * e1[2]  + B * e2[2]); 
+      
+      CX A = sqrt( F ) * exp(IM*theta_1) * gA;
+      CX B = sqrt( F ) * exp(IM*theta_2) * gB;
+      // CX A = sqrt( F / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
+      // CX B = sqrt( F / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
+      
+      double factor = N*N*N;
+      
+      Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
+      Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
+      Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
     
     }
     else
@@ -663,6 +939,19 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
   bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
   bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
+  
+  // clean up imaginary part
+  for(int id = 0; id < size_R_tot; id++){
+   
+    Vx_R[id] = Vx_R[id].real();
+    Vy_R[id] = Vy_R[id].real();
+    Vz_R[id] = Vz_R[id].real();
+    Bx_R[id] = Bx_R[id].real();
+    By_R[id] = By_R[id].real();
+    Bz_R[id] = Bz_R[id].real();
+    
+  }
+  
   
   // RHS_V = VxW + JxB
   for(int id = 0; id < size_R_tot; id++){
@@ -960,20 +1249,35 @@ void CSpecDyn::print_mpi_scalar(CX* field, int& N_bytes_scalar, const char* file
 
 void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
-  // spherical truncation
-  double kmax  = sqrt(2)/3.*N;
-  double kmax2 = kmax*kmax;
+  // Hou&Li
+  double kmax = N/2*dk;
   
-  for(int id = 0; id < size_F_tot; id++){
+ for(int id = 0; id < size_F_tot; id++){
    
-    if(k2[id] >= kmax2)
-    {
-      fieldX[id] = 0.;
-      fieldY[id] = 0.;
-      fieldZ[id] = 0.;
-    }
+    double k = sqrt(k2[id]);
+    double filter = exp(-36. * pow(k/kmax, 36) );
+   
+    fieldX[id] *= filter;
+    fieldY[id] *= filter;
+    fieldZ[id] *= filter;
     
   }
+    
+  
+  //~ // spherical truncation
+  //~ double kmax  = sqrt(2)/3.*N;
+  //~ double kmax2 = kmax*kmax;
+  
+  //~ for(int id = 0; id < size_F_tot; id++){
+   
+    //~ if(k2[id] >= kmax2)
+    //~ {
+      //~ fieldX[id] = 0.;
+      //~ fieldY[id] = 0.;
+      //~ fieldZ[id] = 0.;
+    //~ }
+    
+  //~ }
   
   // // 2/3 rule
   // double kmax = N/2.*dk;
@@ -1243,12 +1547,14 @@ void CSpecDyn::print_scales()
   L_V_loc *= 0.5 /double(N*N*N);
   L_V_loc *= 1. /double(N*N*N);
   MPI_Reduce(&L_V_loc, &L_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  L_V *= M_PI/(2.*v0*v0);
+  //~ L_V *= M_PI/(2.*v0*v0);
+  L_V /= energy_V;
   
   L_B_loc *= 0.5 /double(N*N*N);
   L_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&L_B_loc, &L_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  L_B *= M_PI/(2.*b0*b0);
+  //~ L_B *= M_PI/(2.*b0*b0);
+  L_V /= energy_V;
   
   lambda_V = sqrt(15.*nu /diss_V)*v0;
   lambda_B = sqrt(15.*eta/diss_B)*b0;

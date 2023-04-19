@@ -137,7 +137,7 @@ class CSpecDyn
     float* float_array_vector;
     
     // Energy Spectrum
-    int N_bin = 50;
+    int N_bin = 100;
     
     double* energySpectrum_V;
     double* energySpectrum_V_loc;
@@ -151,6 +151,7 @@ class CSpecDyn
     // private methods
     void setup_k();
     void setup_fields();
+    void setup_B();
     
     void time_step();
     void set_dt();
