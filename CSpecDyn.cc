@@ -819,6 +819,9 @@ void CSpecDyn::set_dt()
 void CSpecDyn::Alvelius()
 {
   
+  double P =  1.;
+  double kf = 2.;
+  
   for(int ix = 0; ix<size_F[0]; ix++){
   for(int iy = 0; iy<size_F[1]; iy++){
   for(int iz = 0; iz<size_F[2]; iz++){
@@ -827,7 +830,7 @@ void CSpecDyn::Alvelius()
     
     int k_int  = int(round(sqrt(k2[id])));
     
-    if(0 < k_int)
+    if(k_int == kf)
     {
     
       double kxx = kx[ix];
@@ -854,26 +857,27 @@ void CSpecDyn::Alvelius()
                            
       double theta_2 = theta_1 + psi;
       
-      double P =  1.;
-      double kf = 2.;
-      
-      double F =  P/dt * (k_int==kf)/3.;// * exp(-((k-kf)*(k-kf))/c);
-      
-      //~ double c =  0.05; 
-      // double C =  15*P/dt* 1./0.396;
-      // double F =  C * exp(-((k-kf)*(k-kf))/c);
-      
+      double F =  P/(dt*3.); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
       
       CX A = sqrt( F ) * exp(IM*theta_1) * gA;
       CX B = sqrt( F ) * exp(IM*theta_2) * gB;
-      // CX A = sqrt( F / (PI2*k2[id]) ) * exp(IM*theta_1) * gA;
-      // CX B = sqrt( F / (PI2*k2[id]) ) * exp(IM*theta_2) * gB;
       
-      double factor = N*N*N;
+      double factor = N*N*N/sqrt(0.35); // 0.35 um Energieverlust durch Projektion zauszugleichen
       
       Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
       Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
       Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
+    
+      // Projektion auf Anteil orthogonal zu B
+      CX proj = (Force_X[id]*std::conj(Bx_F[id]) + Force_Y[id]*std::conj(By_F[id]) + Force_Z[id]*std::conj(Bz_F[id]))
+               /(Bx_F   [id]*std::conj(Bx_F[id]) + By_F   [id]*std::conj(By_F[id]) + Bz_F   [id]*std::conj(Bz_F[id]));
+    
+      Force_X[id] -= proj * Bx_F[id];
+      Force_Y[id] -= proj * By_F[id];
+      Force_Z[id] -= proj * Bz_F[id];
+    
+      //printf("(R,C) = (%f,%f)\n", proj.real(), proj.imag());
+     
     
     }
     else
@@ -1450,7 +1454,7 @@ void CSpecDyn::print_Energy()
   diss_B_loc *= N3_inv;
   diss_B_loc *= N3_inv;
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  diss_V *= eta;
+  diss_B *= eta;
   
   ens_V_loc *= N3_inv;
   ens_V_loc *= N3_inv;
