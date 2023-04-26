@@ -1001,15 +1001,16 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }}}
   
   /************ ALVELIUS - 1999 **********/
-  
-  for(int id = 0; id < size_F_tot; id++){
-   
-    RHSV_X[id] += Force_X[id];
-    RHSV_Y[id] += Force_Y[id];
-    RHSV_Z[id] += Force_Z[id];
-    
+  if(SETUP==2)
+  {
+    for(int id = 0; id < size_F_tot; id++){
+     
+      RHSV_X[id] += Force_X[id];
+      RHSV_Y[id] += Force_Y[id];
+      RHSV_Z[id] += Force_Z[id];
+      
+    }
   }
-  
   /***************************************/
   
   // diffusion
@@ -1386,6 +1387,12 @@ void CSpecDyn::print_Energy()
   double ens_V;
   double ens_B;
   
+  CX Hc_loc = 0.;
+  double Hcr_loc = 0.;
+  double Hci_loc = 0.;
+  double Hcr;
+  double Hci;
+  
   double Vx, Vy, Vz;
   double Bx, By, Bz;
   double Wx, Wy, Wz;
@@ -1418,33 +1425,54 @@ void CSpecDyn::print_Energy()
     
     ens_V_loc    += (Wx*Wx+Wy*Wy+Wz*Wz);
     ens_B_loc    += (Jx*Jx+Jy*Jy+Jz*Jz);
+    
+    Hc_loc += Vx_F[id]*std::conj(Bx_F[id])+Vy_F[id]*std::conj(By_F[id])+Vz_F[id]*std::conj(Bz_F[id]);
 
   }}}
   
-  energy_V_loc *= 0.5/double(N*N*N); // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
-  energy_V_loc *= 1. /double(N*N*N); // wg Fourier Space
+  double N3_inv = 1./double(N*N*N);
+  
+  energy_V_loc *= N3_inv; // Ortsmittelung
+  energy_V_loc *= N3_inv; // DFT
   MPI_Reduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  energy_V *= 0.5;
   
-  energy_B_loc *= 0.5/double(N*N*N);
-  energy_B_loc *= 1. /double(N*N*N);
+  energy_B_loc *= N3_inv;
+  energy_B_loc *= N3_inv;
   MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  energy_B *= 0.5;
   
-  diss_V_loc *= 0.5 /double(N*N*N);
-  diss_V_loc *= 1. /double(N*N*N);
+  diss_V_loc *= N3_inv;
+  diss_V_loc *= N3_inv;
   MPI_Reduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  diss_V *= 2. * nu;
+  diss_V *= nu;
   
-  diss_B_loc *= eta/double(N*N*N);
-  diss_B_loc *= 1. /double(N*N*N);
+  diss_B_loc *= N3_inv;
+  diss_B_loc *= N3_inv;
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  diss_V *= eta;
   
-  ens_V_loc *= 2. /double(N*N*N);
-  ens_V_loc *= 1. /double(N*N*N);
+  ens_V_loc *= N3_inv;
+  ens_V_loc *= N3_inv;
   MPI_Reduce(&ens_V_loc, &ens_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  ens_V *= 1.;
   
-  ens_B_loc *= 2. /double(N*N*N);
-  ens_B_loc *= 1. /double(N*N*N);
+  ens_B_loc *= N3_inv;
+  ens_B_loc *= N3_inv;
   MPI_Reduce(&ens_B_loc, &ens_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  ens_B *= 1.;
+  
+  Hcr_loc = Hc_loc.real();
+  Hcr_loc *= N3_inv;
+  Hcr_loc *= N3_inv;
+  MPI_Reduce(&Hcr_loc, &Hcr, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  Hcr *= 1.;
+  
+  Hci_loc = Hc_loc.imag();
+  Hci_loc *= N3_inv;
+  Hci_loc *= N3_inv;
+  MPI_Reduce(&Hci_loc, &Hci, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  Hci *= 1.;
   
   // print
   if(myRank == 0)
@@ -1458,7 +1486,7 @@ void CSpecDyn::print_Energy()
     }
       
     os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B 
-               << ", " << ens_V    << ", " <<  ens_B    << std::endl;
+               << ", " << ens_V    << ", " <<  ens_B    << ", " <<  Hcr    << ", " <<  Hci    << std::endl;
     
     os.close();
   }MPI_Barrier(comm);
