@@ -31,7 +31,7 @@ int const PDIMS[2] = {8,8};
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD";
 // output interval
 const double OUT_INTERVAL = 0.25;
 // simulation time
