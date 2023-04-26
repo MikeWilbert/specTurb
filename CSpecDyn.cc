@@ -490,9 +490,9 @@ void CSpecDyn::setup_fields()
         Vx_F[id] *= norm_V;
         Vy_F[id] *= norm_V;
         Vz_F[id] *= norm_V;
-        Bx_F[id] *= norm_B;
-        By_F[id] *= norm_B;
-        Bz_F[id] *= norm_B;
+        Bx_F[id] *= norm_B*0.; // UWAGA!
+        By_F[id] *= norm_B*0.;
+        Bz_F[id] *= norm_B*0.;
         
         #ifdef NS
         Bx_F[id] = 0.;
@@ -820,7 +820,12 @@ void CSpecDyn::Alvelius()
 {
   
   double P =  1.;
-  double kf = 2.;
+  
+  //~ double kf = 1.;
+  //~ double Nf = sqrt(3.);
+  
+  int kf = 1;
+  double Nf = 1.;
   
   for(int ix = 0; ix<size_F[0]; ix++){
   for(int iy = 0; iy<size_F[1]; iy++){
@@ -828,15 +833,19 @@ void CSpecDyn::Alvelius()
     
     int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    int k_int  = int(round(sqrt(k2[id])));
+    double k = sqrt(k2[id]);
+    int k_int  = int(round(k));
     
-    if(k_int == kf)
+    //~ if(k_int == kf)
+    if( fabs(kf-k) < 0.001)
     {
     
       double kxx = kx[ix];
       double kyy = ky[iy];
       double kzz = kz[iz];
       double k   = sqrt(k2[id]);
+      
+      //~ printf("(kx,ky,kz,k) = (%d,%d,%d,%f)\n", int(kxx), int(kyy), int(kzz), k);
       
       double phi   = atan2(kxx,kzz);
       double theta = atan2(hypot(kxx,kzz), kyy);
@@ -857,24 +866,26 @@ void CSpecDyn::Alvelius()
                            
       double theta_2 = theta_1 + psi;
       
-      double F =  P/(dt*3.); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
+      double F =  P/(dt*Nf); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
       
       CX A = sqrt( F ) * exp(IM*theta_1) * gA;
       CX B = sqrt( F ) * exp(IM*theta_2) * gB;
       
-      double factor = N*N*N/sqrt(0.35); // 0.35 um Energieverlust durch Projektion zauszugleichen
+      //~ double factor = N*N*N*2.7* sqrt(0.25);
+      double factor = N*N*N*2.7* M_PI;
+      //~ double factor = N*N*N/sqrt(0.35); // 0.35 um Energieverlust durch Projektion zauszugleichen
       
       Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
       Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
       Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
     
       // Projektion auf Anteil orthogonal zu B
-      CX proj = (Force_X[id]*std::conj(Bx_F[id]) + Force_Y[id]*std::conj(By_F[id]) + Force_Z[id]*std::conj(Bz_F[id]))
-               /(Bx_F   [id]*std::conj(Bx_F[id]) + By_F   [id]*std::conj(By_F[id]) + Bz_F   [id]*std::conj(Bz_F[id]));
+      //~ CX proj = (Force_X[id]*std::conj(Bx_F[id]) + Force_Y[id]*std::conj(By_F[id]) + Force_Z[id]*std::conj(Bz_F[id]))
+               //~ /(Bx_F   [id]*std::conj(Bx_F[id]) + By_F   [id]*std::conj(By_F[id]) + Bz_F   [id]*std::conj(Bz_F[id]));
     
-      Force_X[id] -= proj * Bx_F[id];
-      Force_Y[id] -= proj * By_F[id];
-      Force_Z[id] -= proj * Bz_F[id];
+      //~ Force_X[id] -= proj * Bx_F[id];
+      //~ Force_Y[id] -= proj * By_F[id];
+      //~ Force_Z[id] -= proj * Bz_F[id];
     
       //printf("(R,C) = (%f,%f)\n", proj.real(), proj.imag());
      

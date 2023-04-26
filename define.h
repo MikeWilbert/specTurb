@@ -31,11 +31,11 @@ int const PDIMS[2] = {8,8};
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Hc_Off2";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1";
 // output interval
-const double OUT_INTERVAL = 1.;
+const double OUT_INTERVAL = 0.25;
 // simulation time
-const double END_SIMU = 15.;
+const double END_SIMU = 20.;
 
 // choose initial setup: 
 // (0):all zero; 
@@ -46,8 +46,8 @@ const int SETUP = 2;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.0167;
-//~ const double NU  = 0.02;
+//~ const double NU  = 0.0167;
+const double NU  = 0.05;
 // magnetic diffusivity
 const double ETA = NU*1.;
 //~ const double ETA = NU*1.e-1;
