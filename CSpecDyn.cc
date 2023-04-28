@@ -110,6 +110,10 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   Force_Y = FFT.malloc();
   Force_Z = FFT.malloc();
   
+  B0x = FFT.malloc();
+  B0y = FFT.malloc();
+  B0z = FFT.malloc();
+  
   float_array        = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
   
@@ -333,9 +337,7 @@ void CSpecDyn::setup_fields()
   
   double E0_V = 0.5;
   double E0_B = 0.25;
-  double k0 = 2.*M_PI;
-  double Eu = 2.;
-  double Eb = 3.;
+  double energy_b0_init = 4.;
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -346,8 +348,10 @@ void CSpecDyn::setup_fields()
   
   double energy_V_loc = 0.;
   double energy_B_loc = 0.;
+  double energy_B0_loc = 0.;
   double energy_V;
   double energy_B;
+  double energy_B0;
   
   double diss_V_loc = 0.;
   double diss_B_loc = 0.;
@@ -357,9 +361,7 @@ void CSpecDyn::setup_fields()
   double Vx, Vy, Vz;
   double Bx, By, Bz;
   
-  double hs; // factor because of hermitian symmetry in z
-  
-  double norm_V, norm_B;
+  double norm_V, norm_B, norm_B0;
   
   switch(setup)
   {
@@ -502,77 +504,72 @@ void CSpecDyn::setup_fields()
       }
         
       break;
-      
-    case 3:
-      
-      for(int ix = 0; ix<size_F[0]; ix++){
-      for(int iy = 0; iy<size_F[1]; iy++){
-      for(int iz = 0; iz<size_F[2]; iz++){
-        
-        int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-        
-        int k_int  = int(round(sqrt(k2[id])));
-        
-        if(k_int > 0)
-        {
-        
-          double kxx = kx[ix];
-          double kyy = ky[iy];
-          double kzz = kz[iz];
-          double k   = sqrt(k2[id]);
-          
-          double phi   = atan2(kxx,kzz);
-          double theta = atan2(hypot(kxx,kzz), kyy);
-          
-          double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
-          double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
-          
-          double phi_1 = angle(angle_eng);
-          double phi_2 = angle(angle_eng);
-          double phi_3 = angle(angle_eng);
-          double phi_4 = angle(angle_eng);
-          
-          CX u1 = sqrt(Eu/(N*N*N)) * IM * ( exp(IM * phi_1) - exp(IM * phi_2) );
-          CX u2 = sqrt(Eu/(N*N*N))      * ( exp(IM * phi_1) + exp(IM * phi_2) );
-          CX b1 = sqrt(Eb/(N*N*N)) * IM * ( exp(IM * phi_3) - exp(IM * phi_4) );
-          CX b2 = sqrt(Eb/(N*N*N))      * ( exp(IM * phi_3) + exp(IM * phi_4) );
-          
-          double factor = N*N*N;
-          
-          Vx_F[id] = factor*(u1*e1[0] + u2*e2[0]);
-          Vy_F[id] = factor*(u1*e1[1] + u2*e2[1]);
-          Vz_F[id] = factor*(u1*e1[2] + u2*e2[2]);
-          Bx_F[id] = factor*(b1*e1[0] + b2*e2[0]);
-          By_F[id] = factor*(b1*e1[1] + b2*e2[1]);
-          Bz_F[id] = factor*(b1*e1[2] + b2*e2[2]);
-        }
-      }}}
-      
-      //~ // Keep only real part
-      //~ bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
-      //~ bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-      //~ // clean up imaginary part
-      //~ for(int id = 0; id < size_R_tot; id++){
-       
-        //~ Vx_R[id] = Vx_R[id].real();
-        //~ Vy_R[id] = Vy_R[id].real();
-        //~ Vz_R[id] = Vz_R[id].real();
-        //~ Bx_R[id] = Bx_R[id].real();
-        //~ By_R[id] = By_R[id].real();
-        //~ Bz_R[id] = Bz_R[id].real();
-        
-      //~ }
-      //~ fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-      //~ fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-      
-      
-      break;
     
     default: 
       if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
       MPI_Barrier(comm);
       MPI_Finalize();
       exit(EXIT_FAILURE);
+  }
+  
+  /** Background Field **/
+  switch(BACKGROUND)
+  {
+  
+    case 0:
+    
+      /** B0 = 0 **/
+      for(int id = 0; id < size_R_tot; id++)
+      {    
+        B0x[id] = 0.;
+        B0y[id] = 0.;
+        B0z[id] = 0.;
+      }
+      break;
+      
+    case 1:
+    
+      /** B0 = B0*ez **/
+      for(int id = 0; id < size_R_tot; id++)
+      {    
+        B0x[id] = 0.;
+        B0y[id] = 0.;
+        B0z[id] = 1.;
+      }
+      break;
+  
+    default: 
+      if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
+      MPI_Barrier(comm);
+      MPI_Finalize();
+      exit(EXIT_FAILURE);
+  }
+  
+  if(BACKGROUND != 0)
+  {
+    // Energie in B0 auf vorgegeben Wert setzen!
+    for(int id = 0; id < size_R_tot; id++){
+        
+        Bx = abs(B0x[id]);
+        By = abs(B0y[id]);
+        Bz = abs(B0z[id]);
+        
+        energy_B0_loc += (Bx*Bx+By*By+Bz*Bz);
+
+    }
+    
+    energy_B0_loc *= 0.5/double(N*N*N); // sind in RealSpace!
+    MPI_Allreduce(&energy_B0_loc, &energy_B0, 1, MPI_DOUBLE, MPI_SUM, comm);
+    
+    norm_B0 = sqrt(energy_b0_init/energy_B0);      
+    
+    for(int id = 0; id < size_F_tot; id++)
+    {    
+      B0x[id] *= norm_B0;
+      B0y[id] *= norm_B0;
+      B0z[id] *= norm_B0;
+    }
+    
   }
   
 }
@@ -971,18 +968,18 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   // RHS_V = VxW + JxB
   for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*Bz_R[id]-Jz_R[id]*By_R[id]);
-    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*Bx_R[id]-Jx_R[id]*Bz_R[id]);
-    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*By_R[id]-Jy_R[id]*Bx_R[id]);
+    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
+    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
+    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
     
   }
   
   // RHS_B = VxB
   for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Bx_R[id] = Vy_R[id]*Bz_R[id]-Vz_R[id]*By_R[id];
-    RHS_By_R[id] = Vz_R[id]*Bx_R[id]-Vx_R[id]*Bz_R[id];
-    RHS_Bz_R[id] = Vx_R[id]*By_R[id]-Vy_R[id]*Bx_R[id];
+    RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
+    RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
+    RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
     
   }
   
@@ -1016,7 +1013,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }}}
   
   /************ ALVELIUS - 1999 **********/
-  if(SETUP==2)
+  if(setup==2)
   {
     for(int id = 0; id < size_F_tot; id++){
      

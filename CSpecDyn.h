@@ -127,6 +127,10 @@ class CSpecDyn
     CX* Jy_F;  
     CX* Jz_F;
     
+    CX* B0x;
+    CX* B0y;
+    CX* B0z;
+    
     // random Forces
     CX* Force_X;
     CX* Force_Y;
