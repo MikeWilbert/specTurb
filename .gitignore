@@ -1,3 +1,5 @@
 *.o
 machinefile
 CSpecDyn
+*.err
+*.out

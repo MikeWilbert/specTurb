@@ -144,6 +144,8 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   // random
   angle_eng = std::mt19937(myRank);
   angle = std::uniform_real_distribution<double>(0.,PI2);
+  length_eng = std::mt19937(myRank+2);
+  length = std::uniform_real_distribution<double>(-1.,1.);
   
   // Energy Spectrum
   energySpectrum_V = new double[N_bin];
@@ -337,7 +339,7 @@ void CSpecDyn::setup_fields()
   
   double E0_V = 0.5;
   double E0_B = 0.25;
-  double energy_b0_init = 4.;
+  double energy_b0_init = 0.;
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -609,7 +611,15 @@ void CSpecDyn::time_step()
 {
   
   set_dt();
-  Alvelius();
+  
+  if(FORCING==0)
+  {
+    Alvelius();
+  }
+  else if(FORCING==2)
+  {
+    Titov();
+  }
   
   double del_t;
   
@@ -813,14 +823,88 @@ void CSpecDyn::set_dt()
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
 
+void CSpecDyn::Titov()
+{
+  double P = PI2;
+  int kf = 1;
+  int Nm = 6;
+  
+  double alpha = sqrt(2.*P/(dt*Nm));
+  
+  double e_j[3];
+  double e_u[3];
+  double par, norm;
+  
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    double k = sqrt(k2[id]);
+    
+    if( fabs(kf-k) < 0.001)
+    {
+    
+      double kxx = kx[ix];
+      double kyy = ky[iy];
+      double kzz = kz[iz];
+      
+      do{ 
+        e_j[0] = length(length_eng);
+        e_j[1] = length(length_eng);
+        e_j[2] = length(length_eng);
+        
+        norm = 1./sqrt(e_j[0]*e_j[0] + e_j[1]*e_j[1] + e_j[2]*e_j[2]);
+        
+        e_j[0] *= norm;
+        e_j[1] *= norm;
+        e_j[2] *= norm;
+        
+        par = (e_j[0] * kxx + e_j[1] * kyy + e_j[2] * kzz) / k;
+        
+      }while( fabs(par) < 1.e-7 );
+      
+      e_u[0] = kyy * e_j[2] - kzz * e_j[1];
+      e_u[1] = kzz * e_j[0] - kxx * e_j[2];
+      e_u[2] = kxx * e_j[1] - kyy * e_j[0];
+      
+      norm = 1./sqrt(e_u[0]*e_u[0] + e_u[1]*e_u[1] + e_u[2]*e_u[2]);
+        
+      e_u[0] *= norm;
+      e_u[1] *= norm;
+      e_u[2] *= norm;
+    
+      Force_X[id] = alpha * e_u[0];
+      Force_Y[id] = alpha * e_u[1];
+      Force_Z[id] = alpha * e_u[2];
+  
+    }
+    else
+    {
+      Force_X[id] = 0.;
+      Force_Y[id] = 0.;
+      Force_Z[id] = 0.;
+    }
+  
+  }}}
+  
+  // only keep real part
+  bFFT(Force_X, Force_Y, Force_Z, Jx_R, Jy_R, Jz_R);
+  
+  for(int id = 0; id<size_F_tot; id++)
+  {
+    Jx_R[id] = CX( Jx_R[id].real() );
+    Jy_R[id] = CX( Jy_R[id].real() );
+    Jz_R[id] = CX( Jz_R[id].real() );
+  }
+  
+  fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
+}
+
 void CSpecDyn::Alvelius()
 {
   
-  double P =  1.;
-  
-  //~ double kf = 1.;
-  //~ double Nf = sqrt(3.);
-  
+  double P = PI2;
   int kf = 1;
   double Nf = 1.;
   
@@ -833,7 +917,6 @@ void CSpecDyn::Alvelius()
     double k = sqrt(k2[id]);
     int k_int  = int(round(k));
     
-    //~ if(k_int == kf)
     if( fabs(kf-k) < 0.001)
     {
     
@@ -841,8 +924,6 @@ void CSpecDyn::Alvelius()
       double kyy = ky[iy];
       double kzz = kz[iz];
       double k   = sqrt(k2[id]);
-      
-      //~ printf("(kx,ky,kz,k) = (%d,%d,%d,%f)\n", int(kxx), int(kyy), int(kzz), k);
       
       double phi   = atan2(kxx,kzz);
       double theta = atan2(hypot(kxx,kzz), kyy);
@@ -852,6 +933,8 @@ void CSpecDyn::Alvelius()
       
       CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
+      //~ CX xi_1 = Bx_F[id]*e1[0] + By_F[id]*e1[1] + Bz_F[id]*e1[2]; // Keine F-B Korrelation?
+      //~ CX xi_2 = Bx_F[id]*e2[0] + By_F[id]*e2[1] + Bz_F[id]*e2[2];
       
       double alp = angle(angle_eng);
       double psi = angle(angle_eng);
@@ -869,8 +952,8 @@ void CSpecDyn::Alvelius()
       CX B = sqrt( F ) * exp(IM*theta_2) * gB;
       
       // 2.7 normiert auf eps=1 und sqrt(eps_0) setzt den gewünschten eps-Wert
-      //~ double factor = N*N*N*2.7* M_PI;      // NS
-      double factor = N*N*N*2.7* sqrt(8.); // MHD
+      double factor = N*N*N * 2.7 * sqrt(P);   // NS
+      //~ double factor = N*N*N*2.7* sqrt(8.); // MHD
       
       Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
       Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 

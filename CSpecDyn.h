@@ -54,6 +54,8 @@ class CSpecDyn
     // random
     std::mt19937 angle_eng;
     std::uniform_real_distribution<double> angle;
+    std::mt19937 length_eng;
+    std::uniform_real_distribution<double> length;
     
     // fields
     double* kx;
@@ -181,6 +183,7 @@ class CSpecDyn
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);
     
     void Alvelius();
+    void Titov();
     
   public:
   
