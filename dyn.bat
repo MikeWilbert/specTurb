@@ -4,7 +4,7 @@
 #SBATCH --tasks-per-node=48
 #SBATCH --output=mpi_%j.out
 #SBATCH --error=mpi_%j.err
-#SBATCH --time=8:00:00
+#SBATCH --time=24:00:00
 #SBATCH --partition=batch
 
-srun --overlap ./CSpecDyn_256_Titov
+srun --overlap ./CSpecDyn_1024_CPU48x48

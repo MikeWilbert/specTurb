@@ -22,7 +22,7 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 256;
+const int NUM = 1024;
 // processor grid
 int const PDIMS[2] = {48,48};
 // CFL number
@@ -31,29 +31,29 @@ int const PDIMS[2] = {48,48};
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Alvelius/MHD_N256_B0_0p0_Titov_noHc";
+const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Alvelius/MHD_N1024_Alvelius_cfl0p5_nu0p0012_CPU48x48";
 // output interval
 const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 30.;
+const double END_SIMU = 80.;
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
 const int SETUP = 2;
-const int BACKGROUND = 1;
+const int BACKGROUND = 0;
 
 // choose Forcing
 // (0) Alvelius
 // (2) Titov
-const int FORCING = 2;
+const int FORCING = 0;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 0.0167;
-const double NU  = 0.0072;
+const double NU  = 0.0012;
 // magnetic diffusivity
 const double ETA = NU*1.;
 //~ const double ETA = NU*1.e-1;

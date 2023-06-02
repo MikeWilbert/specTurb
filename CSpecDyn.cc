@@ -815,7 +815,7 @@ void CSpecDyn::set_dt()
   MPI_Allreduce(&vmax_loc, &vmax, 1, MPI_DOUBLE, MPI_MAX, comm);
   vmax = sqrt(vmax);
   
-  double cfl = 0.1;
+  double cfl = 0.5; // sonst immer 0.1
   double dt_adv = cfl * dx / vmax;
   double dt_dif = cfl * dx * dx / nu;
   dt = std::min(dt_adv, dt_dif);
@@ -904,7 +904,8 @@ void CSpecDyn::Titov()
 void CSpecDyn::Alvelius()
 {
   
-  double P = PI2;
+  //~ double P = M_PI*M_PI;
+  double P = 7.64;
   int kf = 1;
   double Nf = 1.;
   
@@ -946,13 +947,13 @@ void CSpecDyn::Alvelius()
                            
       double theta_2 = theta_1 + psi;
       
-      double F =  P/(dt*Nf); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
+      double F =  P/(dt); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
       
       CX A = sqrt( F ) * exp(IM*theta_1) * gA;
       CX B = sqrt( F ) * exp(IM*theta_2) * gB;
       
       // 2.7 normiert auf eps=1 und sqrt(eps_0) setzt den gewünschten eps-Wert
-      double factor = N*N*N * 2.7 * sqrt(P);   // NS
+      double factor = N*N*N * 2.7;   // NS
       //~ double factor = N*N*N*2.7* sqrt(8.); // MHD
       
       Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
