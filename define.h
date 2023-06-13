@@ -22,16 +22,16 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 1024;
+const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {4,4};
 // CFL number
 //~ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.01*(64./NUM);
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Alvelius/MHD_N1024_Alvelius_cfl0p5_nu0p0012_CPU48x48";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/restart";
 // output interval
 const double OUT_INTERVAL = 0.5;
 // simulation time
@@ -41,7 +41,7 @@ const double END_SIMU = 80.;
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
-const int SETUP = 2;
+const int SETUP = 0;
 const int BACKGROUND = 0;
 
 // choose Forcing

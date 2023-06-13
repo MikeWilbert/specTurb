@@ -185,6 +185,8 @@ class CSpecDyn
     void Alvelius();
     void Titov();
     
+    void restart();
+    
   public:
   
     // public methods

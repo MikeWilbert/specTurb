@@ -160,6 +160,105 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   // setup initial fields
   setup_k();
   setup_fields();
+ 
+  print();
+  restart(); 
+  print();
+}
+
+void CSpecDyn::restart()
+{
+  
+  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart_vti/step_0.vti"; // TODO: put as parameter!
+  std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_10.vti"; // TODO: put as parameter!
+  
+  // find header offset
+  char character;
+  int headerOffset = 0;
+  
+  if(myRank==0)
+  {
+    // find length of header
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    for(int i = 0; i < 1e5; i++)
+    {
+      reader.read(&character, sizeof(char));
+      headerOffset += 1;
+      if(character == ' ')
+      {
+        reader.read(&character, sizeof(char));
+        
+        if(character == '_')
+        {
+          headerOffset += 1;
+          break;
+        }
+        else
+        {
+          reader.seekg(headerOffset, std::ios::beg);
+        }
+          
+      }
+    }
+    
+    printf("Offset: %d\n", headerOffset);
+    
+    reader.close();
+  }MPI_Barrier(MPI_COMM_WORLD);
+  
+  MPI_Bcast(&headerOffset, 1, MPI_INT, 0, comm);
+  
+  // open MPI file
+  MPI_File mpi_file;
+  MPI_File_open(comm, restart_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
+  
+  float* buffer = new float[3*size_R_tot];
+  
+  // set specific file view for each process
+  MPI_Offset file_offset = headerOffset + sizeof(uint64_t);
+  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
+  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Vx_R[id] = buffer[id*3  ];
+    Vy_R[id] = buffer[id*3+1];
+    Vz_R[id] = buffer[id*3+2];
+  }
+  
+  file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N*N*N*sizeof(float);
+  MPI_File_set_view(mpi_file, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL); // reset file view to specify offset in bytes in the next file view
+  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
+  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Bx_R[id] = buffer[id*3  ]; // Fortran order und den ganzen Krams denken! -> mal ein räumlich ausgedehntes Testfeld nehmen!
+    By_R[id] = buffer[id*3+1];
+    Bz_R[id] = buffer[id*3+2];
+  }
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  // ich brauch eigentlich nur noch den offset spezifizieren! 
+  // -> mpi_offset = headerOffset + i * (sizeof(uint64) + N*sizeof(float)) oder so
+  // da der view noch nicht geändert wurde sollte die Einheit von mpi_offset in bytes sein!
+  // muss ich beim 2. Lesen wieder einmal den fileview resetten?
+  // wie mach ich das mit dem gestückelten Vektor? Brauch ich da noch ne stride?
+  
+  //~ MPI_File_write_all(mpi_file, float_array_vector, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
+  
+  delete[] buffer;
+  
+  // close MPI file
+  MPI_File_close(&mpi_file);
+  MPI_Barrier(MPI_COMM_WORLD);
   
 }
 
@@ -1222,7 +1321,7 @@ void CSpecDyn::print_vti()
                                         << extend_l[2] << " " << extend_r[2] 
 				 << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
 				 << "\" Spacing=\"" << dx << " " << dx << " " << dx
-         << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // C -> FORTRAN order
+         << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // FORTRAN -> C order
     
     os << "      <FieldData>" << std::endl;
     os << "        <DataArray type=\"Float32\" Name=\"TimeValue\" NumberOfTuples=\"1\" format=\"ascii\">" << std::endl;
