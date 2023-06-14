@@ -27,7 +27,7 @@ class CSpecDyn
     double XB; // left spatial position
     double dx; // space      discretization
     double dk; // wavenumber discretization
-    double time;
+    double time = 0.;
   
     // MPI
     int myRank, nprocs;

@@ -169,9 +169,142 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
 void CSpecDyn::restart()
 {
   
-  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart_vti/step_0.vti"; // TODO: put as parameter!
-  std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_10.vti"; // TODO: put as parameter!
+  std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_12.vti"; // TODO: put as parameter!
   
+  // CHECK RESOLUTION N
+  if(myRank==0)
+  {
+    int N_in = 0;
+    
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    char word[] = "012345";
+    
+    for(int i = 0; i < 200; i++)
+    {
+      reader.seekg(i, std::ios::beg);
+      reader.read(word, 6);
+
+      if(strcmp(word,"Extent")==0)
+      {
+        reader.seekg(i+10, std::ios::beg); // set to start of N
+        
+        char N_word[10];
+        char c; 
+        reader.read(&c, sizeof(char));
+        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
+        {
+          
+          if(c==' ')
+          {
+            N_word[i] = '\0';
+            break;
+          }
+          else{
+            N_word[i] = c;
+          }
+        }
+        
+        N_in = std::stoi(N_word)+1;
+        
+        break;
+      }
+    }
+    reader.close();
+    
+    if(N==N_in)
+    {
+      printf("Restart resolution matches!\n");
+    }
+    else
+    {
+      printf("Resolution N of vti file for restart does not match parameters!\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+  
+  // GET STEP OUTPUT #
+  int step = 0;
+  
+  if(myRank==0)
+  {
+    char number_str[10];
+    int str_counter = 0;
+    
+    for(int i = restart_file.size()-5; restart_file[i]!='_'; i--)
+    {
+      number_str[str_counter] = restart_file[i];
+      str_counter ++;
+    }
+    number_str[str_counter] = '\0';
+    
+    std::string number_rev = std::string(number_str);
+    std::string number = std::string(number_rev.length(), 'x');
+    
+    for(int i=0, n=number.length()-1; i<number.length(); i++, n--)
+    {
+      number[i] = number_rev[n];
+    }
+    
+    print_count = std::stoi(number)+1;
+    
+  }MPI_Barrier(comm);
+  
+  MPI_Bcast(&print_count, 1, MPI_INT, 0, comm);
+  
+  // CHECK TIME
+  if(myRank==0)
+  {
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    char word[] = "TimeValue";
+    
+    for(int i = 0; i < 1000; i++)
+    {
+      reader.seekg(i, std::ios::beg);
+      reader.read(word, 9);
+
+      if(strcmp(word,"TimeValue")==0)
+      {
+        reader.seekg(i+54, std::ios::beg); // set to start of time
+        
+        char t_word[20];
+        char c; 
+        reader.read(&c, sizeof(char));
+        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
+        {
+          
+          if(c==' ')
+          {
+            t_word[i] = '\0';
+            break;
+          }
+          else{
+            t_word[i] = c;
+          }
+        }
+        
+        //~ printf("new time: %s\n", t_word);
+        time = std::stod(t_word);
+        
+        break;
+      }
+    }
+    reader.close();
+    
+  }MPI_Barrier(comm);
+  
+  MPI_Bcast(&time, 1, MPI_DOUBLE, 0, comm);
+  
+  // GET FIELDS
   // find header offset
   char character;
   int headerOffset = 0;
@@ -206,9 +339,8 @@ void CSpecDyn::restart()
       }
     }
     
-    printf("Offset: %d\n", headerOffset);
-    
     reader.close();
+    
   }MPI_Barrier(MPI_COMM_WORLD);
   
   MPI_Bcast(&headerOffset, 1, MPI_INT, 0, comm);
