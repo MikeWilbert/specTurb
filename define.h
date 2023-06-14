@@ -33,15 +33,15 @@ const double DT = 1.e-3;
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/restart";
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.25;
 // simulation time
-const double END_SIMU = 80.;
+const double END_SIMU = 3.;
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
-const int SETUP = 0;
+const int SETUP = 2;
 const int BACKGROUND = 0;
 
 // choose Forcing
@@ -52,8 +52,8 @@ const int FORCING = 0;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-//~ const double NU  = 0.0167;
-const double NU  = 0.0012;
+const double NU  = 0.05;
+//~ const double NU  = 0.0012;
 // magnetic diffusivity
 const double ETA = NU*1.;
 //~ const double ETA = NU*1.e-1;
@@ -61,6 +61,8 @@ const double ETA = NU*1.;
 /** DEFINES **/
 
 //~ #define NS
+# define RESTART true
+//~ # define RESTART false
 
 /** Resolutions **/
 /*

@@ -161,15 +161,27 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   setup_k();
   setup_fields();
  
-  print();
-  restart(); 
-  print();
+  if(RESTART)
+  {
+   restart();
+  }
+  else
+  {
+    print_Energy();
+    print();  
+  }
 }
 
 void CSpecDyn::restart()
 {
   
-  std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_12.vti"; // TODO: put as parameter!
+  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_12.vti"; // TODO: put as parameter!
+  std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart/vti/step_8.vti"; // TODO: put as parameter!
+  
+  if(myRank==0)
+  {
+    printf("Restart!\n");
+  }
   
   // CHECK RESOLUTION N
   if(myRank==0)
@@ -810,23 +822,17 @@ void CSpecDyn::setup_fields()
 void CSpecDyn::execute()
 {
   double start_time = MPI_Wtime();
-  double out_time = time;
+  double out_time = fmod(time,out_interval);
   
-  print_Energy();
-  print();
-  
-  bool b_not_set = true;
-  
-  while(time+dt < end_simu)
+  while(time < end_simu)
   {
-    //~ if(time > 10. && b_not_set){setup_B();b_not_set=false;}
     
     time_step();
     out_time += dt;
     
     print_Energy();
     
-    if(out_time > out_interval+dt)
+    if(out_time > out_interval)
     {
       print();
       out_time -= out_interval;
@@ -834,8 +840,11 @@ void CSpecDyn::execute()
     
   }
   
-  double print_time = MPI_Wtime() - start_time;
-  if(myRank==0){printf("Print time = %f, pdims = [%d,%d], N = %d\n", print_time, pdims[0], pdims[1], N);}
+  double end_time = MPI_Wtime() - start_time;
+  if(myRank==0)
+  {
+    printf("Execution Time: %f [s]\n", end_time);
+  }
 }
 
 void CSpecDyn::time_step()
