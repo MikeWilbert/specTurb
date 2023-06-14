@@ -24,18 +24,21 @@ const CX IM = CX(0., 1.);
 // spatial resolution
 const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {4,4};
+int const PDIMS[2] = {8,8};
 // CFL number
 //~ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.01*(64./NUM);
 const double DT = 1.e-3; 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/restart";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/restart4";
 // output interval
 const double OUT_INTERVAL = 0.25;
 // simulation time
 const double END_SIMU = 3.;
+// restart
+const int RESTART_STEP = 8;
+#define RESTART_DIR  "/home/fs1/mw/Turbulence/Tests/restart3"
 
 // choose initial setup: 
 // (0):all zero; 
@@ -61,8 +64,6 @@ const double ETA = NU*1.;
 /** DEFINES **/
 
 //~ #define NS
-# define RESTART true
-//~ # define RESTART false
 
 /** Resolutions **/
 /*

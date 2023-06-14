@@ -161,7 +161,7 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   setup_k();
   setup_fields();
  
-  if(RESTART)
+  if(RESTART_STEP > 0)
   {
    restart();
   }
@@ -176,7 +176,15 @@ void CSpecDyn::restart()
 {
   
   //~ std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_12.vti"; // TODO: put as parameter!
-  std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart/vti/step_8.vti"; // TODO: put as parameter!
+  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart/vti/step_12.vti"; // TODO: put as parameter!
+  
+  #ifdef RESTART_DIR
+  std::string restart_dir = RESTART_DIR;
+  #else
+  std::string restart_dir = out_dir;
+  #endif
+  
+  std::string restart_file = restart_dir + "/vti/step_" + std::to_string(RESTART_STEP) + ".vti";
   
   if(myRank==0)
   {
