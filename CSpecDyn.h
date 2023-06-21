@@ -176,8 +176,8 @@ class CSpecDyn
     void print_EnergySpectrum();
     void print_scales();
     void print_vti();
-    void print_mpi_scalar(CX* field, int& N_bytes_scalar, const char* file_name);
-    void print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, int& N_bytes_vector, const char* file_name);
+    void print_mpi_scalar(CX* field, long& N_bytes_scalar, const char* file_name);
+    void print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_bytes_vector, const char* file_name);
     
     void calc_Energy(double& energy_V, double& diss_V);
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);

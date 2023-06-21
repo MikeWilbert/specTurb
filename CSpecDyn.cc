@@ -164,12 +164,22 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   if(RESTART_STEP > 0)
   {
    restart();
+   
+   print_Energy();
+   time_step();
+   print_Energy();
+   time_step();
+   print_Energy();
+   time_step();
+   print_Energy();
+   //~ print();
   }
   else
   {
     print_Energy();
     print();  
   }
+  
 }
 
 void CSpecDyn::restart()
@@ -383,7 +393,14 @@ void CSpecDyn::restart()
     Vz_R[id] = buffer[id*3+2];
   }
   
-  file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N*N*N*sizeof(float);
+  //~ MPI_File_close(&mpi_file);
+  //~ MPI_Barrier(comm);
+  //~ MPI_File_open(comm, restart_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
+  
+  //~ ulong offset_long = headerOffset + 2*sizeof(uint64_t) + 3*N*N*N*sizeof(float);
+  
+  long N_l = N;
+  file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N_l*N_l*N_l*sizeof(float);
   MPI_File_set_view(mpi_file, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL); // reset file view to specify offset in bytes in the next file view
   MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
   MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
@@ -397,14 +414,6 @@ void CSpecDyn::restart()
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  // ich brauch eigentlich nur noch den offset spezifizieren! 
-  // -> mpi_offset = headerOffset + i * (sizeof(uint64) + N*sizeof(float)) oder so
-  // da der view noch nicht geändert wurde sollte die Einheit von mpi_offset in bytes sein!
-  // muss ich beim 2. Lesen wieder einmal den fileview resetten?
-  // wie mach ich das mit dem gestückelten Vektor? Brauch ich da noch ne stride?
-  
-  //~ MPI_File_write_all(mpi_file, float_array_vector, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
   
   delete[] buffer;
   
@@ -1066,7 +1075,8 @@ void CSpecDyn::set_dt()
   double cfl = 0.5; // sonst immer 0.1
   double dt_adv = cfl * dx / vmax;
   double dt_dif = cfl * dx * dx / nu;
-  dt = std::min(dt_adv, dt_dif);
+  //~ dt = std::min(dt_adv, dt_dif);
+  dt = dt_adv; // UWAGA!
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
@@ -1444,12 +1454,13 @@ void CSpecDyn::print_vti()
   std::string file_name  = out_dir + "/vti/step_" + std::to_string(print_count) + ".vti";
   std::ofstream os;
   
-  int offset = 0;
-	int N_tot = N*N*N;
-	int N_bytes_scalar  =   N_tot * sizeof(float);
-	int N_bytes_vector  = 3*N_tot * sizeof(float);
-  int bin_size_scalar = N_bytes_scalar + sizeof(uint64_t);// 2nd term is the size of the the leading integer announcing the numbers n the data chunk
-  int bin_size_vector = N_bytes_vector + sizeof(uint64_t);
+  long N_l = N;
+  long offset = 0;
+	long N_tot = N_l*N_l*N_l;
+	long N_bytes_scalar  =   N_tot * sizeof(float);
+	long N_bytes_vector  = 3*N_tot * sizeof(float);
+  long bin_size_scalar = N_bytes_scalar + sizeof(uint64_t);// 2nd term is the size of the the leading integer announcing the numbers n the data chunk
+  long bin_size_vector = N_bytes_vector + sizeof(uint64_t);
   
   // header
   if(myRank==0)
@@ -1526,7 +1537,7 @@ void CSpecDyn::print_vti()
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
 }
 
-void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, int& N_bytes_vector, const char* file_name)
+void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_bytes_vector, const char* file_name)
 {
   if(myRank==0)
   {
@@ -1560,7 +1571,7 @@ void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, int& N_by
   MPI_File_close(&mpi_file);  
 }
 
-void CSpecDyn::print_mpi_scalar(CX* field, int& N_bytes_scalar, const char* file_name)
+void CSpecDyn::print_mpi_scalar(CX* field, long& N_bytes_scalar, const char* file_name)
 {
   if(myRank==0)
   {

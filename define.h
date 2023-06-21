@@ -22,23 +22,24 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 64;
+const int NUM = 1024;
 // processor grid
-int const PDIMS[2] = {8,8};
+//~ int const PDIMS[2] = {96,96};
+int const PDIMS[2] = {48,48};
 // CFL number
 //~ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.01*(64./NUM);
-const double DT = 1.e-3; 
+const double DT = 1.e-8; 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/Tests/restart4";
+const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint";
 // output interval
-const double OUT_INTERVAL = 0.25;
+const double OUT_INTERVAL = 0.05;
 // simulation time
-const double END_SIMU = 3.;
+const double END_SIMU = 50.;
 // restart
-const int RESTART_STEP = 8;
-#define RESTART_DIR  "/home/fs1/mw/Turbulence/Tests/restart3"
+const int RESTART_STEP = 1;
+//~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
 
 // choose initial setup: 
 // (0):all zero; 
@@ -55,7 +56,7 @@ const int FORCING = 0;
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.05;
+const double NU  = 0.0012;
 //~ const double NU  = 0.0012;
 // magnetic diffusivity
 const double ETA = NU*1.;
