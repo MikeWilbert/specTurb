@@ -1072,7 +1072,8 @@ void CSpecDyn::set_dt()
   MPI_Allreduce(&vmax_loc, &vmax, 1, MPI_DOUBLE, MPI_MAX, comm);
   vmax = sqrt(vmax);
   
-  double cfl = 0.5; // sonst immer 0.1
+  //~ double cfl = 0.5; // sonst immer 0.1
+  double cfl = 0.5;
   double dt_adv = cfl * dx / vmax;
   double dt_dif = cfl * dx * dx / nu;
   //~ dt = std::min(dt_adv, dt_dif);

@@ -24,21 +24,21 @@ const CX IM = CX(0., 1.);
 // spatial resolution
 const int NUM = 1024;
 // processor grid
-//~ int const PDIMS[2] = {96,96};
-int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {96,96};
+//~ int const PDIMS[2] = {48,48};
 // CFL number
 //~ const double DT = 0.005*(64./NUM);
 //~ const double DT = 0.01*(64./NUM);
 const double DT = 1.e-8; 
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint";
+const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Production/ForcedTurbulence_N1024";
 // output interval
-const double OUT_INTERVAL = 0.05;
+const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 50.;
+const double END_SIMU = 80.;
 // restart
-const int RESTART_STEP = 1;
+const int RESTART_STEP = 60;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
 
 // choose initial setup: 
@@ -57,7 +57,7 @@ const int FORCING = 0;
 const double LENGTH = PI2;
 // kinematic viscosity
 const double NU  = 0.0012;
-//~ const double NU  = 0.0012;
+//~ const double NU  = 0.0005;
 // magnetic diffusivity
 const double ETA = NU*1.;
 //~ const double ETA = NU*1.e-1;
@@ -74,6 +74,7 @@ const double ETA = NU*1.;
  * N =  256 -> nu = 0.0072
  * N =  512 -> nu = 0.00285
  * N = 1024 -> nu = 0.0012
+ * N = 1024 -> nu = 0.0005
  * 
  * NS
  * N =   64 -> nu = 0.05
