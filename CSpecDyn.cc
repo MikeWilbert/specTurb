@@ -164,15 +164,6 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   if(RESTART_STEP > 0)
   {
    restart();
-   
-   print_Energy();
-   time_step();
-   print_Energy();
-   time_step();
-   print_Energy();
-   time_step();
-   print_Energy();
-   //~ print();
   }
   else
   {
@@ -184,9 +175,6 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
 
 void CSpecDyn::restart()
 {
-  
-  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Forcing_Tests/Alvelius_kf1_MHD/vti/step_12.vti"; // TODO: put as parameter!
-  //~ std::string restart_file = "/home/fs1/mw/Turbulence/Tests/restart/vti/step_12.vti"; // TODO: put as parameter!
   
   #ifdef RESTART_DIR
   std::string restart_dir = RESTART_DIR;
@@ -393,12 +381,6 @@ void CSpecDyn::restart()
     Vz_R[id] = buffer[id*3+2];
   }
   
-  //~ MPI_File_close(&mpi_file);
-  //~ MPI_Barrier(comm);
-  //~ MPI_File_open(comm, restart_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
-  
-  //~ ulong offset_long = headerOffset + 2*sizeof(uint64_t) + 3*N*N*N*sizeof(float);
-  
   long N_l = N;
   file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N_l*N_l*N_l*sizeof(float);
   MPI_File_set_view(mpi_file, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL); // reset file view to specify offset in bytes in the next file view
@@ -407,7 +389,7 @@ void CSpecDyn::restart()
   
   for(int id = 0; id < size_R_tot; id++)
   {
-    Bx_R[id] = buffer[id*3  ]; // Fortran order und den ganzen Krams denken! -> mal ein räumlich ausgedehntes Testfeld nehmen!
+    Bx_R[id] = buffer[id*3  ];
     By_R[id] = buffer[id*3+1];
     Bz_R[id] = buffer[id*3+2];
   }
@@ -488,111 +470,6 @@ void CSpecDyn::setup_k()
   }}}
   
 }
-
-void CSpecDyn::setup_B()
-{
-  double E0_B = 1.e-5;
-  double k0 = 2.*M_PI;
-  
-  std::mt19937 eng(myRank);
-  std::uniform_real_distribution<double> phi(0.,PI2);
-  std::uniform_real_distribution<double> rand_real(1.,2.);
-  double norm_loc = 0.;
-  double norm;
-  double s = 11./6.;
-  
-  double energy_B_loc = 0.;
-  double energy_B;
-  
-  double diss_B_loc = 0.;
-  double diss_B;
-  
-  double Bx, By, Bz;
-  
-  double hs; // factor because of hermitian symmetry in z
-  
-  double norm_V, norm_B;
-    
-  /** random with energy spectrum normalized to desired kinetic energy **/
-  
-  // Zufallsfeld in R
-  for(int id = 0; id < size_R_tot; id++)
-  {    
-    
-    Bx_R[id] = rand_real(eng);
-    By_R[id] = rand_real(eng);
-    Bz_R[id] = rand_real(eng);
-  }
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  // Amplituden für Energie-Spektrum
-  for(int id = 0; id < size_F_tot; id++)
-  {
-    double A = sqrt( 1./pow(1+k2[id],s) );
-    
-    //~ double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
-    
-    if(int(round(k2[id])) != 0)
-    {
-      Bx_F[id] *= A/abs(Bx_F[id]);
-      By_F[id] *= A/abs(By_F[id]);
-      Bz_F[id] *= A/abs(Bz_F[id]);
-    }
-    else
-    {
-      Bx_F[id] = 0.;
-      By_F[id] = 0.;
-      Bz_F[id] = 0.;
-    }
-  }
-  
-  projection(Bx_F, By_F, Bz_F);
-
-  bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
-  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  // Energie normieren
-  for(int ix = 0; ix < size_F[0]; ix++){
-  for(int iy = 0; iy < size_F[1]; iy++){
-  for(int iz = 0; iz < size_F[2]; iz++){
-      
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    int kz_id = int(kz[iz]/dk);
-    if( 0 < kz_id && kz_id < N/2 )
-    {
-      hs = 2.;
-    }
-    else
-    {
-      hs = 1.;
-    }
-    
-    Bx = abs(Bx_F[id]);
-    By = abs(By_F[id]);
-    Bz = abs(Bz_F[id]);
-    
-    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
-
-  }}}
-  
-  energy_B_loc *= 0.5/double(N*N*N);
-  energy_B_loc *= 1. /double(N*N*N);
-  MPI_Allreduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, comm);
-     
-  norm_B = sqrt(E0_B/energy_B);    
-  
-  for(int id = 0; id < size_F_tot; id++)
-  {    
-    Bx_F[id] *= norm_B;
-    By_F[id] *= norm_B;
-    Bz_F[id] *= norm_B;
-  }
-      
-  
-}
-
 
 void CSpecDyn::setup_fields()
 {
@@ -766,6 +643,12 @@ void CSpecDyn::setup_fields()
       }
         
       break;
+      
+    case 3:
+    
+      read_binary();
+      
+      break;
     
     default: 
       if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
@@ -834,6 +717,13 @@ void CSpecDyn::setup_fields()
     
   }
   
+  // set initial forcing to zero
+  for(size_t id = 0; id < size_F_tot; id++)
+  {
+    Force_X[id] = 0.;
+    Force_Y[id] = 0.;
+    Force_Z[id] = 0.;
+  }
 }
 
 void CSpecDyn::execute()
@@ -870,6 +760,10 @@ void CSpecDyn::time_step()
   set_dt();
   
   if(FORCING==0)
+  {
+    // nothing
+  }
+  else if(FORCING==1)
   {
     Alvelius();
   }
@@ -1193,8 +1087,6 @@ void CSpecDyn::Alvelius()
       
       CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
-      //~ CX xi_1 = Bx_F[id]*e1[0] + By_F[id]*e1[1] + Bz_F[id]*e1[2]; // Keine F-B Korrelation?
-      //~ CX xi_2 = Bx_F[id]*e2[0] + By_F[id]*e2[1] + Bz_F[id]*e2[2];
       
       double alp = angle(angle_eng);
       double psi = angle(angle_eng);
@@ -1218,17 +1110,6 @@ void CSpecDyn::Alvelius()
       Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
       Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
       Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
-    
-      // Projektion auf Anteil orthogonal zu B
-      //~ CX proj = (Force_X[id]*std::conj(Bx_F[id]) + Force_Y[id]*std::conj(By_F[id]) + Force_Z[id]*std::conj(Bz_F[id]))
-               //~ /(Bx_F   [id]*std::conj(Bx_F[id]) + By_F   [id]*std::conj(By_F[id]) + Bz_F   [id]*std::conj(Bz_F[id]));
-    
-      //~ Force_X[id] -= proj * Bx_F[id];
-      //~ Force_Y[id] -= proj * By_F[id];
-      //~ Force_Z[id] -= proj * Bz_F[id];
-    
-      //printf("(R,C) = (%f,%f)\n", proj.real(), proj.imag());
-     
     
     }
     else
@@ -1996,4 +1877,54 @@ void CSpecDyn::print()
   }MPI_Barrier(comm);
   
   print_count++;
+}
+
+void CSpecDyn::read_binary()
+{
+  
+  std::string binary_file;
+  std::string field_names[] = {"V0", "V1", "V2", "B0", "B1", "B2"};
+  CX* field_ptrs[] = {Vx_R, Vy_R, Vz_R, Bx_R, By_R, Bz_R};
+  CX* field = NULL;
+  
+  int size_total[3] = {N,N,N};
+  MPI_Datatype subarray;
+  MPI_Type_create_subarray(3, size_total, size_R, start_R, MPI_ORDER_C, MPI_DOUBLE, &subarray);
+  MPI_Type_commit(&subarray);
+  MPI_File mpi_file;
+  
+  double* buffer = new double[size_R_tot];
+  
+  /****************************/
+  // iterate over all 6 field components
+  for(int i = 0; i < 6; i++)
+  {
+  
+    // open MPI file
+    binary_file = BINARY_DIR + "/" + field_names[i] + ".dat";
+    field = field_ptrs[i];
+    
+    MPI_File_open(comm, binary_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
+    
+    // set specific file view for each process
+    MPI_Offset file_offset = 0;
+    MPI_File_set_view(mpi_file, file_offset, MPI_DOUBLE, subarray, "native", MPI_INFO_NULL);
+    MPI_File_read_all(mpi_file, buffer, size_R_tot, MPI_DOUBLE, MPI_STATUS_IGNORE);
+    
+    for(int id = 0; id < size_R_tot; id++)
+    {
+      field[id] = buffer[id];
+    }
+  }
+    
+  /****************************/
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  delete[] buffer;
+  
+  // close MPI file
+  MPI_File_close(&mpi_file);
+  MPI_Barrier(MPI_COMM_WORLD);
 }

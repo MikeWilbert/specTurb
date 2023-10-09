@@ -22,45 +22,45 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 1024;
+const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {96,96};
-//~ int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {8,8};
 // CFL number
-//~ const double DT = 0.005*(64./NUM);
-//~ const double DT = 0.01*(64./NUM);
-const double DT = 1.e-8; 
+const double DT = 1.e-8;  // TODO! 
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/Production/ForcedTurbulence_N1024";
+const std::string OUT_DIR = "/home/fs1/jel/data/Mike/TestRuns/Run_1";
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.2;
 // simulation time
-const double END_SIMU = 80.;
+const double END_SIMU = 2.;
 // restart
-const int RESTART_STEP = 60;
+const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
 
 // choose initial setup: 
 // (0):all zero; 
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
-const int SETUP = 2;
+// (3):Read from binary data (.dat)
+const int SETUP = 3;
 const int BACKGROUND = 0;
+const std::string BINARY_DIR = "/home/fs1/jel/data/Mike/cm-strong-64/0";
 
 // choose Forcing
-// (0) Alvelius
+// (0) None
+// (1) Alvelius
 // (2) Titov
 const int FORCING = 0;
 
 // domain size
 const double LENGTH = PI2;
 // kinematic viscosity
-const double NU  = 0.0012;
+//~ const double NU  = 0.0012;
 //~ const double NU  = 0.0005;
+const double NU  = 0.045;
 // magnetic diffusivity
-const double ETA = NU*1.;
-//~ const double ETA = NU*1.e-1;
+const double ETA = NU;
 
 /** DEFINES **/
 

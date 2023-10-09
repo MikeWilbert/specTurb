@@ -157,7 +157,6 @@ class CSpecDyn
     // private methods
     void setup_k();
     void setup_fields();
-    void setup_B();
     
     void time_step();
     void set_dt();
@@ -186,6 +185,7 @@ class CSpecDyn
     void Titov();
     
     void restart();
+    void read_binary();
     
   public:
   
