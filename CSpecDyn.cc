@@ -731,6 +731,12 @@ void CSpecDyn::execute()
   double start_time = MPI_Wtime();
   double out_time = fmod(time,out_interval);
   
+  // geometric output series
+  double a = 1.3022e-5;
+  double r = 1.3216;
+  
+  out_time = a * r; 
+  
   while(time < end_simu)
   {
     
@@ -739,10 +745,12 @@ void CSpecDyn::execute()
     
     print_Energy();
     
-    if(out_time > out_interval)
+    //~ if(out_time > out_interval)
+    if(time > out_time)
     {
       print();
-      out_time -= out_interval;
+      //~ out_time -= out_interval;
+      out_time = a * pow(r,print_count+1);
     }
     
   }
@@ -1921,6 +1929,9 @@ void CSpecDyn::read_binary()
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  dealias(Vx_F, Vy_F, Vz_F);
+  dealias(Bx_F, By_F, Bz_F);
   
   delete[] buffer;
   

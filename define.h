@@ -22,18 +22,18 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 64;
+const int NUM = 256;
 // processor grid
-int const PDIMS[2] = {8,8};
+int const PDIMS[2] = {48,48};
 // CFL number
 const double DT = 1.e-8;  // TODO! 
 
 // output directory
-const std::string OUT_DIR = "/home/fs1/jel/data/Mike/TestRuns/Run_1";
+const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/decayingTurbulence/cascade-256-mu0.02_intermittent_i0";
 // output interval
-const double OUT_INTERVAL = 0.2;
+const double OUT_INTERVAL = 2.;
 // simulation time
-const double END_SIMU = 2.;
+const double END_SIMU = 0.0182;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
@@ -45,7 +45,7 @@ const int RESTART_STEP = 0;
 // (3):Read from binary data (.dat)
 const int SETUP = 3;
 const int BACKGROUND = 0;
-const std::string BINARY_DIR = "/home/fs1/jel/data/Mike/cm-strong-64/0";
+const std::string BINARY_DIR = "/p/project/specdyn/synthetic_fields/Mike/cascade-256-mu0.02/intermittent/i0";
 
 // choose Forcing
 // (0) None
@@ -54,11 +54,13 @@ const std::string BINARY_DIR = "/home/fs1/jel/data/Mike/cm-strong-64/0";
 const int FORCING = 0;
 
 // domain size
-const double LENGTH = PI2;
+//~ const double LENGTH = PI2;
+const double LENGTH = 1.;
 // kinematic viscosity
+const double NU  = 0.2479;
 //~ const double NU  = 0.0012;
 //~ const double NU  = 0.0005;
-const double NU  = 0.045;
+//~ const double NU  = 0.045;
 // magnetic diffusivity
 const double ETA = NU;
 
