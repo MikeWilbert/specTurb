@@ -163,7 +163,7 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
  
   if(RESTART_STEP > 0)
   {
-   restart();
+    restart();
   }
   else
   {
@@ -502,6 +502,8 @@ void CSpecDyn::setup_fields()
   
   double norm_V, norm_B, norm_B0;
   
+  double urms, urms_loc;
+  
   switch(setup)
   {
     case 0:
@@ -646,7 +648,48 @@ void CSpecDyn::setup_fields()
       
     case 3:
     
+      // read .dat files
       read_binary();
+      
+      // normalize fields to u_rms = 1
+      bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+      bFFT(Bx_F, By_F, Bz_F, Bx_R, By_R, Bz_R);
+      
+      urms_loc = 0.;
+      
+      for(int id = 0; id < size_R_tot; id++)
+      {
+        
+        Vx = Vx_R[id].real();
+        Vy = Vy_R[id].real();
+        Vz = Vz_R[id].real();
+        
+        urms_loc += (Vx*Vx+Vy*Vy+Vz*Vz);
+
+      }
+      
+      MPI_Allreduce(&urms_loc, &urms, 1, MPI_DOUBLE, MPI_SUM, comm);
+      
+      urms *= 1. /double(N*N*N);
+      urms = sqrt(1./3. * urms);
+      urms *= 0.5; // norm to urms = 0.5-> T = 1 for L = 0.5
+      
+      norm = 1./urms;
+      
+      if(myRank==0){printf("urms = %f\n", urms);}
+      
+      for(int id = 0; id < size_R_tot; id++)
+      {    
+        Vx_R[id] *= norm;
+        Vy_R[id] *= norm;
+        Vz_R[id] *= norm;
+        Bx_R[id] *= norm;
+        By_R[id] *= norm;
+        Bz_R[id] *= norm;
+      }
+        
+      fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+      fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
       
       break;
     
@@ -732,8 +775,8 @@ void CSpecDyn::execute()
   double out_time = fmod(time,out_interval);
   
   // geometric output series
-  double a = 1.3022e-5;
-  double r = 1.3216;
+  double r = 1.668;
+  double a = 0.006;
   
   out_time = a * r; 
   
@@ -741,7 +784,7 @@ void CSpecDyn::execute()
   {
     
     time_step();
-    out_time += dt;
+    //~ out_time += dt;
     
     print_Energy();
     
@@ -750,7 +793,7 @@ void CSpecDyn::execute()
     {
       print();
       //~ out_time -= out_interval;
-      out_time = a * pow(r,print_count+1);
+      out_time = a * pow(r,print_count);
     }
     
   }
@@ -978,8 +1021,7 @@ void CSpecDyn::set_dt()
   double cfl = 0.5;
   double dt_adv = cfl * dx / vmax;
   double dt_dif = cfl * dx * dx / nu;
-  //~ dt = std::min(dt_adv, dt_dif);
-  dt = dt_adv; // UWAGA!
+  dt = std::min(dt_adv, dt_dif);
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
