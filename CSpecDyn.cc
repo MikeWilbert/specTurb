@@ -775,8 +775,8 @@ void CSpecDyn::execute()
   double out_time = fmod(time,out_interval);
   
   // geometric output series
-  double r = 1.668;
-  double a = 0.006;
+  double r = 1.4919;
+  double a = 0.00067;
   
   out_time = a * r; 
   
@@ -1017,10 +1017,8 @@ void CSpecDyn::set_dt()
   MPI_Allreduce(&vmax_loc, &vmax, 1, MPI_DOUBLE, MPI_MAX, comm);
   vmax = sqrt(vmax);
   
-  //~ double cfl = 0.5; // sonst immer 0.1
-  double cfl = 0.5;
-  double dt_adv = cfl * dx / vmax;
-  double dt_dif = cfl * dx * dx / nu;
+  double dt_adv = CFL_ADV * dx / vmax;
+  double dt_dif = CFL_DIF * dx * dx / nu;
   dt = std::min(dt_adv, dt_dif);
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
@@ -1567,24 +1565,24 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
     
   //~ }
   
-  // // 2/3 rule
-  // double kmax = N/2.*dk;
-  // double kmax_23 = N/2.*dk*2./3.;
+  // 2/3 rule
+  //~ double kmax = N/2.*dk;
+  //~ double kmax_23 = N/2.*dk*2./3.;
   
-  // for(int ix = 0; ix<size_F[0]; ix++){
-  // for(int iy = 0; iy<size_F[1]; iy++){
-  // for(int iz = 0; iz<size_F[2]; iz++){
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    // int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    // if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
-    // {
-      // fieldX[id] = 0.;
-      // fieldY[id] = 0.;
-      // fieldZ[id] = 0.;
-    // }
+    //~ if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
+    //~ {
+      //~ fieldX[id] = 0.;
+      //~ fieldY[id] = 0.;
+      //~ fieldZ[id] = 0.;
+    //~ }
     
-  // }}}
+  //~ }}}
 }
 
 void CSpecDyn::print_EnergySpectrum()
@@ -1939,11 +1937,11 @@ void CSpecDyn::read_binary()
   
   int size_total[3] = {N,N,N};
   MPI_Datatype subarray;
-  MPI_Type_create_subarray(3, size_total, size_R, start_R, MPI_ORDER_C, MPI_DOUBLE, &subarray);
+  MPI_Type_create_subarray(3, size_total, size_R, start_R, MPI_ORDER_C, MPI_FLOAT, &subarray);
   MPI_Type_commit(&subarray);
   MPI_File mpi_file;
   
-  double* buffer = new double[size_R_tot];
+  float* buffer = new float[size_R_tot];
   
   /****************************/
   // iterate over all 6 field components
@@ -1958,8 +1956,8 @@ void CSpecDyn::read_binary()
     
     // set specific file view for each process
     MPI_Offset file_offset = 0;
-    MPI_File_set_view(mpi_file, file_offset, MPI_DOUBLE, subarray, "native", MPI_INFO_NULL);
-    MPI_File_read_all(mpi_file, buffer, size_R_tot, MPI_DOUBLE, MPI_STATUS_IGNORE);
+    MPI_File_set_view(mpi_file, file_offset, MPI_FLOAT, subarray, "native", MPI_INFO_NULL);
+    MPI_File_read_all(mpi_file, buffer, size_R_tot, MPI_FLOAT, MPI_STATUS_IGNORE);
     
     for(int id = 0; id < size_R_tot; id++)
     {
@@ -1974,6 +1972,9 @@ void CSpecDyn::read_binary()
   
   dealias(Vx_F, Vy_F, Vz_F);
   dealias(Bx_F, By_F, Bz_F);
+  
+  projection(Vx_F, Vy_F, Vz_F);
+  projection(Bx_F, By_F, Bz_F);
   
   delete[] buffer;
   
