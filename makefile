@@ -1,10 +1,11 @@
 MPICXX := mpic++ 
-LIBS := -lfftw3 -lmpi_mpifh -lmpi 
+#~ LIBS := -lfftw3 -lmpi_mpifh -lmpi 
+LIBS := -lfftw3 -lmpi 
 INCLUDE_PATH := -I../libs/fftw3/include
 LIB_PATH     := -L../libs/fftw3/lib
 FLAGS        := -std=c++11 -O3 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
 
-TSpecDyn1: main.o CSpecDyn.o MikeFFT.o
+TSpecDyn_cascade: main.o CSpecDyn.o MikeFFT.o
 	$(MPICXX) $^ -o $@ $(LIB_PATH) $(LIBS) $(FLAGS)
 	
 main.o: main.cc CSpecDyn.h define.h

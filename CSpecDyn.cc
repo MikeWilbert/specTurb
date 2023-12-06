@@ -1931,7 +1931,8 @@ void CSpecDyn::read_binary()
 {
   
   std::string binary_file;
-  std::string field_names[] = {"V0", "V1", "V2", "B0", "B1", "B2"};
+  //~ std::string field_names[] = {"V0", "V1", "V2", "B0", "B1", "B2"};
+  std::string field_names[] = {"W0", "W1", "W2", "Z0", "Z1", "Z2"}; // Elsässer Coords
   CX* field_ptrs[] = {Vx_R, Vy_R, Vz_R, Bx_R, By_R, Bz_R};
   CX* field = NULL;
   
@@ -1966,6 +1967,25 @@ void CSpecDyn::read_binary()
   }
     
   /****************************/
+  
+  // Elsässer -> V,B
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    CX Z_x = Vx_R[id];
+    CX Z_y = Vy_R[id];
+    CX Z_z = Vz_R[id];
+    CX W_x = Bx_R[id];
+    CX W_y = By_R[id];
+    CX W_z = Bz_R[id];
+    
+    Vx_R[id] = 0.5 * (Z_x + W_x);
+    Vy_R[id] = 0.5 * (Z_y + W_y);
+    Vz_R[id] = 0.5 * (Z_z + W_z);
+    Bx_R[id] = 0.5 * (Z_x - W_x);
+    By_R[id] = 0.5 * (Z_y - W_y);
+    Bz_R[id] = 0.5 * (Z_z - W_z);
+  }
+  
   
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);

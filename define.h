@@ -31,7 +31,7 @@ const double CFL_ADV = 0.5;
 const double CFL_DIF = 0.025;
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specdyn/Turbulence/decayingTurbulence/mapping_idw-512_lagrangian_mapping_i0";
+const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Production/DecayingTurbulence/mapping_zw_seed-512_lagrangian_mapping_i0";
 // output interval
 const double OUT_INTERVAL = 2.;
 // simulation time
@@ -46,8 +46,8 @@ const int RESTART_STEP = 0;
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
 const int SETUP = 3;
-const int BACKGROUND = 0;
-const std::string BINARY_DIR = "/p/project/specdyn/synthetic_fields/Mike/mapping_idw-512/lagrangian_mapping/i0";
+const int BACKGROUND = 0.; // dB = 5
+const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
 // choose Forcing
 // (0) None
