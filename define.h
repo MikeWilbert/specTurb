@@ -31,11 +31,11 @@ const double CFL_ADV = 0.5;
 const double CFL_DIF = 0.025;
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Production/DecayingTurbulence/mapping_zw_seed-512_lagrangian_mapping_i0";
+const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/anisotropic/anisotropicTurbulence_N512_B05p0_nu0p003_neu2";
 // output interval
-const double OUT_INTERVAL = 2.;
+const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 2.;
+const double END_SIMU = 25.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
@@ -45,25 +45,24 @@ const int RESTART_STEP = 0;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
-const int SETUP = 3;
-const int BACKGROUND = 0.; // dB = 5
+const int SETUP = 2;
+const bool BACKGROUND = true;
+const double BACKGROUND_ENERGY = 5.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
 // choose Forcing
 // (0) None
 // (1) Alvelius
 // (2) Titov
-const int FORCING = 0;
+const int FORCING = 1;
 
 // domain size
-//~ const double LENGTH = PI2;
-const double LENGTH = 1.;
+const double LENGTH = PI2;
+//~ const double LENGTH = 1.;
 // kinematic viscosity
-const double NU  = 0.0009; // decaying Turbulence N=512
-//~ const double NU  = 0.005;
-//~ const double NU  = 0.0012;
-//~ const double NU  = 0.0005;
-//~ const double NU  = 0.045;
+//~ const double NU  = 0.0009; // decaying Turbulence N=512
+//~ const double NU  = 0.0077;
+const double NU  = 0.003;
 // magnetic diffusivity
 const double ETA = NU;
 

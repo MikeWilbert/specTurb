@@ -476,7 +476,7 @@ void CSpecDyn::setup_fields()
   
   double E0_V = 0.5;
   double E0_B = 0.25;
-  double energy_b0_init = 0.;
+  double energy_b0_init = 5.;
   
   std::mt19937 eng(myRank);
   std::uniform_real_distribution<double> phi(0.,PI2);
@@ -507,6 +507,8 @@ void CSpecDyn::setup_fields()
   switch(setup)
   {
     case 0:
+      if(myRank==0){printf("0\n");}
+      
       /** u = 0, B = 0 **/
       for(int id = 0; id < size_R_tot; id++)
       {    
@@ -523,6 +525,8 @@ void CSpecDyn::setup_fields()
       break;
 
     case 1:
+      if(myRank==0){printf("1\n");}
+    
       /** Orszag-Tang **/
       for(int ix = 0; ix < size_R[0]; ix++){
       for(int iy = 0; iy < size_R[1]; iy++){
@@ -552,6 +556,8 @@ void CSpecDyn::setup_fields()
       break;
       
     case 2:
+      if(myRank==0){printf("2\n");}
+      
     /** random with energy spectrum normalized to desired kinetic energy **/
     
       // Zufallsfeld in R
@@ -647,6 +653,7 @@ void CSpecDyn::setup_fields()
       break;
       
     case 3:
+      if(myRank==0){printf("3\n");}
     
       // read .dat files
       read_binary();
@@ -693,48 +700,24 @@ void CSpecDyn::setup_fields()
       
       break;
     
-    default: 
-      if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
-      MPI_Barrier(comm);
-      MPI_Finalize();
-      exit(EXIT_FAILURE);
+    //~ default: 
+      //~ if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
+      //~ MPI_Barrier(comm);
+      //~ MPI_Finalize();
+      //~ exit(EXIT_FAILURE);
   }
   
   /** Background Field **/
-  switch(BACKGROUND)
+  if(BACKGROUND)
   {
-  
-    case 0:
+   /** B0 = B0*ez **/
+    for(int id = 0; id < size_R_tot; id++)
+    {    
+      B0x[id] = 0.;
+      B0y[id] = 0.;
+      B0z[id] = 1.;
+    }
     
-      /** B0 = 0 **/
-      for(int id = 0; id < size_R_tot; id++)
-      {    
-        B0x[id] = 0.;
-        B0y[id] = 0.;
-        B0z[id] = 0.;
-      }
-      break;
-      
-    case 1:
-    
-      /** B0 = B0*ez **/
-      for(int id = 0; id < size_R_tot; id++)
-      {    
-        B0x[id] = 0.;
-        B0y[id] = 0.;
-        B0z[id] = 1.;
-      }
-      break;
-  
-    default: 
-      if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
-      MPI_Barrier(comm);
-      MPI_Finalize();
-      exit(EXIT_FAILURE);
-  }
-  
-  if(BACKGROUND != 0)
-  {
     // Energie in B0 auf vorgegeben Wert setzen!
     for(int id = 0; id < size_R_tot; id++){
         
@@ -758,6 +741,16 @@ void CSpecDyn::setup_fields()
       B0z[id] *= norm_B0;
     }
     
+  }
+  else
+  {
+    /** B0 = 0 **/
+    for(int id = 0; id < size_R_tot; id++)
+    {    
+      B0x[id] = 0.;
+      B0y[id] = 0.;
+      B0z[id] = 0.;
+    }
   }
   
   // set initial forcing to zero
@@ -784,16 +777,16 @@ void CSpecDyn::execute()
   {
     
     time_step();
-    //~ out_time += dt;
+    out_time += dt;
     
     print_Energy();
     
-    //~ if(out_time > out_interval)
-    if(time > out_time)
+    if(out_time > out_interval)
+    //~ if(time > out_time)
     {
       print();
-      //~ out_time -= out_interval;
-      out_time = a * pow(r,print_count);
+      out_time -= out_interval;
+      //~ out_time = a * pow(r,print_count);
     }
     
   }

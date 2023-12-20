@@ -6,7 +6,7 @@
 
 /* TOOO:
  * 
- * - letzt decaying Turbulence Simu für Jeremiah (Elsässer Coords)
+ * - was ist mit dem deafult in setup_fields() los?
  * - B0=dB Simu (dB aus Simu mit oder ohne Hintergrundfeld?)
  *
  * - typedef für int->long
