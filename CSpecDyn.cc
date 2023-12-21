@@ -16,6 +16,11 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   size_R_tot = size_R[0]*size_R[1]*size_R[2];
   size_F_tot = size_F[0]*size_F[1]*size_F[2];
   
+  FFT.get_sizes_cplx(size_R_cplx, start_R_cplx, size_F_cplx, start_F_cplx);
+  
+  size_R_tot_cplx = size_R_cplx[0]*size_R_cplx[1]*size_R_cplx[2];
+  size_F_tot_cplx = size_F_cplx[0]*size_F_cplx[1]*size_F_cplx[2];
+  
   // get MPI info
   FFT.get_comm(comm);
   
@@ -40,6 +45,11 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   ky = new double[size_F[1]];
   kz = new double[size_F[2]];
   k2 = new double[size_F_tot];
+  
+  kx_cplx = new double[size_F_cplx[0]];
+  ky_cplx = new double[size_F_cplx[1]];
+  kz_cplx = new double[size_F_cplx[2]];
+  k2_cplx = new double[size_F_tot_cplx];
   
   Vx_R = FFT.malloc_R();
   Vy_R = FFT.malloc_R();
@@ -106,9 +116,9 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   Jy_F = FFT.malloc_F();
   Jz_F = FFT.malloc_F();
   
-  Force_X = FFT.malloc_R();
-  Force_Y = FFT.malloc_R();
-  Force_Z = FFT.malloc_R();
+  Force_X = FFT.malloc_F();
+  Force_Y = FFT.malloc_F();
+  Force_Z = FFT.malloc_F();
   
   B0x = FFT.malloc_R();
   B0y = FFT.malloc_R();
@@ -170,6 +180,8 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
     print_Energy();
     print();  
   }
+  
+  Alvelius(); // UWAGA!
   
 }
 
@@ -234,6 +246,68 @@ void CSpecDyn::setup_k()
     
   }}}
   
+  // complex FFT
+  
+  // kx
+  for(int ix = 0; ix < size_F_cplx[0]; ix++)
+	{
+    
+    int ix_glob = start_F_cplx[0] + ix;
+    
+    if(ix_glob < N/2)
+    {
+      kx_cplx[ix] = ix_glob * dk;
+    }
+    else
+    {
+      kx_cplx[ix] = (ix_glob-N) * dk;
+		}
+	}
+  
+  // ky
+  for(int iy = 0; iy < size_F_cplx[1]; iy++)
+	{
+    
+    int iy_glob = start_F_cplx[1] + iy;
+    
+    if(iy_glob < N/2)
+    {
+      ky_cplx[iy] = iy_glob * dk;
+    }
+    else
+    {
+      ky_cplx[iy] = (iy_glob-N) * dk;
+		}
+	}
+  
+  // kz
+  for(int iz = 0; iz < size_F_cplx[2]; iz++)
+	{
+    
+    int iz_glob = start_F_cplx[2] + iz;
+    
+    if(iz_glob < N/2)
+    {
+      kz_cplx[iz] = iz_glob * dk;
+    }
+    else
+    {
+      kz_cplx[iz] = (iz_glob-N) * dk;
+		}
+	}
+  
+  // k2
+  for(int ix = 0; ix<size_F_cplx[0]; ix++){
+  for(int iy = 0; iy<size_F_cplx[1]; iy++){
+  for(int iz = 0; iz<size_F_cplx[2]; iz++){
+
+    int id = ix * size_F_cplx[1]*size_F_cplx[2] + iy * size_F_cplx[2] + iz;
+    
+    k2_cplx[id] = kx_cplx[ix]*kx_cplx[ix] + ky_cplx[iy]*ky_cplx[iy] + kz_cplx[iz]*kz_cplx[iz];
+    
+    k2_cplx[id] = std::max(k2_cplx[id], 1.e-12); 
+    
+  }}}
 }
 
 void CSpecDyn::setup_fields()
@@ -781,10 +855,138 @@ void CSpecDyn::set_dt()
 void CSpecDyn::Alvelius()
 {
   
-  //double P = M_PI*M_PI;
+  /** COMPLEX VERSION WITH rFFT**/
+  CX* Vx_R_cplx = NULL;
+  CX* Vy_R_cplx = NULL;
+  CX* Vz_R_cplx = NULL;
+  CX* Fx_R_cplx = NULL;
+  CX* Fy_R_cplx = NULL;
+  CX* Fz_R_cplx = NULL;
+  CX* Vx_F_cplx = NULL;
+  CX* Vy_F_cplx = NULL;
+  CX* Vz_F_cplx = NULL;
+  CX* Fx_F_cplx = NULL;
+  CX* Fy_F_cplx = NULL;
+  CX* Fz_F_cplx = NULL;
+  
+  Vx_R_cplx = FFT.malloc_R_cplx();
+  Vy_R_cplx = FFT.malloc_R_cplx();
+  Vz_R_cplx = FFT.malloc_R_cplx();
+  Fx_R_cplx = FFT.malloc_R_cplx();
+  Fy_R_cplx = FFT.malloc_R_cplx();
+  Fz_R_cplx = FFT.malloc_R_cplx();
+  Vx_F_cplx = FFT.malloc_F_cplx();
+  Vy_F_cplx = FFT.malloc_F_cplx();
+  Vz_F_cplx = FFT.malloc_F_cplx();
+  Fx_F_cplx = FFT.malloc_F_cplx();
+  Fy_F_cplx = FFT.malloc_F_cplx();
+  Fz_F_cplx = FFT.malloc_F_cplx();
+  
+  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Vx_R_cplx[id] = Vx_R[id];
+    Vy_R_cplx[id] = Vy_R[id];
+    Vz_R_cplx[id] = Vz_R[id];
+  }
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  
+  FFT.c2c_fwrd(Vx_R_cplx, Vx_F_cplx);
+  FFT.c2c_fwrd(Vy_R_cplx, Vy_F_cplx);
+  FFT.c2c_fwrd(Vz_R_cplx, Vz_F_cplx);
+  
+  double P = 7.64;
+  int kf = 1;
+  
+  for(int ix = 0; ix<size_F_cplx[0]; ix++){
+  for(int iy = 0; iy<size_F_cplx[1]; iy++){
+  for(int iz = 0; iz<size_F_cplx[2]; iz++){
+    
+    int id = ix * size_F_cplx[1]*size_F_cplx[2] + iy * size_F_cplx[2] + iz;
+    
+    double k = sqrt(k2_cplx[id]);
+    
+    if( fabs(kf-k) < 0.001)
+    {
+    
+      double kxx = kx_cplx[ix];
+      double kyy = ky_cplx[iy];
+      double kzz = kz_cplx[iz];
+      
+      double phi   = atan2(kxx,kzz);
+      double theta = atan2(hypot(kxx,kzz), kyy);
+      
+      double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
+      double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
+      
+      CX xi_1 = Vx_F_cplx[id]*e1[0] + Vy_F_cplx[id]*e1[1] + Vz_F_cplx[id]*e1[2];
+      CX xi_2 = Vx_F_cplx[id]*e2[0] + Vy_F_cplx[id]*e2[1] + Vz_F_cplx[id]*e2[2];
+      
+      double alp = angle(angle_eng);
+      double psi = angle(angle_eng);
+      double gA = sin(2.*alp);
+      double gB = cos(2.*alp);
+      
+      double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
+                             -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
+                           
+      double theta_2 = theta_1 + psi;
+      
+      double F =  P/(dt); // delta Forcing! (6 Moden im Band kf=1 oder kf=2)
+      
+      CX A = sqrt( F ) * exp(IM*theta_1) * gA;
+      CX B = sqrt( F ) * exp(IM*theta_2) * gB;
+      
+      // 2.7 normiert auf eps=1 und sqrt(eps_0) setzt den gewünschten eps-Wert
+      double factor = N*N*N * 2.7;   // NS
+      
+      Fx_F_cplx[id] = factor*(A * e1[0]  + B * e2[0]); // Force in 'complex' Fourier Space
+      Fy_F_cplx[id] = factor*(A * e1[1]  + B * e2[1]); 
+      Fz_F_cplx[id] = factor*(A * e1[2]  + B * e2[2]); 
+    
+    }
+    else
+    {
+      Fx_F_cplx[id] = 0.;
+      Fy_F_cplx[id] = 0.;
+      Fz_F_cplx[id] = 0.;
+    }
+    
+  }}}
+  
+  FFT.c2c_bwrd(Fx_F_cplx, Fx_R_cplx);
+  FFT.c2c_bwrd(Fy_F_cplx, Fy_R_cplx);
+  FFT.c2c_bwrd(Fz_F_cplx, Fz_R_cplx);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Jx_R[id] = Fx_R_cplx[id].real();
+    Jy_R[id] = Fy_R_cplx[id].real();
+    Jz_R[id] = Fz_R_cplx[id].real();
+  }
+  
+  fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
+  
+  FFT.free_C(Vx_R_cplx);
+  FFT.free_C(Vy_R_cplx);
+  FFT.free_C(Vz_R_cplx);
+  FFT.free_C(Fx_R_cplx);
+  FFT.free_C(Fy_R_cplx);
+  FFT.free_C(Fz_R_cplx);
+  FFT.free_C(Vx_F_cplx);
+  FFT.free_C(Vy_F_cplx);
+  FFT.free_C(Vz_F_cplx);
+  FFT.free_C(Fx_F_cplx);
+  FFT.free_C(Fy_F_cplx);
+  FFT.free_C(Fz_F_cplx);
+  
+  /** COMPLEX VERSION **/
+  //~ //double P = M_PI*M_PI;
   //~ double P = 7.64;
   //~ int kf = 1;
-  //~ double Nf = 1.;
+  //~ //double Nf = 1.;
   
   //~ for(int ix = 0; ix<size_F[0]; ix++){
   //~ for(int iy = 0; iy<size_F[1]; iy++){
@@ -793,7 +995,6 @@ void CSpecDyn::Alvelius()
     //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
     //~ double k = sqrt(k2[id]);
-    //~ int k_int  = int(round(k));
     
     //~ if( fabs(kf-k) < 0.001)
     //~ {

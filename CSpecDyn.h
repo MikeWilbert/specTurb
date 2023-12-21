@@ -48,6 +48,12 @@ class CSpecDyn
     int size_R_tot;  
     int size_F_tot;  
     
+    int start_R_cplx[3], size_R_cplx[3];
+    int start_F_cplx[3], size_F_cplx[3];
+    
+    int size_R_tot_cplx;  
+    int size_F_tot_cplx;  
+    
     // output
     int print_count = 0;
     
@@ -62,6 +68,11 @@ class CSpecDyn
 		double* ky;
 		double* kz;
 		double* k2;
+    
+    double* kx_cplx;
+		double* ky_cplx;
+		double* kz_cplx;
+		double* k2_cplx;
     
     double* Vx_R;  
     double* Vy_R;  
@@ -134,9 +145,9 @@ class CSpecDyn
     double* B0z;
     
     // random Forces
-    double* Force_X;
-    double* Force_Y;
-    double* Force_Z;
+    CX* Force_X;
+    CX* Force_Y;
+    CX* Force_Z;
     
     // vti output
     float* float_array;
