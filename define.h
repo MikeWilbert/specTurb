@@ -22,16 +22,16 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 512;
+const int NUM = 64;
 // processor grid
-int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {8,8};
 // CFL number
 const double DT = 1.e-8;
 const double CFL_ADV = 0.5;
 const double CFL_DIF = 0.025;
 
 // output directory
-const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/anisotropic/anisotropicTurbulence_N512_B05p0_nu0p003_neu2";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/realFFT/test";
 // output interval
 const double OUT_INTERVAL = 0.5;
 // simulation time
@@ -45,8 +45,8 @@ const int RESTART_STEP = 0;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
-const int SETUP = 2;
-const bool BACKGROUND = true;
+const int SETUP = 1;
+const bool BACKGROUND = false;
 const double BACKGROUND_ENERGY = 5.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
@@ -54,7 +54,7 @@ const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mappin
 // (0) None
 // (1) Alvelius
 // (2) Titov
-const int FORCING = 1;
+const int FORCING = 0;
 
 // domain size
 const double LENGTH = PI2;
@@ -62,7 +62,7 @@ const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512
 //~ const double NU  = 0.0077;
-const double NU  = 0.003;
+const double NU  = 0.1;
 // magnetic diffusivity
 const double ETA = NU;
 

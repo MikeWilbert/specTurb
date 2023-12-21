@@ -11,7 +11,7 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   FFT = MikeFFT(N, pdims);
   
   // get sizes
-  FFT.get_sizes(size_R, start_R, size_F, start_F);
+  FFT.get_sizes_real(size_R, start_R, size_F, start_F);
   
   size_R_tot = size_R[0]*size_R[1]*size_R[2];
   size_F_tot = size_F[0]*size_F[1]*size_F[2];
@@ -41,78 +41,78 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   kz = new double[size_F[2]];
   k2 = new double[size_F_tot];
   
-  Vx_R = FFT.malloc();
-  Vy_R = FFT.malloc();
-  Vz_R = FFT.malloc();
+  Vx_R = FFT.malloc_R();
+  Vy_R = FFT.malloc_R();
+  Vz_R = FFT.malloc_R();
   
-  Bx_R = FFT.malloc();
-  By_R = FFT.malloc();
-  Bz_R = FFT.malloc();
+  Bx_R = FFT.malloc_R();
+  By_R = FFT.malloc_R();
+  Bz_R = FFT.malloc_R();
   
-  Vx_F = FFT.malloc();
-  Vy_F = FFT.malloc();
-  Vz_F = FFT.malloc();
-  Vx_F1 = FFT.malloc();
-  Vy_F1 = FFT.malloc();
-  Vz_F1 = FFT.malloc();
-  Vx_F2 = FFT.malloc();
-  Vy_F2 = FFT.malloc();
-  Vz_F2 = FFT.malloc();
-  Bx_F = FFT.malloc();
-  By_F = FFT.malloc();
-  Bz_F = FFT.malloc();
-  Bx_F1 = FFT.malloc();
-  By_F1 = FFT.malloc();
-  Bz_F1 = FFT.malloc();
-  Bx_F2 = FFT.malloc();
-  By_F2 = FFT.malloc();
-  Bz_F2 = FFT.malloc();
-  RHS_Vx_F = FFT.malloc();
-  RHS_Vy_F = FFT.malloc();
-  RHS_Vz_F = FFT.malloc();
-  RHS_Vx_F1 = FFT.malloc();
-  RHS_Vy_F1 = FFT.malloc();
-  RHS_Vz_F1 = FFT.malloc();
-  RHS_Vx_F2 = FFT.malloc();
-  RHS_Vy_F2 = FFT.malloc();
-  RHS_Vz_F2 = FFT.malloc();
-  RHS_Bx_F = FFT.malloc();
-  RHS_By_F = FFT.malloc();
-  RHS_Bz_F = FFT.malloc();
-  RHS_Bx_F1 = FFT.malloc();
-  RHS_By_F1 = FFT.malloc();
-  RHS_Bz_F1 = FFT.malloc();
-  RHS_Bx_F2 = FFT.malloc();
-  RHS_By_F2 = FFT.malloc();
-  RHS_Bz_F2 = FFT.malloc();
+  Vx_F = FFT.malloc_F();
+  Vy_F = FFT.malloc_F();
+  Vz_F = FFT.malloc_F();
+  Vx_F1 = FFT.malloc_F();
+  Vy_F1 = FFT.malloc_F();
+  Vz_F1 = FFT.malloc_F();
+  Vx_F2 = FFT.malloc_F();
+  Vy_F2 = FFT.malloc_F();
+  Vz_F2 = FFT.malloc_F();
+  Bx_F = FFT.malloc_F();
+  By_F = FFT.malloc_F();
+  Bz_F = FFT.malloc_F();
+  Bx_F1 = FFT.malloc_F();
+  By_F1 = FFT.malloc_F();
+  Bz_F1 = FFT.malloc_F();
+  Bx_F2 = FFT.malloc_F();
+  By_F2 = FFT.malloc_F();
+  Bz_F2 = FFT.malloc_F();
+  RHS_Vx_F = FFT.malloc_F();
+  RHS_Vy_F = FFT.malloc_F();
+  RHS_Vz_F = FFT.malloc_F();
+  RHS_Vx_F1 = FFT.malloc_F();
+  RHS_Vy_F1 = FFT.malloc_F();
+  RHS_Vz_F1 = FFT.malloc_F();
+  RHS_Vx_F2 = FFT.malloc_F();
+  RHS_Vy_F2 = FFT.malloc_F();
+  RHS_Vz_F2 = FFT.malloc_F();
+  RHS_Bx_F = FFT.malloc_F();
+  RHS_By_F = FFT.malloc_F();
+  RHS_Bz_F = FFT.malloc_F();
+  RHS_Bx_F1 = FFT.malloc_F();
+  RHS_By_F1 = FFT.malloc_F();
+  RHS_Bz_F1 = FFT.malloc_F();
+  RHS_Bx_F2 = FFT.malloc_F();
+  RHS_By_F2 = FFT.malloc_F();
+  RHS_Bz_F2 = FFT.malloc_F();
   
-  RHS_Vx_R = FFT.malloc();
-  RHS_Vy_R = FFT.malloc();
-  RHS_Vz_R = FFT.malloc();
-  RHS_Bx_R = FFT.malloc();
-  RHS_By_R = FFT.malloc();
-  RHS_Bz_R = FFT.malloc();
+  RHS_Vx_R = FFT.malloc_R();
+  RHS_Vy_R = FFT.malloc_R();
+  RHS_Vz_R = FFT.malloc_R();
+  RHS_Bx_R = FFT.malloc_R();
+  RHS_By_R = FFT.malloc_R();
+  RHS_Bz_R = FFT.malloc_R();
   
-  Wx_R = FFT.malloc();
-  Wy_R = FFT.malloc();
-  Wz_R = FFT.malloc();
-  Jx_R = FFT.malloc();
-  Jy_R = FFT.malloc();
-  Jz_R = FFT.malloc();
-  Wx_F = FFT.malloc();
-  Wy_F = FFT.malloc();
-  Wz_F = FFT.malloc();
-  Jx_F = FFT.malloc();
-  Jy_F = FFT.malloc();
-  Jz_F = FFT.malloc();
+  Wx_R = FFT.malloc_R();
+  Wy_R = FFT.malloc_R();
+  Wz_R = FFT.malloc_R();
+  Jx_R = FFT.malloc_R();
+  Jy_R = FFT.malloc_R();
+  Jz_R = FFT.malloc_R();
+  Wx_F = FFT.malloc_F();
+  Wy_F = FFT.malloc_F();
+  Wz_F = FFT.malloc_F();
+  Jx_F = FFT.malloc_F();
+  Jy_F = FFT.malloc_F();
+  Jz_F = FFT.malloc_F();
   
-  Force_X = FFT.malloc();
-  Force_Y = FFT.malloc();
-  Force_Z = FFT.malloc();
+  Force_X = FFT.malloc_R();
+  Force_Y = FFT.malloc_R();
+  Force_Z = FFT.malloc_R();
   
-  B0x = FFT.malloc();
-  B0y = FFT.malloc();
-  B0z = FFT.malloc();
+  B0x = FFT.malloc_R();
+  B0y = FFT.malloc_R();
+  B0z = FFT.malloc_R();
   
   float_array        = (float*) malloc(sizeof(float)*size_R_tot);
   float_array_vector = (float*) malloc(sizeof(float)*size_R_tot*3);
@@ -173,236 +173,9 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
   
 }
 
-void CSpecDyn::restart()
+void CSpecDyn::finalize()
 {
-  
-  #ifdef RESTART_DIR
-  std::string restart_dir = RESTART_DIR;
-  #else
-  std::string restart_dir = out_dir;
-  #endif
-  
-  std::string restart_file = restart_dir + "/vti/step_" + std::to_string(RESTART_STEP) + ".vti";
-  
-  if(myRank==0)
-  {
-    printf("Restart!\n");
-  }
-  
-  // CHECK RESOLUTION N
-  if(myRank==0)
-  {
-    int N_in = 0;
-    
-    std::ifstream reader;
-    reader.open(restart_file, std::ios::in);
-    if(!reader){
-      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
-    }
-    
-    char word[] = "012345";
-    
-    for(int i = 0; i < 200; i++)
-    {
-      reader.seekg(i, std::ios::beg);
-      reader.read(word, 6);
-
-      if(strcmp(word,"Extent")==0)
-      {
-        reader.seekg(i+10, std::ios::beg); // set to start of N
-        
-        char N_word[10];
-        char c; 
-        reader.read(&c, sizeof(char));
-        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
-        {
-          
-          if(c==' ')
-          {
-            N_word[i] = '\0';
-            break;
-          }
-          else{
-            N_word[i] = c;
-          }
-        }
-        
-        N_in = std::stoi(N_word)+1;
-        
-        break;
-      }
-    }
-    reader.close();
-    
-    if(N==N_in)
-    {
-      printf("Restart resolution matches!\n");
-    }
-    else
-    {
-      printf("Resolution N of vti file for restart does not match parameters!\n");
-      exit(EXIT_FAILURE);
-    }
-  }
-  
-  // GET STEP OUTPUT #
-  int step = 0;
-  
-  if(myRank==0)
-  {
-    char number_str[10];
-    int str_counter = 0;
-    
-    for(int i = restart_file.size()-5; restart_file[i]!='_'; i--)
-    {
-      number_str[str_counter] = restart_file[i];
-      str_counter ++;
-    }
-    number_str[str_counter] = '\0';
-    
-    std::string number_rev = std::string(number_str);
-    std::string number = std::string(number_rev.length(), 'x');
-    
-    for(int i=0, n=number.length()-1; i<number.length(); i++, n--)
-    {
-      number[i] = number_rev[n];
-    }
-    
-    print_count = std::stoi(number)+1;
-    
-  }MPI_Barrier(comm);
-  
-  MPI_Bcast(&print_count, 1, MPI_INT, 0, comm);
-  
-  // CHECK TIME
-  if(myRank==0)
-  {
-    std::ifstream reader;
-    reader.open(restart_file, std::ios::in);
-    if(!reader){
-      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
-    }
-    
-    char word[] = "TimeValue";
-    
-    for(int i = 0; i < 1000; i++)
-    {
-      reader.seekg(i, std::ios::beg);
-      reader.read(word, 9);
-
-      if(strcmp(word,"TimeValue")==0)
-      {
-        reader.seekg(i+54, std::ios::beg); // set to start of time
-        
-        char t_word[20];
-        char c; 
-        reader.read(&c, sizeof(char));
-        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
-        {
-          
-          if(c==' ')
-          {
-            t_word[i] = '\0';
-            break;
-          }
-          else{
-            t_word[i] = c;
-          }
-        }
-        
-        //~ printf("new time: %s\n", t_word);
-        time = std::stod(t_word);
-        
-        break;
-      }
-    }
-    reader.close();
-    
-  }MPI_Barrier(comm);
-  
-  MPI_Bcast(&time, 1, MPI_DOUBLE, 0, comm);
-  
-  // GET FIELDS
-  // find header offset
-  char character;
-  int headerOffset = 0;
-  
-  if(myRank==0)
-  {
-    // find length of header
-    std::ifstream reader;
-    reader.open(restart_file, std::ios::in);
-    if(!reader){
-      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
-    }
-    
-    for(int i = 0; i < 1e5; i++)
-    {
-      reader.read(&character, sizeof(char));
-      headerOffset += 1;
-      if(character == ' ')
-      {
-        reader.read(&character, sizeof(char));
-        
-        if(character == '_')
-        {
-          headerOffset += 1;
-          break;
-        }
-        else
-        {
-          reader.seekg(headerOffset, std::ios::beg);
-        }
-          
-      }
-    }
-    
-    reader.close();
-    
-  }MPI_Barrier(MPI_COMM_WORLD);
-  
-  MPI_Bcast(&headerOffset, 1, MPI_INT, 0, comm);
-  
-  // open MPI file
-  MPI_File mpi_file;
-  MPI_File_open(comm, restart_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
-  
-  float* buffer = new float[3*size_R_tot];
-  
-  // set specific file view for each process
-  MPI_Offset file_offset = headerOffset + sizeof(uint64_t);
-  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
-  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
-  
-  for(int id = 0; id < size_R_tot; id++)
-  {
-    Vx_R[id] = buffer[id*3  ];
-    Vy_R[id] = buffer[id*3+1];
-    Vz_R[id] = buffer[id*3+2];
-  }
-  
-  long N_l = N;
-  file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N_l*N_l*N_l*sizeof(float);
-  MPI_File_set_view(mpi_file, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL); // reset file view to specify offset in bytes in the next file view
-  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
-  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
-  
-  for(int id = 0; id < size_R_tot; id++)
-  {
-    Bx_R[id] = buffer[id*3  ];
-    By_R[id] = buffer[id*3+1];
-    Bz_R[id] = buffer[id*3+2];
-  }
-  
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
-  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
-  
-  delete[] buffer;
-  
-  // close MPI file
-  MPI_File_close(&mpi_file);
-  MPI_Barrier(MPI_COMM_WORLD);
-  
+  MPI_Finalize();
 }
 
 void CSpecDyn::setup_k()
@@ -440,20 +213,12 @@ void CSpecDyn::setup_k()
 		}
 	}
   
-  // kz
+  // kx
   for(int iz = 0; iz < size_F[2]; iz++)
 	{
-    
-    int iz_glob = start_F[2] + iz;
-    
-    if(iz_glob < N/2)
-    {
-      kz[iz] = iz_glob * dk;
-    }
-    else
-    {
-      kz[iz] = (iz_glob-N) * dk;
-		}
+		int iz_glob = start_F[2] + iz;
+		
+    kz[iz] = iz_glob * dk;
 	}
   
   // k2
@@ -579,7 +344,7 @@ void CSpecDyn::setup_fields()
       {
         double A = sqrt( 1./pow(1+k2[id],s) );
         
-        //~ double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
+        //~ //double A = sqrt( k2[id]*k2[id] *exp( -2. * k2[id]/(k0*k0) ) );
         
         if(int(round(k2[id])) != 0)
         {
@@ -667,9 +432,9 @@ void CSpecDyn::setup_fields()
       for(int id = 0; id < size_R_tot; id++)
       {
         
-        Vx = Vx_R[id].real();
-        Vy = Vy_R[id].real();
-        Vz = Vz_R[id].real();
+        Vx = Vx_R[id];
+        Vy = Vy_R[id];
+        Vz = Vz_R[id];
         
         urms_loc += (Vx*Vx+Vy*Vy+Vz*Vz);
 
@@ -700,11 +465,11 @@ void CSpecDyn::setup_fields()
       
       break;
     
-    //~ default: 
-      //~ if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
-      //~ MPI_Barrier(comm);
-      //~ MPI_Finalize();
-      //~ exit(EXIT_FAILURE);
+    default: 
+      if(myRank==0){printf("No valid setup provided! setup = %d\n", setup);}
+      MPI_Barrier(comm);
+      MPI_Finalize();
+      exit(EXIT_FAILURE);
   }
   
   /** Background Field **/
@@ -734,7 +499,7 @@ void CSpecDyn::setup_fields()
     
     norm_B0 = sqrt(energy_b0_init/energy_B0);      
     
-    for(int id = 0; id < size_F_tot; id++)
+    for(int id = 0; id < size_R_tot; id++)
     {    
       B0x[id] *= norm_B0;
       B0y[id] *= norm_B0;
@@ -754,7 +519,7 @@ void CSpecDyn::setup_fields()
   }
   
   // set initial forcing to zero
-  for(size_t id = 0; id < size_F_tot; id++)
+  for(size_t id = 0; id < size_R_tot; id++)
   {
     Force_X[id] = 0.;
     Force_Y[id] = 0.;
@@ -762,143 +527,143 @@ void CSpecDyn::setup_fields()
   }
 }
 
-void CSpecDyn::execute()
-{
-  double start_time = MPI_Wtime();
-  double out_time = fmod(time,out_interval);
+//~ void CSpecDyn::execute()
+//~ {
+  //~ double start_time = MPI_Wtime();
+  //~ double out_time = fmod(time,out_interval);
   
-  // geometric output series
-  double r = 1.4919;
-  double a = 0.00067;
+  //~ // geometric output series
+  //~ double r = 1.4919;
+  //~ double a = 0.00067;
   
-  out_time = a * r; 
+  //~ out_time = a * r; 
   
-  while(time < end_simu)
-  {
+  //~ while(time < end_simu)
+  //~ {
     
-    time_step();
-    out_time += dt;
+    //~ time_step();
+    //~ out_time += dt;
     
-    print_Energy();
+    //~ print_Energy();
     
-    if(out_time > out_interval)
-    //~ if(time > out_time)
-    {
-      print();
-      out_time -= out_interval;
-      //~ out_time = a * pow(r,print_count);
-    }
+    //~ if(out_time > out_interval)
+    //if(time > out_time) // log output
+    //~ {
+      //~ print();
+      //~ out_time -= out_interval;
+      //~ out_time = a * pow(r,print_count); // log output
+    //~ }
     
-  }
+  //~ }
   
-  double end_time = MPI_Wtime() - start_time;
-  if(myRank==0)
-  {
-    printf("Execution Time: %f [s]\n", end_time);
-  }
-}
+  //~ double end_time = MPI_Wtime() - start_time;
+  //~ if(myRank==0)
+  //~ {
+    //~ printf("Execution Time: %f [s]\n", end_time);
+  //~ }
+//~ }
 
-void CSpecDyn::time_step()
-{
+//~ void CSpecDyn::time_step()
+//~ {
   
-  set_dt();
+  //~ set_dt();
   
-  if(FORCING==0)
-  {
-    // nothing
-  }
-  else if(FORCING==1)
-  {
-    Alvelius();
-  }
-  else if(FORCING==2)
-  {
-    Titov();
-  }
+  //~ if(FORCING==0)
+  //~ {
+    //~ // nothing
+  //~ }
+  //~ else if(FORCING==1)
+  //~ {
+    //~ Alvelius();
+  //~ }
+  //~ else if(FORCING==2)
+  //~ {
+    //~ Titov();
+  //~ }
   
-  double del_t;
+  //~ double del_t;
   
-  // step 1
-  del_t = 1.;
+  //~ // step 1
+  //~ del_t = 1.;
   
-  calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
+  //~ calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
+          //~ ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
   
-  for(int id = 0; id < size_F_tot; id++)
-  { 
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ { 
     
-    Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
-    Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
-    Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
+    //~ Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
+    //~ Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
+    //~ Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
     
-    Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
-    By_F1[id] = By_F[id] + dt * RHS_By_F[id];
-    Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
+    //~ Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
+    //~ By_F1[id] = By_F[id] + dt * RHS_By_F[id];
+    //~ Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
     
-  }
+  //~ }
   
-  diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  //~ diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
   
-  projection(Vx_F1, Vy_F1, Vz_F1);
-  projection(Bx_F1, By_F1, Bz_F1);
+  //~ projection(Vx_F1, Vy_F1, Vz_F1);
+  //~ projection(Bx_F1, By_F1, Bz_F1);
           
-  // step 2
-  del_t = 0.5;
+  //~ // step 2
+  //~ del_t = 0.5;
   
-  calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  //~ calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
+          //~ ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
    
-  double dt_025 = 0.25*dt; 
+  //~ double dt_025 = 0.25*dt; 
           
-  for(int id = 0; id < size_F_tot; id++)
-  { 
-    Vx_F2[id] = Vx_F[id] + dt_025 * ( RHS_Vx_F[id] + RHS_Vx_F1[id]);
-    Vy_F2[id] = Vy_F[id] + dt_025 * ( RHS_Vy_F[id] + RHS_Vy_F1[id]);
-    Vz_F2[id] = Vz_F[id] + dt_025 * ( RHS_Vz_F[id] + RHS_Vz_F1[id]);
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ { 
+    //~ Vx_F2[id] = Vx_F[id] + dt_025 * ( RHS_Vx_F[id] + RHS_Vx_F1[id]);
+    //~ Vy_F2[id] = Vy_F[id] + dt_025 * ( RHS_Vy_F[id] + RHS_Vy_F1[id]);
+    //~ Vz_F2[id] = Vz_F[id] + dt_025 * ( RHS_Vz_F[id] + RHS_Vz_F1[id]);
     
-    Bx_F2[id] = Bx_F[id] + dt_025 * ( RHS_Bx_F[id] + RHS_Bx_F1[id]);
-    By_F2[id] = By_F[id] + dt_025 * ( RHS_By_F[id] + RHS_By_F1[id]);
-    Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
-  }
+    //~ Bx_F2[id] = Bx_F[id] + dt_025 * ( RHS_Bx_F[id] + RHS_Bx_F1[id]);
+    //~ By_F2[id] = By_F[id] + dt_025 * ( RHS_By_F[id] + RHS_By_F1[id]);
+    //~ Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
+  //~ }
   
-  diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+  //~ diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
-  projection(Vx_F2, Vy_F2, Vz_F2);
-  projection(Bx_F2, By_F2, Bz_F2);
+  //~ projection(Vx_F2, Vy_F2, Vz_F2);
+  //~ projection(Bx_F2, By_F2, Bz_F2);
           
-  // step 3
-  del_t = 1.;
+  //~ // step 3
+  //~ del_t = 1.;
   
-  calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+  //~ calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
+          //~ ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
-  double dt_6 = dt/6.;
+  //~ double dt_6 = dt/6.;
   
-  for(int id = 0; id < size_F_tot; id++)
-  { 
-    Vx_F[id] = Vx_F[id] + dt_6 * (RHS_Vx_F[id] + RHS_Vx_F1[id] + 4.*RHS_Vx_F2[id]);
-    Vy_F[id] = Vy_F[id] + dt_6 * (RHS_Vy_F[id] + RHS_Vy_F1[id] + 4.*RHS_Vy_F2[id]);
-    Vz_F[id] = Vz_F[id] + dt_6 * (RHS_Vz_F[id] + RHS_Vz_F1[id] + 4.*RHS_Vz_F2[id]);
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ { 
+    //~ Vx_F[id] = Vx_F[id] + dt_6 * (RHS_Vx_F[id] + RHS_Vx_F1[id] + 4.*RHS_Vx_F2[id]);
+    //~ Vy_F[id] = Vy_F[id] + dt_6 * (RHS_Vy_F[id] + RHS_Vy_F1[id] + 4.*RHS_Vy_F2[id]);
+    //~ Vz_F[id] = Vz_F[id] + dt_6 * (RHS_Vz_F[id] + RHS_Vz_F1[id] + 4.*RHS_Vz_F2[id]);
     
-    Bx_F[id] = Bx_F[id] + dt_6 * (RHS_Bx_F[id] + RHS_Bx_F1[id] + 4.*RHS_Bx_F2[id]);
-    By_F[id] = By_F[id] + dt_6 * (RHS_By_F[id] + RHS_By_F1[id] + 4.*RHS_By_F2[id]);
-    Bz_F[id] = Bz_F[id] + dt_6 * (RHS_Bz_F[id] + RHS_Bz_F1[id] + 4.*RHS_Bz_F2[id]);
+    //~ Bx_F[id] = Bx_F[id] + dt_6 * (RHS_Bx_F[id] + RHS_Bx_F1[id] + 4.*RHS_Bx_F2[id]);
+    //~ By_F[id] = By_F[id] + dt_6 * (RHS_By_F[id] + RHS_By_F1[id] + 4.*RHS_By_F2[id]);
+    //~ Bz_F[id] = Bz_F[id] + dt_6 * (RHS_Bz_F[id] + RHS_Bz_F1[id] + 4.*RHS_Bz_F2[id]);
 
-  }
+  //~ }
   
-  diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
+  //~ diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
   
-  projection(Vx_F , Vy_F , Vz_F );
-  projection(Bx_F , By_F , Bz_F );
+  //~ projection(Vx_F , Vy_F , Vz_F );
+  //~ projection(Bx_F , By_F , Bz_F );
   
-  // update time
-  time += dt;
+  //~ // update time
+  //~ time += dt;
   
-  if(myRank == 0)
-	{
-		printf("  time step: time = %f, dt = %f\n", time, dt);
-	}MPI_Barrier(comm);
-}
+  //~ if(myRank == 0)
+	//~ {
+		//~ printf("  time step: time = %f, dt = %f\n", time, dt);
+	//~ }MPI_Barrier(comm);
+//~ }
 
 // calc Energy and Dissipation
 void CSpecDyn::calc_Energy(double& energy_V, double& diss_V)
@@ -999,9 +764,9 @@ void CSpecDyn::set_dt()
   double vmax_loc = 0.;
   for(int id = 0; id < size_R_tot; id++)
   {
-    double Vx = Vx_R[id].real();
-    double Vy = Vy_R[id].real();
-    double Vz = Vz_R[id].real();
+    double Vx = Vx_R[id];
+    double Vy = Vy_R[id];
+    double Vz = Vz_R[id];
     
     vmax_loc = std::max( {vmax_loc, Vx*Vx+Vy*Vy+Vz*Vz} );
   }
@@ -1017,320 +782,237 @@ void CSpecDyn::set_dt()
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
 
-void CSpecDyn::Titov()
-{
-  double P = PI2;
-  int kf = 1;
-  int Nm = 6;
+//~ void CSpecDyn::Alvelius()
+//~ {
   
-  double alpha = sqrt(2.*P/(dt*Nm));
+  //double P = M_PI*M_PI;
+  //~ double P = 7.64;
+  //~ int kf = 1;
+  //~ double Nf = 1.;
   
-  double e_j[3];
-  double e_u[3];
-  double par, norm;
-  
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    double k = sqrt(k2[id]);
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    if( fabs(kf-k) < 0.001)
-    {
+    //~ double k = sqrt(k2[id]);
+    //~ int k_int  = int(round(k));
     
-      double kxx = kx[ix];
-      double kyy = ky[iy];
-      double kzz = kz[iz];
-      
-      do{ 
-        e_j[0] = length(length_eng);
-        e_j[1] = length(length_eng);
-        e_j[2] = length(length_eng);
-        
-        norm = 1./sqrt(e_j[0]*e_j[0] + e_j[1]*e_j[1] + e_j[2]*e_j[2]);
-        
-        e_j[0] *= norm;
-        e_j[1] *= norm;
-        e_j[2] *= norm;
-        
-        par = (e_j[0] * kxx + e_j[1] * kyy + e_j[2] * kzz) / k;
-        
-      }while( fabs(par) < 1.e-7 );
-      
-      e_u[0] = kyy * e_j[2] - kzz * e_j[1];
-      e_u[1] = kzz * e_j[0] - kxx * e_j[2];
-      e_u[2] = kxx * e_j[1] - kyy * e_j[0];
-      
-      norm = 1./sqrt(e_u[0]*e_u[0] + e_u[1]*e_u[1] + e_u[2]*e_u[2]);
-        
-      e_u[0] *= norm;
-      e_u[1] *= norm;
-      e_u[2] *= norm;
+    //~ if( fabs(kf-k) < 0.001)
+    //~ {
     
-      Force_X[id] = alpha * e_u[0];
-      Force_Y[id] = alpha * e_u[1];
-      Force_Z[id] = alpha * e_u[2];
-  
-    }
-    else
-    {
-      Force_X[id] = 0.;
-      Force_Y[id] = 0.;
-      Force_Z[id] = 0.;
-    }
-  
-  }}}
-  
-  // only keep real part
-  bFFT(Force_X, Force_Y, Force_Z, Jx_R, Jy_R, Jz_R);
-  
-  for(int id = 0; id<size_F_tot; id++)
-  {
-    Jx_R[id] = CX( Jx_R[id].real() );
-    Jy_R[id] = CX( Jy_R[id].real() );
-    Jz_R[id] = CX( Jz_R[id].real() );
-  }
-  
-  fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
-}
-
-void CSpecDyn::Alvelius()
-{
-  
-  //~ double P = M_PI*M_PI;
-  double P = 7.64;
-  int kf = 1;
-  double Nf = 1.;
-  
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    double k = sqrt(k2[id]);
-    int k_int  = int(round(k));
-    
-    if( fabs(kf-k) < 0.001)
-    {
-    
-      double kxx = kx[ix];
-      double kyy = ky[iy];
-      double kzz = kz[iz];
-      double k   = sqrt(k2[id]);
+      //~ double kxx = kx[ix];
+      //~ double kyy = ky[iy];
+      //~ double kzz = kz[iz];
+      //~ double k   = sqrt(k2[id]);
       
-      double phi   = atan2(kxx,kzz);
-      double theta = atan2(hypot(kxx,kzz), kyy);
+      //~ double phi   = atan2(kxx,kzz);
+      //~ double theta = atan2(hypot(kxx,kzz), kyy);
       
-      double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
-      double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
+      //~ double e1[3] = {+           sin(phi), -           cos(phi), 0.         };
+      //~ double e2[3] = {-cos(theta)*cos(phi), -cos(theta)*sin(phi), +sin(theta)};
       
-      CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
-      CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
+      //~ CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
+      //~ CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
       
-      double alp = angle(angle_eng);
-      double psi = angle(angle_eng);
-      double gA = sin(2.*alp);
-      double gB = cos(2.*alp);
+      //~ double alp = angle(angle_eng);
+      //~ double psi = angle(angle_eng);
+      //~ double gA = sin(2.*alp);
+      //~ double gB = cos(2.*alp);
       
-      double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
-                             -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
+      //~ double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
+                             //~ -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
                            
-      double theta_2 = theta_1 + psi;
+      //~ double theta_2 = theta_1 + psi;
       
-      double F =  P/(dt); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
+      //~ double F =  P/(dt); // delta Forcing! (3 Moden im Band kf=1 oder kf=2)
       
-      CX A = sqrt( F ) * exp(IM*theta_1) * gA;
-      CX B = sqrt( F ) * exp(IM*theta_2) * gB;
+      //~ CX A = sqrt( F ) * exp(IM*theta_1) * gA;
+      //~ CX B = sqrt( F ) * exp(IM*theta_2) * gB;
       
-      // 2.7 normiert auf eps=1 und sqrt(eps_0) setzt den gewünschten eps-Wert
-      double factor = N*N*N * 2.7;   // NS
-      //~ double factor = N*N*N*2.7* sqrt(8.); // MHD
+      //~ // 2.7 normiert auf eps=1 und sqrt(eps_0) setzt den gewünschten eps-Wert
+      //~ double factor = N*N*N * 2.7;   // NS
+      //double factor = N*N*N*2.7* sqrt(8.); // MHD
       
-      Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
-      Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
-      Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
+      //~ Force_X[id] = factor*(A * e1[0]  + B * e2[0]); 
+      //~ Force_Y[id] = factor*(A * e1[1]  + B * e2[1]); 
+      //~ Force_Z[id] = factor*(A * e1[2]  + B * e2[2]); 
     
-    }
-    else
-    {
-      Force_X[id] = 0.;
-      Force_Y[id] = 0.;
-      Force_Z[id] = 0.;
-    }
-  }}}
+    //~ }
+    //~ else
+    //~ {
+      //~ Force_X[id] = 0.;
+      //~ Force_Y[id] = 0.;
+      //~ Force_Z[id] = 0.;
+    //~ }
+  //~ }}}
   
-  // only keep real part
-  bFFT(Force_X, Force_Y, Force_Z, Jx_R, Jy_R, Jz_R);
+  //~ // only keep real part
+  //~ bFFT(Force_X, Force_Y, Force_Z, Jx_R, Jy_R, Jz_R);
   
-  for(int id = 0; id<size_F_tot; id++)
-  {
-    Jx_R[id] = CX( Jx_R[id].real() );
-    Jy_R[id] = CX( Jy_R[id].real() );
-    Jz_R[id] = CX( Jz_R[id].real() );
-  }
+  //~ for(int id = 0; id<size_F_tot; id++)
+  //~ {
+    //~ Jx_R[id] = CX( Jx_R[id].real() );
+    //~ Jy_R[id] = CX( Jy_R[id].real() );
+    //~ Jz_R[id] = CX( Jz_R[id].real() );
+  //~ }
   
-  fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
+  //~ fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
   
-}
+//~ }
 
-void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
-                        CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                        double del_t)
-{
-  // W = rot(V)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+//~ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
+                        //~ CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
+                        //~ double del_t)
+//~ {
+  //~ // W = rot(V)
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
-    Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
-    Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
+    //~ Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
+    //~ Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
+    //~ Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
     
-  }}}
+  //~ }}}
   
-  // J = rot(B)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  //~ // J = rot(B)
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
-    Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
-    Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
+    //~ Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
+    //~ Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
+    //~ Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
     
-  }}}
+  //~ }}}
   
-  // dealias
-  dealias(V_X, V_Y, V_Z);
-  dealias(B_X, B_Y, B_Z);
-  dealias(Wx_F, Wy_F, Wz_F);
-  dealias(Jx_F, Jy_F, Jz_F);
+  //~ // dealias
+  //~ dealias(V_X, V_Y, V_Z);
+  //~ dealias(B_X, B_Y, B_Z);
+  //~ dealias(Wx_F, Wy_F, Wz_F);
+  //~ dealias(Jx_F, Jy_F, Jz_F);
   
-  // FFT F->R
-  bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
-  bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
-  bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
-  bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
+  //~ // FFT F->R
+  //~ bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
+  //~ bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
+  //~ bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
+  //~ bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
-  // clean up imaginary part
-  for(int id = 0; id < size_R_tot; id++){
+  //~ // clean up imaginary part
+  //~ for(int id = 0; id < size_R_tot; id++){
    
-    Vx_R[id] = Vx_R[id].real();
-    Vy_R[id] = Vy_R[id].real();
-    Vz_R[id] = Vz_R[id].real();
-    Bx_R[id] = Bx_R[id].real();
-    By_R[id] = By_R[id].real();
-    Bz_R[id] = Bz_R[id].real();
+    //~ Vx_R[id] = Vx_R[id].real();
+    //~ Vy_R[id] = Vy_R[id].real();
+    //~ Vz_R[id] = Vz_R[id].real();
+    //~ Bx_R[id] = Bx_R[id].real();
+    //~ By_R[id] = By_R[id].real();
+    //~ Bz_R[id] = Bz_R[id].real();
     
-  }
+  //~ }
   
   
-  // RHS_V = VxW + JxB
-  for(int id = 0; id < size_R_tot; id++){
+  //~ // RHS_V = VxW + JxB
+  //~ for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
-    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
-    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
+    //~ RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
+    //~ RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
+    //~ RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
     
-  }
+  //~ }
   
-  // RHS_B = VxB
-  for(int id = 0; id < size_R_tot; id++){
+  //~ // RHS_B = VxB
+  //~ for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
-    RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
-    RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
+    //~ RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
+    //~ RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
+    //~ RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
     
-  }
+  //~ }
   
-  // FFT R->F
-  fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
-  fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
-  fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
-  fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
+  //~ // FFT R->F
+  //~ fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
+  //~ fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
+  //~ fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
+  //~ fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
   
-  // dealias
-  dealias(V_X, V_Y, V_Z);
-  dealias(B_X, B_Y, B_Z);
-  dealias(RHSV_X, RHSV_Y, RHSV_Z);
-  dealias(RHSB_X, RHSB_Y, RHSB_Z);
+  //~ // dealias
+  //~ dealias(V_X, V_Y, V_Z);
+  //~ dealias(B_X, B_Y, B_Z);
+  //~ dealias(RHSV_X, RHSV_Y, RHSV_Z);
+  //~ dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  // RHS_B = rot(VxB)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  //~ // RHS_B = rot(VxB)
+  //~ for(int ix = 0; ix<size_F[0]; ix++){
+  //~ for(int iy = 0; iy<size_F[1]; iy++){
+  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    CX VxB_X = RHSB_X[id];
-    CX VxB_Y = RHSB_Y[id];
-    CX VxB_Z = RHSB_Z[id];
+    //~ CX VxB_X = RHSB_X[id];
+    //~ CX VxB_Y = RHSB_Y[id];
+    //~ CX VxB_Z = RHSB_Z[id];
     
-    RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
-    RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
-    RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
+    //~ RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
+    //~ RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
+    //~ RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
     
-  }}}
+  //~ }}}
   
-  /************ ALVELIUS - 1999 **********/
-  if(setup==2)
-  {
-    for(int id = 0; id < size_F_tot; id++){
+  //~ /************ ALVELIUS - 1999 **********/
+  //~ if(setup==2)
+  //~ {
+    //~ for(int id = 0; id < size_F_tot; id++){
      
-      RHSV_X[id] += Force_X[id];
-      RHSV_Y[id] += Force_Y[id];
-      RHSV_Z[id] += Force_Z[id];
+      //~ RHSV_X[id] += Force_X[id];
+      //~ RHSV_Y[id] += Force_Y[id];
+      //~ RHSV_Z[id] += Force_Z[id];
       
-    }
-  }
-  /***************************************/
+    //~ }
+  //~ }
+  //~ /***************************************/
   
-  // diffusion
-  for(int id = 0; id < size_F_tot; id++)
-  {
-    double exp_diff_V = exp(nu *k2[id]*del_t*dt);
-    double exp_diff_B = exp(eta*k2[id]*del_t*dt);
+  //~ // diffusion
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ {
+    //~ double exp_diff_V = exp(nu *k2[id]*del_t*dt);
+    //~ double exp_diff_B = exp(eta*k2[id]*del_t*dt);
     
-    RHSV_X[id] *= exp_diff_V;
-    RHSV_X[id] *= exp_diff_V;
-    RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
+    //~ RHSV_X[id] *= exp_diff_V;
     
-    RHSB_X[id] *= exp_diff_B;
-    RHSB_X[id] *= exp_diff_B;
-    RHSB_X[id] *= exp_diff_B;
-  }
-}
+    //~ RHSB_X[id] *= exp_diff_B;
+    //~ RHSB_X[id] *= exp_diff_B;
+    //~ RHSB_X[id] *= exp_diff_B;
+  //~ }
+//~ }
 
-void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
-{
+//~ void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
+//~ {
 
-  double exp_diff_V;
-  double exp_diff_B;
+  //~ double exp_diff_V;
+  //~ double exp_diff_B;
 
-  for(int id = 0; id < size_F_tot; id++)
-  {
-    exp_diff_V = exp(- nu *k2[id]*del_t*dt);
-    exp_diff_B = exp(- eta*k2[id]*del_t*dt);
+  //~ for(int id = 0; id < size_F_tot; id++)
+  //~ {
+    //~ exp_diff_V = exp(- nu *k2[id]*del_t*dt);
+    //~ exp_diff_B = exp(- eta*k2[id]*del_t*dt);
     
-    Vx[id] *= exp_diff_V;
-    Vy[id] *= exp_diff_V;
-    Vz[id] *= exp_diff_V;
+    //~ Vx[id] *= exp_diff_V;
+    //~ Vy[id] *= exp_diff_V;
+    //~ Vz[id] *= exp_diff_V;
     
-    Bx[id] *= exp_diff_B;
-    By[id] *= exp_diff_B;
-    Bz[id] *= exp_diff_B;
-  }
-}
-
-void CSpecDyn::finalize()
-{
-  MPI_Finalize();
-}
+    //~ Bx[id] *= exp_diff_B;
+    //~ By[id] *= exp_diff_B;
+    //~ Bz[id] *= exp_diff_B;
+  //~ }
+//~ }
 
 void CSpecDyn::projection(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
@@ -1351,21 +1033,21 @@ void CSpecDyn::projection(CX* fieldX, CX* fieldY, CX* fieldZ)
   
 }
 
-void CSpecDyn::fFFT(CX* IN_x, CX* IN_y, CX* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z)
+void CSpecDyn::fFFT(double* IN_x, double* IN_y, double* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z)
 {
   
-  FFT.R2F(IN_x, OUT_x);
-  FFT.R2F(IN_y, OUT_y);
-  FFT.R2F(IN_z, OUT_z);
+  FFT.r2c(IN_x, OUT_x);
+  FFT.r2c(IN_y, OUT_y);
+  FFT.r2c(IN_z, OUT_z);
   
 }
 
-void CSpecDyn::bFFT(CX* IN_x, CX* IN_y, CX* IN_z, CX* OUT_x, CX* OUT_y, CX* OUT_z)
+void CSpecDyn::bFFT(CX* IN_x, CX* IN_y, CX* IN_z, double* OUT_x, double* OUT_y, double* OUT_z)
 {
   
-  FFT.F2R(IN_x, OUT_x);
-  FFT.F2R(IN_y, OUT_y);
-  FFT.F2R(IN_z, OUT_z);
+  FFT.c2r(IN_x, OUT_x);
+  FFT.c2r(IN_y, OUT_y);
+  FFT.c2r(IN_z, OUT_z);
   
 }
 
@@ -1460,7 +1142,7 @@ void CSpecDyn::print_vti()
   fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
 }
 
-void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_bytes_vector, const char* file_name)
+void CSpecDyn::print_mpi_vector(double* field_X, double* field_Y, double* field_Z, long& N_bytes_vector, const char* file_name)
 {
   if(myRank==0)
   {
@@ -1481,9 +1163,9 @@ void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_b
   // data to float array
   for(int id = 0; id < size_R_tot; id++)
   {
-    float_array_vector[3*id+0] = float(field_X[id].real());
-    float_array_vector[3*id+1] = float(field_Y[id].real());
-    float_array_vector[3*id+2] = float(field_Z[id].real());
+    float_array_vector[3*id+0] = float(field_X[id]);
+    float_array_vector[3*id+1] = float(field_Y[id]);
+    float_array_vector[3*id+2] = float(field_Z[id]);
   }
   
   // write data
@@ -1494,7 +1176,7 @@ void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_b
   MPI_File_close(&mpi_file);  
 }
 
-void CSpecDyn::print_mpi_scalar(CX* field, long& N_bytes_scalar, const char* file_name)
+void CSpecDyn::print_mpi_scalar(double* field, long& N_bytes_scalar, const char* file_name)
 {
   if(myRank==0)
   {
@@ -1515,7 +1197,7 @@ void CSpecDyn::print_mpi_scalar(CX* field, long& N_bytes_scalar, const char* fil
   // data to float array
   for(int id = 0; id < size_R_tot; id++)
   {
-    float_array[id] = float(field[id].real());
+    float_array[id] = float(field[id]);
   }
   
   // write data
@@ -1542,40 +1224,6 @@ void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
     
   }
     
-  
-  //~ // spherical truncation
-  //~ double kmax  = sqrt(2)/3.*N;
-  //~ double kmax2 = kmax*kmax;
-  
-  //~ for(int id = 0; id < size_F_tot; id++){
-   
-    //~ if(k2[id] >= kmax2)
-    //~ {
-      //~ fieldX[id] = 0.;
-      //~ fieldY[id] = 0.;
-      //~ fieldZ[id] = 0.;
-    //~ }
-    
-  //~ }
-  
-  // 2/3 rule
-  //~ double kmax = N/2.*dk;
-  //~ double kmax_23 = N/2.*dk*2./3.;
-  
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
-    
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    //~ if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
-    //~ {
-      //~ fieldX[id] = 0.;
-      //~ fieldY[id] = 0.;
-      //~ fieldZ[id] = 0.;
-    //~ }
-    
-  //~ }}}
 }
 
 void CSpecDyn::print_EnergySpectrum()
@@ -1853,13 +1501,13 @@ void CSpecDyn::print_scales()
   L_V_loc *= 0.5 /double(N*N*N);
   L_V_loc *= 1. /double(N*N*N);
   MPI_Reduce(&L_V_loc, &L_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  //~ L_V *= M_PI/(2.*v0*v0);
+  //~ //L_V *= M_PI/(2.*v0*v0);
   L_V /= energy_V;
   
   L_B_loc *= 0.5 /double(N*N*N);
   L_B_loc *= 1. /double(N*N*N);
   MPI_Reduce(&L_B_loc, &L_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  //~ L_B *= M_PI/(2.*b0*b0);
+  //~ //L_B *= M_PI/(2.*b0*b0);
   L_V /= energy_V;
   
   lambda_V = sqrt(15.*nu /diss_V)*v0;
@@ -1924,10 +1572,10 @@ void CSpecDyn::read_binary()
 {
   
   std::string binary_file;
-  //~ std::string field_names[] = {"V0", "V1", "V2", "B0", "B1", "B2"};
+  //std::string field_names[] = {"V0", "V1", "V2", "B0", "B1", "B2"};
   std::string field_names[] = {"W0", "W1", "W2", "Z0", "Z1", "Z2"}; // Elsässer Coords
-  CX* field_ptrs[] = {Vx_R, Vy_R, Vz_R, Bx_R, By_R, Bz_R};
-  CX* field = NULL;
+  double* field_ptrs[] = {Vx_R, Vy_R, Vz_R, Bx_R, By_R, Bz_R};
+  double* field = NULL;
   
   int size_total[3] = {N,N,N};
   MPI_Datatype subarray;
@@ -1964,12 +1612,12 @@ void CSpecDyn::read_binary()
   // Elsässer -> V,B
   for(int id = 0; id < size_R_tot; id++)
   {
-    CX Z_x = Vx_R[id];
-    CX Z_y = Vy_R[id];
-    CX Z_z = Vz_R[id];
-    CX W_x = Bx_R[id];
-    CX W_y = By_R[id];
-    CX W_z = Bz_R[id];
+    double Z_x = Vx_R[id];
+    double Z_y = Vy_R[id];
+    double Z_z = Vz_R[id];
+    double W_x = Bx_R[id];
+    double W_y = By_R[id];
+    double W_z = Bz_R[id];
     
     Vx_R[id] = 0.5 * (Z_x + W_x);
     Vy_R[id] = 0.5 * (Z_y + W_y);
@@ -1994,4 +1642,236 @@ void CSpecDyn::read_binary()
   // close MPI file
   MPI_File_close(&mpi_file);
   MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void CSpecDyn::restart()
+{
+  
+  #ifdef RESTART_DIR
+  std::string restart_dir = RESTART_DIR;
+  #else
+  std::string restart_dir = out_dir;
+  #endif
+  
+  std::string restart_file = restart_dir + "/vti/step_" + std::to_string(RESTART_STEP) + ".vti";
+  
+  if(myRank==0)
+  {
+    printf("Restart!\n");
+  }
+  
+  // CHECK RESOLUTION N
+  if(myRank==0)
+  {
+    int N_in = 0;
+    
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    char word[] = "012345";
+    
+    for(int i = 0; i < 200; i++)
+    {
+      reader.seekg(i, std::ios::beg);
+      reader.read(word, 6);
+
+      if(strcmp(word,"Extent")==0)
+      {
+        reader.seekg(i+10, std::ios::beg); // set to start of N
+        
+        char N_word[10];
+        char c; 
+        reader.read(&c, sizeof(char));
+        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
+        {
+          
+          if(c==' ')
+          {
+            N_word[i] = '\0';
+            break;
+          }
+          else{
+            N_word[i] = c;
+          }
+        }
+        
+        N_in = std::stoi(N_word)+1;
+        
+        break;
+      }
+    }
+    reader.close();
+    
+    if(N==N_in)
+    {
+      printf("Restart resolution matches!\n");
+    }
+    else
+    {
+      printf("Resolution N of vti file for restart does not match parameters!\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+  
+  // GET STEP OUTPUT #
+  int step = 0;
+  
+  if(myRank==0)
+  {
+    char number_str[10];
+    int str_counter = 0;
+    
+    for(int i = restart_file.size()-5; restart_file[i]!='_'; i--)
+    {
+      number_str[str_counter] = restart_file[i];
+      str_counter ++;
+    }
+    number_str[str_counter] = '\0';
+    
+    std::string number_rev = std::string(number_str);
+    std::string number = std::string(number_rev.length(), 'x');
+    
+    for(int i=0, n=number.length()-1; i<number.length(); i++, n--)
+    {
+      number[i] = number_rev[n];
+    }
+    
+    print_count = std::stoi(number)+1;
+    
+  }MPI_Barrier(comm);
+  
+  MPI_Bcast(&print_count, 1, MPI_INT, 0, comm);
+  
+  // CHECK TIME
+  if(myRank==0)
+  {
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    char word[] = "TimeValue";
+    
+    for(int i = 0; i < 1000; i++)
+    {
+      reader.seekg(i, std::ios::beg);
+      reader.read(word, 9);
+
+      if(strcmp(word,"TimeValue")==0)
+      {
+        reader.seekg(i+54, std::ios::beg); // set to start of time
+        
+        char t_word[20];
+        char c; 
+        reader.read(&c, sizeof(char));
+        for(int i = 0; ; i++,reader.read(&c, sizeof(char)))
+        {
+          
+          if(c==' ')
+          {
+            t_word[i] = '\0';
+            break;
+          }
+          else{
+            t_word[i] = c;
+          }
+        }
+        
+        //~ //printf("new time: %s\n", t_word);
+        time = std::stod(t_word);
+        
+        break;
+      }
+    }
+    reader.close();
+    
+  }MPI_Barrier(comm);
+  
+  MPI_Bcast(&time, 1, MPI_DOUBLE, 0, comm);
+  
+  // GET FIELDS
+  // find header offset
+  char character;
+  int headerOffset = 0;
+  
+  if(myRank==0)
+  {
+    // find length of header
+    std::ifstream reader;
+    reader.open(restart_file, std::ios::in);
+    if(!reader){
+      std::cout << "Cannot read header to file '" << restart_file << "'!\n";
+    }
+    
+    for(int i = 0; i < 1e5; i++)
+    {
+      reader.read(&character, sizeof(char));
+      headerOffset += 1;
+      if(character == ' ')
+      {
+        reader.read(&character, sizeof(char));
+        
+        if(character == '_')
+        {
+          headerOffset += 1;
+          break;
+        }
+        else
+        {
+          reader.seekg(headerOffset, std::ios::beg);
+        }
+          
+      }
+    }
+    
+    reader.close();
+    
+  }MPI_Barrier(MPI_COMM_WORLD);
+  
+  MPI_Bcast(&headerOffset, 1, MPI_INT, 0, comm);
+  
+  // open MPI file
+  MPI_File mpi_file;
+  MPI_File_open(comm, restart_file.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_file);
+  
+  float* buffer = new float[3*size_R_tot];
+  
+  // set specific file view for each process
+  MPI_Offset file_offset = headerOffset + sizeof(uint64_t);
+  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
+  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Vx_R[id] = buffer[id*3  ];
+    Vy_R[id] = buffer[id*3+1];
+    Vz_R[id] = buffer[id*3+2];
+  }
+  
+  long N_l = N;
+  file_offset = headerOffset + 2*sizeof(uint64_t) + 3*N_l*N_l*N_l*sizeof(float);
+  MPI_File_set_view(mpi_file, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL); // reset file view to specify offset in bytes in the next file view
+  MPI_File_set_view(mpi_file, file_offset, vti_float3, vti_subarray_vector, "native", MPI_INFO_NULL);
+  MPI_File_read_all(mpi_file, buffer, size_R_tot, vti_float3, MPI_STATUS_IGNORE);
+  
+  for(int id = 0; id < size_R_tot; id++)
+  {
+    Bx_R[id] = buffer[id*3  ];
+    By_R[id] = buffer[id*3+1];
+    Bz_R[id] = buffer[id*3+2];
+  }
+  
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  fFFT(Bx_R, By_R, Bz_R, Bx_F, By_F, Bz_F);
+  
+  delete[] buffer;
+  
+  // close MPI file
+  MPI_File_close(&mpi_file);
+  MPI_Barrier(MPI_COMM_WORLD);
+  
 }
