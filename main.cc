@@ -18,7 +18,7 @@
 int main(int argc, char** argv)
 {
   CSpecDyn simu;
-  //~ simu.execute();
+  simu.execute();
   simu.finalize();
   return 0;
 }

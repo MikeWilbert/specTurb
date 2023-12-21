@@ -527,143 +527,139 @@ void CSpecDyn::setup_fields()
   }
 }
 
-//~ void CSpecDyn::execute()
-//~ {
-  //~ double start_time = MPI_Wtime();
-  //~ double out_time = fmod(time,out_interval);
+void CSpecDyn::execute()
+{
+  double start_time = MPI_Wtime();
+  double out_time = fmod(time,out_interval);
   
-  //~ // geometric output series
-  //~ double r = 1.4919;
-  //~ double a = 0.00067;
+  // geometric output series
+  double r = 1.4919;
+  double a = 0.00067;
   
-  //~ out_time = a * r; 
+  out_time = a * r; 
   
-  //~ while(time < end_simu)
-  //~ {
+  while(time < end_simu)
+  {
     
-    //~ time_step();
-    //~ out_time += dt;
+    time_step();
+    out_time += dt;
     
-    //~ print_Energy();
+    print_Energy();
     
-    //~ if(out_time > out_interval)
-    //if(time > out_time) // log output
-    //~ {
-      //~ print();
-      //~ out_time -= out_interval;
-      //~ out_time = a * pow(r,print_count); // log output
-    //~ }
+    if(out_time > out_interval)
+    // //if(time > out_time) // log output
+    {
+      print();
+      out_time -= out_interval;
+      // out_time = a * pow(r,print_count); // log output
+    }
     
-  //~ }
+  }
   
-  //~ double end_time = MPI_Wtime() - start_time;
-  //~ if(myRank==0)
-  //~ {
-    //~ printf("Execution Time: %f [s]\n", end_time);
-  //~ }
-//~ }
+  double end_time = MPI_Wtime() - start_time;
+  if(myRank==0)
+  {
+    printf("Execution Time: %f [s]\n", end_time);
+  }
+}
 
-//~ void CSpecDyn::time_step()
-//~ {
+void CSpecDyn::time_step()
+{
   
-  //~ set_dt();
+  set_dt();
   
-  //~ if(FORCING==0)
-  //~ {
-    //~ // nothing
-  //~ }
-  //~ else if(FORCING==1)
-  //~ {
-    //~ Alvelius();
-  //~ }
-  //~ else if(FORCING==2)
-  //~ {
-    //~ Titov();
-  //~ }
+  if(FORCING==0)
+  {
+    // nothing
+  }
+  else if(FORCING==1)
+  {
+    Alvelius();
+  }
   
-  //~ double del_t;
+  double del_t;
   
-  //~ // step 1
-  //~ del_t = 1.;
+  // step 1
+  del_t = 1.;
   
-  //~ calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          //~ ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
+  calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
+          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
   
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
+  for(int id = 0; id < size_F_tot; id++)
+  { 
     
-    //~ Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
-    //~ Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
-    //~ Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
+    Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
+    Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
+    Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
     
-    //~ Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
-    //~ By_F1[id] = By_F[id] + dt * RHS_By_F[id];
-    //~ Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
+    Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
+    By_F1[id] = By_F[id] + dt * RHS_By_F[id];
+    Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
     
-  //~ }
+  }
   
-  //~ diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
   
-  //~ projection(Vx_F1, Vy_F1, Vz_F1);
-  //~ projection(Bx_F1, By_F1, Bz_F1);
+  projection(Vx_F1, Vy_F1, Vz_F1);
+  projection(Bx_F1, By_F1, Bz_F1);
           
-  //~ // step 2
-  //~ del_t = 0.5;
+  // step 2
+  del_t = 0.5;
   
-  //~ calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          //~ ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
+          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
    
-  //~ double dt_025 = 0.25*dt; 
+  double dt_025 = 0.25*dt; 
           
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
-    //~ Vx_F2[id] = Vx_F[id] + dt_025 * ( RHS_Vx_F[id] + RHS_Vx_F1[id]);
-    //~ Vy_F2[id] = Vy_F[id] + dt_025 * ( RHS_Vy_F[id] + RHS_Vy_F1[id]);
-    //~ Vz_F2[id] = Vz_F[id] + dt_025 * ( RHS_Vz_F[id] + RHS_Vz_F1[id]);
+  for(int id = 0; id < size_F_tot; id++)
+  { 
+    Vx_F2[id] = Vx_F[id] + dt_025 * ( RHS_Vx_F[id] + RHS_Vx_F1[id]);
+    Vy_F2[id] = Vy_F[id] + dt_025 * ( RHS_Vy_F[id] + RHS_Vy_F1[id]);
+    Vz_F2[id] = Vz_F[id] + dt_025 * ( RHS_Vz_F[id] + RHS_Vz_F1[id]);
     
-    //~ Bx_F2[id] = Bx_F[id] + dt_025 * ( RHS_Bx_F[id] + RHS_Bx_F1[id]);
-    //~ By_F2[id] = By_F[id] + dt_025 * ( RHS_By_F[id] + RHS_By_F1[id]);
-    //~ Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
-  //~ }
+    Bx_F2[id] = Bx_F[id] + dt_025 * ( RHS_Bx_F[id] + RHS_Bx_F1[id]);
+    By_F2[id] = By_F[id] + dt_025 * ( RHS_By_F[id] + RHS_By_F1[id]);
+    Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
+  }
   
-  //~ diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+  diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
-  //~ projection(Vx_F2, Vy_F2, Vz_F2);
-  //~ projection(Bx_F2, By_F2, Bz_F2);
+  projection(Vx_F2, Vy_F2, Vz_F2);
+  projection(Bx_F2, By_F2, Bz_F2);
           
-  //~ // step 3
-  //~ del_t = 1.;
+  // step 3
+  del_t = 1.;
   
-  //~ calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          //~ ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+  calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
+          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
   
-  //~ double dt_6 = dt/6.;
+  double dt_6 = dt/6.;
   
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
-    //~ Vx_F[id] = Vx_F[id] + dt_6 * (RHS_Vx_F[id] + RHS_Vx_F1[id] + 4.*RHS_Vx_F2[id]);
-    //~ Vy_F[id] = Vy_F[id] + dt_6 * (RHS_Vy_F[id] + RHS_Vy_F1[id] + 4.*RHS_Vy_F2[id]);
-    //~ Vz_F[id] = Vz_F[id] + dt_6 * (RHS_Vz_F[id] + RHS_Vz_F1[id] + 4.*RHS_Vz_F2[id]);
+  for(int id = 0; id < size_F_tot; id++)
+  { 
+    Vx_F[id] = Vx_F[id] + dt_6 * (RHS_Vx_F[id] + RHS_Vx_F1[id] + 4.*RHS_Vx_F2[id]);
+    Vy_F[id] = Vy_F[id] + dt_6 * (RHS_Vy_F[id] + RHS_Vy_F1[id] + 4.*RHS_Vy_F2[id]);
+    Vz_F[id] = Vz_F[id] + dt_6 * (RHS_Vz_F[id] + RHS_Vz_F1[id] + 4.*RHS_Vz_F2[id]);
     
-    //~ Bx_F[id] = Bx_F[id] + dt_6 * (RHS_Bx_F[id] + RHS_Bx_F1[id] + 4.*RHS_Bx_F2[id]);
-    //~ By_F[id] = By_F[id] + dt_6 * (RHS_By_F[id] + RHS_By_F1[id] + 4.*RHS_By_F2[id]);
-    //~ Bz_F[id] = Bz_F[id] + dt_6 * (RHS_Bz_F[id] + RHS_Bz_F1[id] + 4.*RHS_Bz_F2[id]);
+    Bx_F[id] = Bx_F[id] + dt_6 * (RHS_Bx_F[id] + RHS_Bx_F1[id] + 4.*RHS_Bx_F2[id]);
+    By_F[id] = By_F[id] + dt_6 * (RHS_By_F[id] + RHS_By_F1[id] + 4.*RHS_By_F2[id]);
+    Bz_F[id] = Bz_F[id] + dt_6 * (RHS_Bz_F[id] + RHS_Bz_F1[id] + 4.*RHS_Bz_F2[id]);
 
-  //~ }
+  }
   
-  //~ diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
+  diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
   
-  //~ projection(Vx_F , Vy_F , Vz_F );
-  //~ projection(Bx_F , By_F , Bz_F );
+  projection(Vx_F , Vy_F , Vz_F );
+  projection(Bx_F , By_F , Bz_F );
   
-  //~ // update time
-  //~ time += dt;
+  // update time
+  time += dt;
   
-  //~ if(myRank == 0)
-	//~ {
-		//~ printf("  time step: time = %f, dt = %f\n", time, dt);
-	//~ }MPI_Barrier(comm);
-//~ }
+  if(myRank == 0)
+	{
+		printf("  time step: time = %f, dt = %f\n", time, dt);
+	}MPI_Barrier(comm);
+}
 
 // calc Energy and Dissipation
 void CSpecDyn::calc_Energy(double& energy_V, double& diss_V)
@@ -782,8 +778,8 @@ void CSpecDyn::set_dt()
   fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
 
-//~ void CSpecDyn::Alvelius()
-//~ {
+void CSpecDyn::Alvelius()
+{
   
   //double P = M_PI*M_PI;
   //~ double P = 7.64;
@@ -860,159 +856,146 @@ void CSpecDyn::set_dt()
   
   //~ fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
   
-//~ }
+}
 
-//~ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
-                        //~ CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
-                        //~ double del_t)
-//~ {
-  //~ // W = rot(V)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
+                        CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
+                        double del_t)
+{
+  // W = rot(V)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
-    //~ Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
-    //~ Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
+    Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
+    Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
+    Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
     
-  //~ }}}
+  }}}
   
-  //~ // J = rot(B)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  // J = rot(B)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
-    //~ Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
-    //~ Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
+    Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
+    Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
+    Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
     
-  //~ }}}
+  }}}
   
-  //~ // dealias
-  //~ dealias(V_X, V_Y, V_Z);
-  //~ dealias(B_X, B_Y, B_Z);
-  //~ dealias(Wx_F, Wy_F, Wz_F);
-  //~ dealias(Jx_F, Jy_F, Jz_F);
+  // dealias
+  dealias(V_X, V_Y, V_Z);
+  dealias(B_X, B_Y, B_Z);
+  dealias(Wx_F, Wy_F, Wz_F);
+  dealias(Jx_F, Jy_F, Jz_F);
   
-  //~ // FFT F->R
-  //~ bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
-  //~ bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
-  //~ bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
-  //~ bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
+  // FFT F->R
+  bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
+  bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
+  bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
+  bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
-  //~ // clean up imaginary part
-  //~ for(int id = 0; id < size_R_tot; id++){
-   
-    //~ Vx_R[id] = Vx_R[id].real();
-    //~ Vy_R[id] = Vy_R[id].real();
-    //~ Vz_R[id] = Vz_R[id].real();
-    //~ Bx_R[id] = Bx_R[id].real();
-    //~ By_R[id] = By_R[id].real();
-    //~ Bz_R[id] = Bz_R[id].real();
+  // RHS_V = VxW + JxB
+  for(int id = 0; id < size_R_tot; id++){
     
-  //~ }
+    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
+    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
+    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
+    
+  }
   
+  // RHS_B = VxB
+  for(int id = 0; id < size_R_tot; id++){
+    
+    RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
+    RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
+    RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
+    
+  }
   
-  //~ // RHS_V = VxW + JxB
-  //~ for(int id = 0; id < size_R_tot; id++){
-    
-    //~ RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
-    //~ RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
-    //~ RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
-    
-  //~ }
+  // FFT R->F
+  fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
+  fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
+  fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
+  fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
   
-  //~ // RHS_B = VxB
-  //~ for(int id = 0; id < size_R_tot; id++){
-    
-    //~ RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
-    //~ RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
-    //~ RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
-    
-  //~ }
+  // dealias
+  dealias(V_X, V_Y, V_Z);
+  dealias(B_X, B_Y, B_Z);
+  dealias(RHSV_X, RHSV_Y, RHSV_Z);
+  dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  //~ // FFT R->F
-  //~ fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
-  //~ fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
-  //~ fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
-  //~ fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
+  // RHS_B = rot(VxB)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
+    
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    CX VxB_X = RHSB_X[id];
+    CX VxB_Y = RHSB_Y[id];
+    CX VxB_Z = RHSB_Z[id];
+    
+    RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
+    RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
+    RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
+    
+  }}}
   
-  //~ // dealias
-  //~ dealias(V_X, V_Y, V_Z);
-  //~ dealias(B_X, B_Y, B_Z);
-  //~ dealias(RHSV_X, RHSV_Y, RHSV_Z);
-  //~ dealias(RHSB_X, RHSB_Y, RHSB_Z);
-  
-  //~ // RHS_B = rot(VxB)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
-    
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    //~ CX VxB_X = RHSB_X[id];
-    //~ CX VxB_Y = RHSB_Y[id];
-    //~ CX VxB_Z = RHSB_Z[id];
-    
-    //~ RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
-    //~ RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
-    //~ RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
-    
-  //~ }}}
-  
-  //~ /************ ALVELIUS - 1999 **********/
-  //~ if(setup==2)
-  //~ {
-    //~ for(int id = 0; id < size_F_tot; id++){
+  /************ ALVELIUS - 1999 **********/
+  if(setup==2)
+  {
+    for(int id = 0; id < size_F_tot; id++){
      
-      //~ RHSV_X[id] += Force_X[id];
-      //~ RHSV_Y[id] += Force_Y[id];
-      //~ RHSV_Z[id] += Force_Z[id];
+      RHSV_X[id] += Force_X[id];
+      RHSV_Y[id] += Force_Y[id];
+      RHSV_Z[id] += Force_Z[id];
       
-    //~ }
-  //~ }
-  //~ /***************************************/
+    }
+  }
+  /***************************************/
   
-  //~ // diffusion
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ {
-    //~ double exp_diff_V = exp(nu *k2[id]*del_t*dt);
-    //~ double exp_diff_B = exp(eta*k2[id]*del_t*dt);
+  // diffusion
+  for(int id = 0; id < size_F_tot; id++)
+  {
+    double exp_diff_V = exp(nu *k2[id]*del_t*dt);
+    double exp_diff_B = exp(eta*k2[id]*del_t*dt);
     
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
+    RHSV_X[id] *= exp_diff_V;
     
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-  //~ }
-//~ }
+    RHSB_X[id] *= exp_diff_B;
+    RHSB_X[id] *= exp_diff_B;
+    RHSB_X[id] *= exp_diff_B;
+  }
+}
 
-//~ void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
-//~ {
+void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
+{
 
-  //~ double exp_diff_V;
-  //~ double exp_diff_B;
+  double exp_diff_V;
+  double exp_diff_B;
 
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ {
-    //~ exp_diff_V = exp(- nu *k2[id]*del_t*dt);
-    //~ exp_diff_B = exp(- eta*k2[id]*del_t*dt);
+  for(int id = 0; id < size_F_tot; id++)
+  {
+    exp_diff_V = exp(- nu *k2[id]*del_t*dt);
+    exp_diff_B = exp(- eta*k2[id]*del_t*dt);
     
-    //~ Vx[id] *= exp_diff_V;
-    //~ Vy[id] *= exp_diff_V;
-    //~ Vz[id] *= exp_diff_V;
+    Vx[id] *= exp_diff_V;
+    Vy[id] *= exp_diff_V;
+    Vz[id] *= exp_diff_V;
     
-    //~ Bx[id] *= exp_diff_B;
-    //~ By[id] *= exp_diff_B;
-    //~ Bz[id] *= exp_diff_B;
-  //~ }
-//~ }
+    Bx[id] *= exp_diff_B;
+    By[id] *= exp_diff_B;
+    Bz[id] *= exp_diff_B;
+  }
+}
 
 void CSpecDyn::projection(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
@@ -1294,6 +1277,131 @@ void CSpecDyn::print_EnergySpectrum()
   
 }
 
+//~ void CSpecDyn::print_Energy()
+//~ {
+  //~ // Compute mean Energy and Dissipation in Fourier Space
+  //~ /** Energie und Dissipation direkt **/
+  //~ double energy_V_loc = 0.;
+  //~ double energy_B_loc = 0.;
+  //~ double energy_V;
+  //~ double energy_B;
+  
+  //~ double diss_V_loc = 0.;
+  //~ double diss_B_loc = 0.;
+  //~ double diss_V;
+  //~ double diss_B;
+  
+  //~ double ens_V_loc = 0.;
+  //~ double ens_B_loc = 0.;
+  //~ double ens_V;
+  //~ double ens_B;
+  
+  //~ CX Hc_loc = 0.;
+  //~ double Hcr_loc = 0.;
+  //~ double Hci_loc = 0.;
+  //~ double Hcr;
+  //~ double Hci;
+  
+  //~ double Vx, Vy, Vz;
+  //~ double Bx, By, Bz;
+  //~ double Wx, Wy, Wz;
+  //~ double Jx, Jy, Jz;
+  
+  //~ for(int ix = 0; ix < size_F[0]; ix++){
+  //~ for(int iy = 0; iy < size_F[1]; iy++){
+  //~ for(int iz = 0; iz < size_F[2]; iz++){
+      
+    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    //~ Vx = abs(Vx_F[id]);
+    //~ Vy = abs(Vy_F[id]);
+    //~ Vz = abs(Vz_F[id]);
+    //~ Bx = abs(Bx_F[id]);
+    //~ By = abs(By_F[id]);
+    //~ Bz = abs(Bz_F[id]);
+    //~ Wx = abs(ky[iy] * Vz_F[id] - kz[iz] * Vy_F[id]);
+    //~ Wy = abs(kz[iz] * Vx_F[id] - kx[ix] * Vz_F[id]);
+    //~ Wz = abs(kx[ix] * Vy_F[id] - ky[iy] * Vx_F[id]);
+    //~ Jx = abs(ky[iy] * Bz_F[id] - kz[iz] * By_F[id]);
+    //~ Jy = abs(kz[iz] * Bx_F[id] - kx[ix] * Bz_F[id]);
+    //~ Jz = abs(kx[ix] * By_F[id] - ky[iy] * Bx_F[id]);
+    
+    //~ energy_V_loc += (Vx*Vx+Vy*Vy+Vz*Vz);
+    //~ energy_B_loc += (Bx*Bx+By*By+Bz*Bz);
+    
+    //~ diss_V_loc   += (Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    //~ diss_B_loc   += (Bx*Bx+By*By+Bz*Bz) * k2[id];
+    
+    //~ ens_V_loc    += (Wx*Wx+Wy*Wy+Wz*Wz);
+    //~ ens_B_loc    += (Jx*Jx+Jy*Jy+Jz*Jz);
+    
+    //~ Hc_loc += Vx_F[id]*std::conj(Bx_F[id])+Vy_F[id]*std::conj(By_F[id])+Vz_F[id]*std::conj(Bz_F[id]);
+
+  //~ }}}
+  
+  //~ double N3_inv = 1./double(N*N*N);
+  
+  //~ energy_V_loc *= N3_inv; // Ortsmittelung
+  //~ energy_V_loc *= N3_inv; // DFT
+  //~ MPI_Reduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ energy_V *= 0.5;
+  
+  //~ energy_B_loc *= N3_inv;
+  //~ energy_B_loc *= N3_inv;
+  //~ MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ energy_B *= 0.5;
+  
+  //~ diss_V_loc *= N3_inv;
+  //~ diss_V_loc *= N3_inv;
+  //~ MPI_Reduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ diss_V *= nu;
+  
+  //~ diss_B_loc *= N3_inv;
+  //~ diss_B_loc *= N3_inv;
+  //~ MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ diss_B *= eta;
+  
+  //~ ens_V_loc *= N3_inv;
+  //~ ens_V_loc *= N3_inv;
+  //~ MPI_Reduce(&ens_V_loc, &ens_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ ens_V *= 1.;
+  
+  //~ ens_B_loc *= N3_inv;
+  //~ ens_B_loc *= N3_inv;
+  //~ MPI_Reduce(&ens_B_loc, &ens_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ ens_B *= 1.;
+  
+  //~ Hcr_loc = Hc_loc.real();
+  //~ Hcr_loc *= N3_inv;
+  //~ Hcr_loc *= N3_inv;
+  //~ MPI_Reduce(&Hcr_loc, &Hcr, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ Hcr *= 1.;
+  
+  //~ Hci_loc = Hc_loc.imag();
+  //~ Hci_loc *= N3_inv;
+  //~ Hci_loc *= N3_inv;
+  //~ MPI_Reduce(&Hci_loc, &Hci, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
+  //~ Hci *= 1.;
+  
+  //~ // print
+  //~ if(myRank == 0)
+  //~ {
+    //~ std::string file_name  = out_dir + "/energy.csv";
+    //~ std::ofstream os;
+    
+    //~ os.open(file_name.c_str(), std::ios::out | std::ios::app);
+    //~ if(!os){
+      //~ std::cout << "Cannot write header to file '" << file_name << "'!\n";
+    //~ }
+      
+    //~ os << time << ", " << energy_V << ", " << energy_B  << ", " << diss_V << ", " <<  diss_B 
+               //~ << ", " << ens_V    << ", " <<  ens_B    << ", " <<  Hcr    << ", " <<  Hci    << std::endl;
+    
+    //~ os.close();
+  //~ }MPI_Barrier(comm);
+  
+//~ }
+
 void CSpecDyn::print_Energy()
 {
   // Compute mean Energy and Dissipation in Fourier Space
@@ -1324,11 +1432,23 @@ void CSpecDyn::print_Energy()
   double Wx, Wy, Wz;
   double Jx, Jy, Jz;
   
+  double hs; // factor because of hermitian symmetry in z
+  
   for(int ix = 0; ix < size_F[0]; ix++){
   for(int iy = 0; iy < size_F[1]; iy++){
   for(int iz = 0; iz < size_F[2]; iz++){
       
     int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+    int kz_id = int(kz[iz]/dk);
+    if( 0 < kz_id && kz_id < N/2 )
+    {
+      hs = 2.;
+    }
+    else
+    {
+      hs = 1.;
+    }
     
     Vx = abs(Vx_F[id]);
     Vy = abs(Vy_F[id]);
@@ -1343,50 +1463,45 @@ void CSpecDyn::print_Energy()
     Jy = abs(kz[iz] * Bx_F[id] - kx[ix] * Bz_F[id]);
     Jz = abs(kx[ix] * By_F[id] - ky[iy] * Bx_F[id]);
     
-    energy_V_loc += (Vx*Vx+Vy*Vy+Vz*Vz);
-    energy_B_loc += (Bx*Bx+By*By+Bz*Bz);
+    energy_V_loc += hs*(Vx*Vx+Vy*Vy+Vz*Vz);
+    energy_B_loc += hs*(Bx*Bx+By*By+Bz*Bz);
     
-    diss_V_loc   += (Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
-    diss_B_loc   += (Bx*Bx+By*By+Bz*Bz) * k2[id];
+    diss_V_loc   += hs*(Vx*Vx+Vy*Vy+Vz*Vz) * k2[id];
+    diss_B_loc   += hs*(Bx*Bx+By*By+Bz*Bz) * k2[id];
     
-    ens_V_loc    += (Wx*Wx+Wy*Wy+Wz*Wz);
-    ens_B_loc    += (Jx*Jx+Jy*Jy+Jz*Jz);
+    ens_V_loc    += hs*(Wx*Wx+Wy*Wy+Wz*Wz);
+    ens_B_loc    += hs*(Jx*Jx+Jy*Jy+Jz*Jz);
     
-    Hc_loc += Vx_F[id]*std::conj(Bx_F[id])+Vy_F[id]*std::conj(By_F[id])+Vz_F[id]*std::conj(Bz_F[id]);
+    Hc_loc += hs*(Vx_F[id]*std::conj(Bx_F[id])+Vy_F[id]*std::conj(By_F[id])+Vz_F[id]*std::conj(Bz_F[id]));
 
   }}}
   
   double N3_inv = 1./double(N*N*N);
   
-  energy_V_loc *= N3_inv; // Ortsmittelung
-  energy_V_loc *= N3_inv; // DFT
+  energy_V_loc *= 0.5*N3_inv; // Ortsmittelung und 0.5 aus Definition der Energie/Definition Energy Spectrum?
+  energy_V_loc *= N3_inv; // wg Fourier Space
   MPI_Reduce(&energy_V_loc, &energy_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  energy_V *= 0.5;
   
-  energy_B_loc *= N3_inv;
+  energy_B_loc *= 0.5*N3_inv;
   energy_B_loc *= N3_inv;
   MPI_Reduce(&energy_B_loc, &energy_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  energy_B *= 0.5;
   
-  diss_V_loc *= N3_inv;
+  diss_V_loc *= 0.5 *N3_inv;
   diss_V_loc *= N3_inv;
   MPI_Reduce(&diss_V_loc, &diss_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  diss_V *= nu;
+  diss_V *= 2. * nu;
   
-  diss_B_loc *= N3_inv;
+  diss_B_loc *= eta*N3_inv;
   diss_B_loc *= N3_inv;
   MPI_Reduce(&diss_B_loc, &diss_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  diss_B *= eta;
   
-  ens_V_loc *= N3_inv;
+  ens_V_loc *= 2. *N3_inv;
   ens_V_loc *= N3_inv;
   MPI_Reduce(&ens_V_loc, &ens_V, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  ens_V *= 1.;
   
-  ens_B_loc *= N3_inv;
+  ens_B_loc *= 2. *N3_inv;
   ens_B_loc *= N3_inv;
   MPI_Reduce(&ens_B_loc, &ens_B, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
-  ens_B *= 1.;
   
   Hcr_loc = Hc_loc.real();
   Hcr_loc *= N3_inv;
