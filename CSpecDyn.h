@@ -149,6 +149,19 @@ class CSpecDyn
     CX* Force_Y;
     CX* Force_Z;
     
+    CX* Vx_R_cplx = NULL;
+    CX* Vy_R_cplx = NULL;
+    CX* Vz_R_cplx = NULL;
+    CX* Fx_R_cplx = NULL;
+    CX* Fy_R_cplx = NULL;
+    CX* Fz_R_cplx = NULL;
+    CX* Vx_F_cplx = NULL;
+    CX* Vy_F_cplx = NULL;
+    CX* Vz_F_cplx = NULL;
+    CX* Fx_F_cplx = NULL;
+    CX* Fy_F_cplx = NULL;
+    CX* Fz_F_cplx = NULL;
+    
     // vti output
     float* float_array;
     float* float_array_vector;
