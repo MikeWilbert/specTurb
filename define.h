@@ -33,9 +33,9 @@ const double CFL_DIF = 0.025;
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/realFFT/Alvelius_real";
 // output interval
-const double OUT_INTERVAL = 0.25;
+const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 20.;
+const double END_SIMU = 25.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
@@ -61,13 +61,13 @@ const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512
 //~ const double NU  = 0.0077;
-const double NU  = 0.045;
+const double NU  = 0.02;
 // magnetic diffusivity
 const double ETA = NU;
 
 /** DEFINES **/
 
-#define NS
+//~ #define NS
 
 /** Resolutions **/
 /*

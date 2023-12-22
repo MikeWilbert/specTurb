@@ -655,7 +655,7 @@ void CSpecDyn::time_step()
   
   if(FORCING==0)
   {
-    // nothing
+    fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
   }
   else if(FORCING==1)
   {
@@ -860,13 +860,13 @@ void CSpecDyn::set_dt()
   double dt_dif = CFL_DIF * dx * dx / nu;
   dt = std::min(dt_adv, dt_dif);
   
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
+  //fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // combine with forcing
 }
 
 void CSpecDyn::Alvelius()
 {
   // copy to complex FFT version
-  bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
+  //bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
   
   for(int id = 0; id < size_R_tot; id++)
   {
@@ -1770,16 +1770,16 @@ void CSpecDyn::print_scales()
 
 void CSpecDyn::print()
 {
-  print_vti();
-  print_scales();
-  print_EnergySpectrum();
+  //~ print_vti();
+  //~ print_scales();
+  //~ print_EnergySpectrum();
   
-  if(myRank==0)
-  {
-    printf("Printing # %d!\n", print_count);
-  }MPI_Barrier(comm);
+  //~ if(myRank==0)
+  //~ {
+    //~ printf("Printing # %d!\n", print_count);
+  //~ }MPI_Barrier(comm);
   
-  print_count++;
+  //~ print_count++;
 }
 
 void CSpecDyn::read_binary()
