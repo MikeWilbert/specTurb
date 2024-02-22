@@ -1042,10 +1042,47 @@ void CSpecDyn::Alvelius()
     
     if( ( K > (k_f-dk_f) ) && ( K < (k_f+dk_f) ) )
     {
+      // Alvelius
+      double K_x = kx[ix];
+      double K_y = ky[iy];
+      double K_z = kz[iz];
+      double K_p = (K_x*K_x + K_y*K_y);
+      double K_inv   = 1./K;
+      double K_p_inv = 1./K_p;
       
-      Force_X[id] = normal(normal_eng) + IM * normal(normal_eng);
-      Force_Y[id] = normal(normal_eng) + IM * normal(normal_eng);
-      Force_Z[id] = normal(normal_eng) + IM * normal(normal_eng);
+      double alpha  = atan2(K_x,K_z);
+      double beta   = atan2(hypot(K_x,K_z), K_y);
+      
+      double e1[3] = {+          sin(alpha), -          cos(alpha),         0.};
+      double e2[3] = {-cos(beta)*cos(alpha), -cos(beta)*sin(alpha), +sin(beta)};
+      
+      CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
+      CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
+      
+      double phi = angle(angle_eng);
+      //~ double theta_1 = angle(angle_eng);
+      //~ double theta_2 = angle(angle_eng);
+      double psi = angle(angle_eng);
+      
+      double gA = sin(2.*phi);
+      double gB = cos(2.*phi);
+      
+      double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
+                             -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
+                           
+      double theta_2 = theta_1 + psi;
+      
+      CX A = K_inv * exp(IM*theta_1) * gA;
+      CX B = K_inv * exp(IM*theta_2) * gB;
+      
+      Force_X[id] = (A * e1[0]  + B * e2[0]); 
+      Force_Y[id] = (A * e1[1]  + B * e2[1]); 
+      Force_Z[id] = (A * e1[2]  + B * e2[2]); 
+      
+      // white noise
+      //~ Force_X[id] = normal(normal_eng) + IM * normal(normal_eng);
+      //~ Force_Y[id] = normal(normal_eng) + IM * normal(normal_eng);
+      //~ Force_Z[id] = normal(normal_eng) + IM * normal(normal_eng);
     
     }
     else
@@ -1068,7 +1105,7 @@ void CSpecDyn::Alvelius()
   
   fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
   
-  // projection
+  // projection (for white noise only)
   projection(Force_X, Force_Y, Force_Z);
   
   // set energy injection rate

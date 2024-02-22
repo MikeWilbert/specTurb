@@ -3,3 +3,4 @@ machinefile
 CSpecDyn
 *.err
 *.out
+TSpecDyn*
