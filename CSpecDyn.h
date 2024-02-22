@@ -56,6 +56,8 @@ class CSpecDyn
     std::uniform_real_distribution<double> angle;
     std::mt19937 length_eng;
     std::uniform_real_distribution<double> length;
+    std::mt19937 normal_eng;
+    std::normal_distribution<double> normal;
     
     // fields
     double* kx;
