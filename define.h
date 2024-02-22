@@ -17,6 +17,7 @@
 
 /** CONSTANTS **/
 const double PI2 = 2.*M_PI;
+const double PI  =    M_PI;
 typedef std::complex<double> CX;
 const CX IM = CX(0., 1.);
 
@@ -33,9 +34,9 @@ const double CFL_DIF = 0.025;
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/clean_up/N_128";
 // output interval
-const double OUT_INTERVAL = 100;
+const double OUT_INTERVAL = 4;
 // simulation time
-const double END_SIMU = 5000.;
+const double END_SIMU = 40.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
@@ -47,7 +48,7 @@ const int RESTART_STEP = 0;
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
 const bool BACKGROUND = false;
-const double BACKGROUND_ENERGY = 5.0;
+const double BACKGROUND_ENERGY = 0.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
 // choose Forcing
@@ -61,7 +62,7 @@ const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512
 //~ const double NU  = 0.0077;
-const double NU  = 0.0001;
+const double NU  = 0.01;
 // magnetic diffusivity
 const double ETA = NU;
 

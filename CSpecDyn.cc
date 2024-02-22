@@ -802,99 +802,90 @@ void CSpecDyn::execute()
 
 void CSpecDyn::time_step()
 {
+  double exp_diff_V_0, exp_diff_V_1;
+  double exp_diff_B_0, exp_diff_B_1;
   
   set_dt();
   
   Alvelius();
   
-  // Euler UWGWA!!: Step zize in diffusion corrector und calc RHS muss anders sein!
+  // step 1
+  calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
+          ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, 0.);
   
   for(int id = 0; id < size_F_tot; id++)
   { 
-    double diff = exp(-nu*k2[id]*dt);
     
-    Vx_F[id] = (Vx_F[id] + dt * Force_X[id]) * diff;
-    Vy_F[id] = (Vy_F[id] + dt * Force_Y[id]) * diff;
-    Vz_F[id] = (Vz_F[id] + dt * Force_Z[id]) * diff;
+    exp_diff_V_0 = exp(- nu  * k2[id] * dt);
+    exp_diff_B_0 = exp(- eta * k2[id] * dt);
+    
+    Vx_F1[id] = ( Vx_F[id] + dt * RHS_Vx_F[id] ) * exp_diff_V_0 ;
+    Vy_F1[id] = ( Vy_F[id] + dt * RHS_Vy_F[id] ) * exp_diff_V_0 ;
+    Vz_F1[id] = ( Vz_F[id] + dt * RHS_Vz_F[id] ) * exp_diff_V_0 ;
+    
+    Bx_F1[id] = ( Bx_F[id] + dt * RHS_Bx_F[id] ) * exp_diff_B_0 ;
+    By_F1[id] = ( By_F[id] + dt * RHS_By_F[id] ) * exp_diff_B_0 ;
+    Bz_F1[id] = ( Bz_F[id] + dt * RHS_Bz_F[id] ) * exp_diff_B_0 ;
     
   }
   
-  //~ diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, 1.);
-  
-  //~ projection(Vx_F , Vy_F , Vz_F );
-  
-  //~ // step 1
-  //~ del_t = 1.;
-  
-  //~ calc_RHS(RHS_Vx_F , RHS_Vy_F , RHS_Vz_F , Vx_F , Vy_F , Vz_F
-          //~ ,RHS_Bx_F , RHS_By_F , RHS_Bz_F , Bx_F , By_F , Bz_F, del_t);
-  
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
-    
-    //~ Vx_F1[id] = Vx_F[id] + dt * RHS_Vx_F[id];
-    //~ Vy_F1[id] = Vy_F[id] + dt * RHS_Vy_F[id];
-    //~ Vz_F1[id] = Vz_F[id] + dt * RHS_Vz_F[id];
-    
-    //~ Bx_F1[id] = Bx_F[id] + dt * RHS_Bx_F[id];
-    //~ By_F1[id] = By_F[id] + dt * RHS_By_F[id];
-    //~ Bz_F1[id] = Bz_F[id] + dt * RHS_Bz_F[id];
-    
-  //~ }
-  
-  //~ diffusion_correction(Vx_F1, Vy_F1, Vz_F1, Bx_F1, By_F1, Bz_F1, del_t);
-  
-  //~ projection(Vx_F1, Vy_F1, Vz_F1);
-  //~ projection(Bx_F1, By_F1, Bz_F1);
+  projection(Vx_F1, Vy_F1, Vz_F1);
+  projection(Bx_F1, By_F1, Bz_F1);
           
-  //~ // step 2
-  //~ del_t = 0.5;
+  // step 2
   
-  //~ calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
-          //~ ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, del_t);
+  calc_RHS(RHS_Vx_F1, RHS_Vy_F1, RHS_Vz_F1, Vx_F1, Vy_F1, Vz_F1
+          ,RHS_Bx_F1, RHS_By_F1, RHS_Bz_F1, Bx_F1, By_F1, Bz_F1, 0.);
    
-  //~ double dt_025 = 0.25*dt; 
+  double dt_025 = 0.25*dt;
           
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
-    //~ Vx_F2[id] = Vx_F[id] + dt_025 * ( RHS_Vx_F[id] + RHS_Vx_F1[id]);
-    //~ Vy_F2[id] = Vy_F[id] + dt_025 * ( RHS_Vy_F[id] + RHS_Vy_F1[id]);
-    //~ Vz_F2[id] = Vz_F[id] + dt_025 * ( RHS_Vz_F[id] + RHS_Vz_F1[id]);
+  for(int id = 0; id < size_F_tot; id++)
+  { 
     
-    //~ Bx_F2[id] = Bx_F[id] + dt_025 * ( RHS_Bx_F[id] + RHS_Bx_F1[id]);
-    //~ By_F2[id] = By_F[id] + dt_025 * ( RHS_By_F[id] + RHS_By_F1[id]);
-    //~ Bz_F2[id] = Bz_F[id] + dt_025 * ( RHS_Bz_F[id] + RHS_Bz_F1[id]);
-  //~ }
+    exp_diff_V_0 = exp(- 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_0 = exp(- 0.5 * eta * k2[id] * dt);
+    exp_diff_V_1 = exp(+ 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_1 = exp(+ 0.5 * eta * k2[id] * dt);
+    
+    Vx_F2[id] = ( Vx_F[id] + dt_025 *  RHS_Vx_F[id] ) * exp_diff_V_0+ ( dt_025 * RHS_Vx_F1[id] ) * exp_diff_V_1;
+    Vy_F2[id] = ( Vy_F[id] + dt_025 *  RHS_Vy_F[id] ) * exp_diff_V_0+ ( dt_025 * RHS_Vy_F1[id] ) * exp_diff_V_1;
+    Vz_F2[id] = ( Vz_F[id] + dt_025 *  RHS_Vz_F[id] ) * exp_diff_V_0+ ( dt_025 * RHS_Vz_F1[id] ) * exp_diff_V_1;
+    
+    Bx_F2[id] = ( Bx_F[id] + dt_025 *  RHS_Bx_F[id] ) * exp_diff_B_0+ ( dt_025 * RHS_Bx_F1[id] ) * exp_diff_B_1;
+    By_F2[id] = ( By_F[id] + dt_025 *  RHS_By_F[id] ) * exp_diff_B_0+ ( dt_025 * RHS_By_F1[id] ) * exp_diff_B_1;
+    Bz_F2[id] = ( Bz_F[id] + dt_025 *  RHS_Bz_F[id] ) * exp_diff_B_0+ ( dt_025 * RHS_Bz_F1[id] ) * exp_diff_B_1;
+    
+  }
   
-  //~ diffusion_correction(Vx_F2, Vy_F2, Vz_F2, Bx_F2, By_F2, Bz_F2, del_t);
-  
-  //~ projection(Vx_F2, Vy_F2, Vz_F2);
-  //~ projection(Bx_F2, By_F2, Bz_F2);
+  projection(Vx_F2, Vy_F2, Vz_F2);
+  projection(Bx_F2, By_F2, Bz_F2);
           
-  //~ // step 3
-  //~ del_t = 1.;
+  // step 3
+  calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
+          ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, 0.);
   
-  //~ calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
-          //~ ,RHS_Bx_F2, RHS_By_F2, RHS_Bz_F2, Bx_F2, By_F2, Bz_F2, del_t);
+  double dt_6 = dt/6.;
   
-  //~ double dt_6 = dt/6.;
-  
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ { 
-    //~ Vx_F[id] = Vx_F[id] + dt_6 * (RHS_Vx_F[id] + RHS_Vx_F1[id] + 4.*RHS_Vx_F2[id]);
-    //~ Vy_F[id] = Vy_F[id] + dt_6 * (RHS_Vy_F[id] + RHS_Vy_F1[id] + 4.*RHS_Vy_F2[id]);
-    //~ Vz_F[id] = Vz_F[id] + dt_6 * (RHS_Vz_F[id] + RHS_Vz_F1[id] + 4.*RHS_Vz_F2[id]);
+  for(int id = 0; id < size_F_tot; id++)
+  { 
     
-    //~ Bx_F[id] = Bx_F[id] + dt_6 * (RHS_Bx_F[id] + RHS_Bx_F1[id] + 4.*RHS_Bx_F2[id]);
-    //~ By_F[id] = By_F[id] + dt_6 * (RHS_By_F[id] + RHS_By_F1[id] + 4.*RHS_By_F2[id]);
-    //~ Bz_F[id] = Bz_F[id] + dt_6 * (RHS_Bz_F[id] + RHS_Bz_F1[id] + 4.*RHS_Bz_F2[id]);
+    exp_diff_V_0 = exp(-       nu  * k2[id] * dt);
+    exp_diff_B_0 = exp(-       eta * k2[id] * dt);
+    exp_diff_V_1 = exp(- 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_1 = exp(- 0.5 * eta * k2[id] * dt);
+    
+    Vx_F[id] = ( Vx_F[id] + dt_6 * RHS_Vx_F[id] ) * exp_diff_V_0 + dt_6 * RHS_Vx_F1[id] + dt_6 * 4.*RHS_Vx_F2[id] * exp_diff_V_1;
+    Vy_F[id] = ( Vy_F[id] + dt_6 * RHS_Vy_F[id] ) * exp_diff_V_0 + dt_6 * RHS_Vy_F1[id] + dt_6 * 4.*RHS_Vy_F2[id] * exp_diff_V_1;
+    Vz_F[id] = ( Vz_F[id] + dt_6 * RHS_Vz_F[id] ) * exp_diff_V_0 + dt_6 * RHS_Vz_F1[id] + dt_6 * 4.*RHS_Vz_F2[id] * exp_diff_V_1;
 
-  //~ }
+    Bx_F[id] = ( Bx_F[id] + dt_6 * RHS_Bx_F[id] ) * exp_diff_B_0 + dt_6 * RHS_Bx_F1[id] + dt_6 * 4.*RHS_Bx_F2[id] * exp_diff_B_1;
+    By_F[id] = ( By_F[id] + dt_6 * RHS_By_F[id] ) * exp_diff_B_0 + dt_6 * RHS_By_F1[id] + dt_6 * 4.*RHS_By_F2[id] * exp_diff_B_1;
+    Bz_F[id] = ( Bz_F[id] + dt_6 * RHS_Bz_F[id] ) * exp_diff_B_0 + dt_6 * RHS_Bz_F1[id] + dt_6 * 4.*RHS_Bz_F2[id] * exp_diff_B_1;
   
-  //~ diffusion_correction(Vx_F, Vy_F, Vz_F, Bx_F, By_F, Bz_F, del_t);
+  }
   
-  //~ projection(Vx_F , Vy_F , Vz_F );
-  //~ projection(Bx_F , By_F , Bz_F );
+  projection(Vx_F , Vy_F , Vz_F );
+  projection(Bx_F , By_F , Bz_F );
   
   // update time
   time += dt;
@@ -997,39 +988,42 @@ void CSpecDyn::calc_Energy(double& energy_V, double& diss_V, double& energy_B, d
     
 }
 
+// cfl condition from https://github.com/marinlauber/2D-Turbulence-Python/blob/master/src/Theory.ipynb
 void CSpecDyn::set_dt()
 {
+  
   bFFT(Vx_F, Vy_F, Vz_F, Vx_R, Vy_R, Vz_R);
   
-  double vmax_loc = 0.;
+  double L1_max_loc = 0.;
+  double L1_max;
+  double L1;
+  double Vx, Vy, Vz;
+  
   for(int id = 0; id < size_R_tot; id++)
   {
-    double Vx = Vx_R[id].real();
-    double Vy = Vy_R[id].real();
-    double Vz = Vz_R[id].real();
+    Vx = std::abs( Vx_R[id].real() );
+    Vy = std::abs( Vy_R[id].real() );
+    Vz = std::abs( Vz_R[id].real() );
     
-    vmax_loc = std::max( {vmax_loc, Vx*Vx+Vy*Vy+Vz*Vz} );
+    L1 = Vx + Vy + Vz; 
+    
+    L1_max_loc = std::max( L1_max_loc , L1 );
   }
   
-  double vmax;
-  MPI_Allreduce(&vmax_loc, &vmax, 1, MPI_DOUBLE, MPI_MAX, comm);
-  vmax = sqrt(vmax);
+  MPI_Allreduce(&L1_max_loc, &L1_max, 1, MPI_DOUBLE, MPI_MAX, comm);
   
-  double dt_adv = CFL_ADV * dx / vmax;
-  double dt_dif = CFL_DIF * dx * dx / nu;
-  dt = std::min(dt_adv, dt_dif);
+  dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
   
-  dt = 0.5; // UWAGA!
+  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // do I need back trafo?
   
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F);
 }
 
 void CSpecDyn::Alvelius()
 {
   
   double P = 1.;
-  double k_f = 5.;
-  double dk_f = 1.;
+  double k_f = 2.5;
+  double dk_f = 0.5;
   
   // white noise with bandpass and zero velocity-correlation
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -1060,12 +1054,10 @@ void CSpecDyn::Alvelius()
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
       
       double phi = angle(angle_eng);
-      //~ double theta_1 = angle(angle_eng);
-      //~ double theta_2 = angle(angle_eng);
       double psi = angle(angle_eng);
       
-      double gA = sin(2.*phi);
-      double gB = cos(2.*phi);
+      double gA = sin(phi);
+      double gB = cos(phi);
       
       double theta_1 = atan2( gA * xi_1.real() + gB * ( sin(psi) * xi_2.imag() + cos(psi) * xi_2.real() ) ,
                              -gA * xi_1.imag() + gB * ( sin(psi) * xi_2.real() - cos(psi) * xi_2.imag() ) );
@@ -1078,12 +1070,7 @@ void CSpecDyn::Alvelius()
       Force_X[id] = (A * e1[0]  + B * e2[0]); 
       Force_Y[id] = (A * e1[1]  + B * e2[1]); 
       Force_Z[id] = (A * e1[2]  + B * e2[2]); 
-      
-      // white noise
-      //~ Force_X[id] = normal(normal_eng) + IM * normal(normal_eng);
-      //~ Force_Y[id] = normal(normal_eng) + IM * normal(normal_eng);
-      //~ Force_Z[id] = normal(normal_eng) + IM * normal(normal_eng);
-    
+
     }
     else
     {
@@ -1105,7 +1092,7 @@ void CSpecDyn::Alvelius()
   
   fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
   
-  // projection (for white noise only)
+  // projection (white noise only)
   projection(Force_X, Force_Y, Force_Z);
   
   // set energy injection rate
@@ -1226,133 +1213,113 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
                         CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
                         double del_t)
 {
-  //~ // W = rot(V)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  // W = rot(V)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
-    //~ Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
-    //~ Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
+    Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
+    Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
+    Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
     
-  //~ }}}
+  }}}
   
-  //~ // J = rot(B)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  // J = rot(B)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
-    //~ Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
-    //~ Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
+    Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
+    Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
+    Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
     
-  //~ }}}
+  }}}
   
-  //~ // dealias
-  //~ dealias(V_X, V_Y, V_Z);
-  //~ dealias(B_X, B_Y, B_Z);
-  //~ dealias(Wx_F, Wy_F, Wz_F);
-  //~ dealias(Jx_F, Jy_F, Jz_F);
+  // dealias
+  dealias(V_X, V_Y, V_Z);
+  dealias(B_X, B_Y, B_Z);
+  dealias(Wx_F, Wy_F, Wz_F);
+  dealias(Jx_F, Jy_F, Jz_F);
   
-  //~ // FFT F->R
-  //~ bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
-  //~ bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
-  //~ bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
-  //~ bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
+  // FFT F->R
+  bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
+  bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
+  bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
+  bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
-  //~ // clean up imaginary part
-  //~ for(int id = 0; id < size_R_tot; id++){
+  // clean up imaginary part
+  for(int id = 0; id < size_R_tot; id++){
    
-    //~ Vx_R[id] = Vx_R[id].real();
-    //~ Vy_R[id] = Vy_R[id].real();
-    //~ Vz_R[id] = Vz_R[id].real();
-    //~ Bx_R[id] = Bx_R[id].real();
-    //~ By_R[id] = By_R[id].real();
-    //~ Bz_R[id] = Bz_R[id].real();
+    Vx_R[id] = Vx_R[id].real();
+    Vy_R[id] = Vy_R[id].real();
+    Vz_R[id] = Vz_R[id].real();
+    Bx_R[id] = Bx_R[id].real();
+    By_R[id] = By_R[id].real();
+    Bz_R[id] = Bz_R[id].real();
     
-  //~ }
+  }
   
   
-  //~ // RHS_V = VxW + JxB
-  //~ for(int id = 0; id < size_R_tot; id++){
+  // RHS_V = VxW + JxB
+  for(int id = 0; id < size_R_tot; id++){
     
-    //~ RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
-    //~ RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
-    //~ RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
+    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
+    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
+    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
     
-  //~ }
+  }
   
-  //~ // RHS_B = VxB
-  //~ for(int id = 0; id < size_R_tot; id++){
+  // RHS_B = VxB
+  for(int id = 0; id < size_R_tot; id++){
     
-    //~ RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
-    //~ RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
-    //~ RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
+    RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
+    RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
+    RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
     
-  //~ }
+  }
   
-  //~ // FFT R->F
-  //~ fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
-  //~ fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
-  //~ fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
-  //~ fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
+  // FFT R->F
+  fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
+  fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
+  fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
+  fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
   
-  //~ // dealias
-  //~ dealias(V_X, V_Y, V_Z);
-  //~ dealias(B_X, B_Y, B_Z);
-  //~ dealias(RHSV_X, RHSV_Y, RHSV_Z);
-  //~ dealias(RHSB_X, RHSB_Y, RHSB_Z);
+  // dealias
+  dealias(V_X, V_Y, V_Z);
+  dealias(B_X, B_Y, B_Z);
+  dealias(RHSV_X, RHSV_Y, RHSV_Z);
+  dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  //~ // RHS_B = rot(VxB)
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
+  // RHS_B = rot(VxB)
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    //~ CX VxB_X = RHSB_X[id];
-    //~ CX VxB_Y = RHSB_Y[id];
-    //~ CX VxB_Z = RHSB_Z[id];
+    CX VxB_X = RHSB_X[id];
+    CX VxB_Y = RHSB_Y[id];
+    CX VxB_Z = RHSB_Z[id];
     
-    //~ RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
-    //~ RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
-    //~ RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
+    RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
+    RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
+    RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
     
-  //~ }}}
+  }}}
   
   // forcing
-  //~ if(setup==2)
-  //~ {
-    for(int id = 0; id < size_F_tot; id++){
-     
-      //~ RHSV_X[id] += Force_X[id];
-      //~ RHSV_Y[id] += Force_Y[id];
-      //~ RHSV_Z[id] += Force_Z[id];
-      RHSV_X[id] = Force_X[id];
-      RHSV_Y[id] = Force_Y[id];
-      RHSV_Z[id] = Force_Z[id];
-      
-    }
-  //~ }
+  for(int id = 0; id < size_F_tot; id++){
+   
+    RHSV_X[id] += Force_X[id];
+    RHSV_Y[id] += Force_Y[id];
+    RHSV_Z[id] += Force_Z[id];
   
-  // diffusion
-  //~ for(int id = 0; id < size_F_tot; id++)
-  //~ {
-    //~ double exp_diff_V = exp(nu *k2[id]*del_t*dt);
-    //~ double exp_diff_B = exp(eta*k2[id]*del_t*dt);
+  }
     
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
-    //~ RHSV_X[id] *= exp_diff_V;
-    
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-    //~ RHSB_X[id] *= exp_diff_B;
-  //~ }
 }
 
 void CSpecDyn::diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t)
