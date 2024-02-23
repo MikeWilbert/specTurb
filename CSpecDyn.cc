@@ -1,7 +1,8 @@
 #include "CSpecDyn.h"
 
 CSpecDyn::CSpecDyn():
-N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_simu(END_SIMU), L(LENGTH), nu(NU), eta(ETA), setup(SETUP)
+N(NUM), pdims(PDIMS), k_f(K_F), dk_f(DK_F), c_ref(C_REF), T(T_LE), Pr_m(PRM),out_dir(OUT_DIR), 
+out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
 {
   
   // init MPI
@@ -23,17 +24,33 @@ N(NUM), pdims(PDIMS), dt(DT), out_dir(OUT_DIR), out_interval(OUT_INTERVAL), end_
 	MPI_Comm_rank(comm, &myRank);
   MPI_Cart_coords(comm, myRank, 2, mpi_coords);
   
-  if(myRank==0)
-  {
-    printf("Real   : (%d, %d, %d)\n", size_R[0], size_R[1], size_R[2]);
-    printf("Fourier: (%d, %d, %d)\n", size_F[0], size_F[1], size_F[2]);
-  }
+  // other quantites
+  time = 0.;
+  dt   = 0.;
+  L = PI2;
   
   // drived quantities
-  XB = -L*0.5;
-  dx = L/N;
-  dk = PI2/L;
-  time = 0.;
+  XB    = -L*0.5;
+  dx    = L/N;
+  dk    = PI2/L;
+  k_max = N/3.;
+  
+  P   = L*L/(T*T*T);
+  nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.);
+  eta = nu / Pr_m;
+  
+  // print parameters
+  if(myRank == 0)
+  {
+    printf("\n");
+    printf("---- PARAMETERS ----\n");
+    printf("\n");
+    printf("nu  = %f\n", nu);
+    printf("eta = %f\n", eta);
+    printf("P   = %f\n", P);
+     printf("\n");
+    
+  }MPI_Barrier(comm);
   
   // allocate memory
   kx = new double[size_F[0]];
@@ -511,7 +528,7 @@ void CSpecDyn::setup_fields()
   switch(setup)
   {
     case 0:
-      if(myRank==0){printf("0\n");}
+      if(myRank==0){printf("setup 0: zero initial conditions\n");}
       
       /** u = 0, B = 0 **/
       for(int id = 0; id < size_R_tot; id++)
@@ -529,7 +546,7 @@ void CSpecDyn::setup_fields()
       break;
 
     case 1:
-      if(myRank==0){printf("1\n");}
+      if(myRank==0){printf("setup 1: Orszag-Tang\n");}
     
       /** Orszag-Tang **/
       for(int ix = 0; ix < size_R[0]; ix++){
@@ -560,7 +577,7 @@ void CSpecDyn::setup_fields()
       break;
       
     case 2:
-      if(myRank==0){printf("2\n");}
+      if(myRank==0){printf("setup 2: small turbulent fields\n");}
       
     /** random with energy spectrum normalized to desired kinetic energy **/
     
@@ -1022,10 +1039,9 @@ void CSpecDyn::set_dt()
 
 void CSpecDyn::Alvelius()
 {
-  
-  double P = 1.;
-  double k_f = 2.5;
-  double dk_f = 0.5;
+  //~ double P = 1.;
+  //~ double k_f = 2.5;
+  //~ double dk_f = 0.5;
   
   // white noise with bandpass and zero velocity-correlation
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -1045,12 +1061,6 @@ void CSpecDyn::Alvelius()
       double K_p = (K_x*K_x + K_y*K_y);
       double K_inv   = 1./K;
       double K_p_inv = 1./K_p;
-      
-      //~ double alpha  = atan2(K_x,K_z);
-      //~ double beta   = atan2(hypot(K_x,K_z), K_y);
-      
-      //~ double e1[3] = {+          sin(alpha), -          cos(alpha),         0.};
-      //~ double e2[3] = {-cos(beta)*cos(alpha), -cos(beta)*sin(alpha), +sin(beta)};
       
       double e1[3] = { K_y * K_p_inv, - K_x * K_p_inv, 0. };
       double e2[3] = { K_x * K_z * K_inv * K_p_inv, K_y * K_z * K_inv * K_p_inv, - K_p * K_inv };

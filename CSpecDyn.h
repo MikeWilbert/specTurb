@@ -11,23 +11,32 @@ class CSpecDyn
     //parameters
     const int N;
     const int* pdims;
-          double dt;
+    const double k_f;
+    const double dk_f;
+    const double c_ref;
+    const double T;
+    const double Pr_m;
 
-    const std::string out_dir;
-    const double out_interval;
-    const double end_simu;
+    std::string out_dir;
+    double out_interval;
+    double end_simu;
 
-    const double L;
-    const double nu;
-    const double eta;
-    
     const int setup;
     
     // derived quantities
+    double P;  // energy injection rate
+    double nu; // kinematic viscosity
+    double eta;// magnetic resistivity 
+
     double XB; // left spatial position
     double dx; // space      discretization
     double dk; // wavenumber discretization
-    double time = 0.;
+    double k_max;
+    
+    // other quantites
+    double time;
+    double dt;
+    double L;
   
     // MPI
     int myRank, nprocs;

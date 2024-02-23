@@ -26,17 +26,24 @@ const CX IM = CX(0., 1.);
 const int NUM = 64;
 // processor grid
 int const PDIMS[2] = {4,4};
-// CFL number
-const double DT = 1.e-8;
-const double CFL_ADV = 0.5;
-const double CFL_DIF = 0.025;
 
+// forced mode
+const double K_F = 2.;
+// width of forcing band
+const double DK_F = 0.5;
+// resolution of turbulence
+const double C_REF = 1.5;
+// large eddy turnover time
+const double T_LE = 1.;
+// magnetic Prandtl number
+const double PRM = 1.;
 // output directory
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/clean_up/N_128";
+
 // output interval
-const double OUT_INTERVAL = 4;
+const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 40.;
+const double END_SIMU = 10.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
@@ -62,9 +69,6 @@ const double LENGTH = PI2;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512
 //~ const double NU  = 0.0077;
-const double NU  = 0.01;
-// magnetic diffusivity
-const double ETA = NU;
 
 /** DEFINES **/
 
