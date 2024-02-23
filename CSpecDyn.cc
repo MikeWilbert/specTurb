@@ -476,8 +476,10 @@ void CSpecDyn::setup_k()
 void CSpecDyn::setup_fields()
 {
   
-  double E0_V = 0.5;
-  double E0_B = 0.25;
+  //~ double E0_V = 0.5;
+  //~ double E0_B = 0.25;
+  double E0_V = 0.001;
+  double E0_B = 0.001;
   double energy_b0_init = 5.;
   
   std::mt19937 eng(myRank);
@@ -1044,11 +1046,14 @@ void CSpecDyn::Alvelius()
       double K_inv   = 1./K;
       double K_p_inv = 1./K_p;
       
-      double alpha  = atan2(K_x,K_z);
-      double beta   = atan2(hypot(K_x,K_z), K_y);
+      //~ double alpha  = atan2(K_x,K_z);
+      //~ double beta   = atan2(hypot(K_x,K_z), K_y);
       
-      double e1[3] = {+          sin(alpha), -          cos(alpha),         0.};
-      double e2[3] = {-cos(beta)*cos(alpha), -cos(beta)*sin(alpha), +sin(beta)};
+      //~ double e1[3] = {+          sin(alpha), -          cos(alpha),         0.};
+      //~ double e2[3] = {-cos(beta)*cos(alpha), -cos(beta)*sin(alpha), +sin(beta)};
+      
+      double e1[3] = { K_y * K_p_inv, - K_x * K_p_inv, 0. };
+      double e2[3] = { K_x * K_z * K_inv * K_p_inv, K_y * K_z * K_inv * K_p_inv, - K_p * K_inv };
       
       CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
@@ -1091,9 +1096,6 @@ void CSpecDyn::Alvelius()
   }
   
   fFFT(Jx_R, Jy_R, Jz_R, Force_X, Force_Y, Force_Z);
-  
-  // projection (white noise only)
-  projection(Force_X, Force_Y, Force_Z);
   
   // set energy injection rate
   double energy_F_loc = 0.;
@@ -1544,122 +1546,38 @@ void CSpecDyn::print_mpi_scalar(CX* field, long& N_bytes_scalar, const char* fil
 
 void CSpecDyn::dealias(CX* fieldX, CX* fieldY, CX* fieldZ)
 {
-  // Hou&Li
-  double kmax = N/2*dk;
+  // 2/3 rule
+  double kmax = N/3.;
   
- for(int id = 0; id < size_F_tot; id++){
-   
-    double k = sqrt(k2[id]);
-    double filter = exp(-36. * pow(k/kmax, 36) );
-   
-    fieldX[id] *= filter;
-    fieldY[id] *= filter;
-    fieldZ[id] *= filter;
+  for(int ix = 0; ix<size_F[0]; ix++){
+  for(int iy = 0; iy<size_F[1]; iy++){
+  for(int iz = 0; iz<size_F[2]; iz++){
     
-  }
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
+    if( fabs(kx[ix]) > kmax ||  fabs(ky[iy]) > kmax ||  fabs(kz[iz]) > kmax)
+    {
+      fieldX[id] = 0.;
+      fieldY[id] = 0.;
+      fieldZ[id] = 0.;
+    }
+    
+  }}}
   
-  //~ // spherical truncation
-  //~ double kmax  = sqrt(2)/3.*N;
-  //~ double kmax2 = kmax*kmax;
+  //~ // Hou & Li
+  //~ double kmax = N/2*dk;
   
-  //~ for(int id = 0; id < size_F_tot; id++){
+ //~ for(int id = 0; id < size_F_tot; id++){
    
-    //~ if(k2[id] >= kmax2)
-    //~ {
-      //~ fieldX[id] = 0.;
-      //~ fieldY[id] = 0.;
-      //~ fieldZ[id] = 0.;
-    //~ }
+    //~ double k = sqrt(k2[id]);
+    //~ double filter = exp(-36. * pow(k/kmax, 36) );
+   
+    //~ fieldX[id] *= filter;
+    //~ fieldY[id] *= filter;
+    //~ fieldZ[id] *= filter;
     
   //~ }
-  
-  // 2/3 rule
-  //~ double kmax = N/2.*dk;
-  //~ double kmax_23 = N/2.*dk*2./3.;
-  
-  //~ for(int ix = 0; ix<size_F[0]; ix++){
-  //~ for(int iy = 0; iy<size_F[1]; iy++){
-  //~ for(int iz = 0; iz<size_F[2]; iz++){
     
-    //~ int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    //~ if( fabs(kx[ix]) > kmax_23 ||  fabs(ky[iy]) > kmax_23 ||  fabs(kz[iz]) > kmax_23) // Cube
-    //~ {
-      //~ fieldX[id] = 0.;
-      //~ fieldY[id] = 0.;
-      //~ fieldZ[id] = 0.;
-    //~ }
-    
-  //~ }}}
-}
-
-void CSpecDyn::print_EnergySpectrum()
-{
-  double kmax = N/2*dk;
-  double del_k = kmax/N_bin;
-  
-  // clean containers
-  for(int ik = 0; ik < N_bin; ik++)
-  {
-    energySpectrum_V_loc[ik] = 0.;
-    bin_counter_V_loc[ik]    = 0;
-    energySpectrum_B_loc[ik] = 0.;
-    bin_counter_B_loc[ik]    = 0;
-  }
-  
-  double Vx, Vy, Vz;
-  double Bx, By, Bz;
-  
-  for(int id = 0; id < size_F_tot; id++){
-    
-    double k = sqrt(k2[id]);
-    int id_k = int(k/del_k);
-  
-    if(id_k < N_bin)
-    {
-      Vx = abs(Vx_F[id]);
-      Vy = abs(Vy_F[id]);
-      Vz = abs(Vz_F[id]);
-      Bx = abs(Bx_F[id]);
-      By = abs(By_F[id]);
-      Bz = abs(Bz_F[id]);
-      
-      energySpectrum_V_loc[id_k] += Vx*Vx+Vy*Vy+Vz*Vz;
-      energySpectrum_B_loc[id_k] += Bx*Bx+By*By+Bz*Bz;
-      bin_counter_V_loc   [id_k] += 1;
-      bin_counter_B_loc   [id_k] += 1;
-    }
-  }
-  
-  MPI_Reduce(energySpectrum_V_loc, energySpectrum_V, N_bin, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(bin_counter_V_loc   , bin_counter_V   , N_bin, MPI_INT   , MPI_SUM, 0, comm);
-  MPI_Reduce(energySpectrum_B_loc, energySpectrum_B, N_bin, MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(bin_counter_B_loc   , bin_counter_B   , N_bin, MPI_INT   , MPI_SUM, 0, comm);
-  
-  if(myRank == 0)
-  {
-    std::string file_name  = out_dir + "/spectra/spectrum_" + std::to_string(print_count) + ".csv";
-    std::ofstream os;
-    
-    os.open(file_name.c_str(), std::ios::out);
-    if(!os){
-      std::cout << "Cannot write header to file '" << file_name << "'!\n";
-    }
-    
-    for(int ik = 1; ik < N_bin; ik++)
-    {
-      energySpectrum_V[ik] /= double(bin_counter_V[ik]); // divide by number of elements in bin to get mean values
-      energySpectrum_V[ik] *= 0.5 * 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik ); // get discrete Energy density
-      energySpectrum_B[ik] /= double(bin_counter_B[ik]);
-      energySpectrum_B[ik] *= 0.5 * 4./3.*M_PI*del_k*del_k* ( (ik+1)*(ik+1)*(ik+1) - ik*ik*ik );
-      
-      os << (ik+0.5)*del_k << ", " << energySpectrum_V[ik] << ", " << energySpectrum_B[ik] << std::endl;
-    }
-    
-    os.close();
-  }MPI_Barrier(comm);
-  
 }
 
 void CSpecDyn::print_Energy()
@@ -1926,7 +1844,6 @@ void CSpecDyn::print()
 {
   print_vti();
   print_scales();
-  print_EnergySpectrum();
   
   if(myRank==0)
   {
