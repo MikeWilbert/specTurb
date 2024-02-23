@@ -35,7 +35,8 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
   dk    = PI2/L;
   k_max = N/3.;
   
-  P   = L*L/(T*T*T);
+  double L_f = PI2/k_f;
+  P   = L_f*L_f/(T*T*T);
   nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.);
   eta = nu / Pr_m;
   
@@ -493,10 +494,10 @@ void CSpecDyn::setup_k()
 void CSpecDyn::setup_fields()
 {
   
-  //~ double E0_V = 0.5;
-  //~ double E0_B = 0.25;
-  double E0_V = 0.001;
-  double E0_B = 0.001;
+  double E0_V = 1.;
+  double E0_B = 1.;
+  //~ double E0_V = 0.001;
+  //~ double E0_B = 0.001;
   double energy_b0_init = 5.;
   
   std::mt19937 eng(myRank);

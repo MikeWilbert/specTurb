@@ -23,12 +23,12 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 64;
+const int NUM = 128;
 // processor grid
-int const PDIMS[2] = {4,4};
+int const PDIMS[2] = {12,24};
 
 // forced mode
-const double K_F = 2.;
+const double K_F = 2.5;
 // width of forcing band
 const double DK_F = 0.5;
 // resolution of turbulence
@@ -38,15 +38,15 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/clean_up/N_128";
+const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/new_version/v2";
 
 // output interval
 const double OUT_INTERVAL = 1.;
 // simulation time
-const double END_SIMU = 10.;
+const double END_SIMU = 50.;
 // restart
-const int RESTART_STEP = 0;
-//~ #define RESTART_DIR  "/p/scratch/specdyn/Turbulence/Restart_tests/Restart_1024_longint"
+const int RESTART_STEP = 10;
+#define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/new_version/v2"
 
 // choose initial setup: 
 // (0):all zero; 
