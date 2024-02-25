@@ -192,7 +192,6 @@ class CSpecDyn
     void calc_Energy(double& energy_V, double& diss_V, double& energy_B, double& diss_B);
     
     void Alvelius();
-    void Titov();
     
     void restart();
     void read_binary();

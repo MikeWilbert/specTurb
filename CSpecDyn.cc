@@ -191,6 +191,8 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
     print();  
   }
   
+  Alvelius();
+  
 }
 
 void CSpecDyn::restart()
@@ -494,10 +496,10 @@ void CSpecDyn::setup_k()
 void CSpecDyn::setup_fields()
 {
   
-  double E0_V = 1.;
-  double E0_B = 1.;
-  //~ double E0_V = 0.001;
-  //~ double E0_B = 0.001;
+  //~ double E0_V = 1.;
+  //~ double E0_B = 1.;
+  double E0_V = 0.001;
+  double E0_B = 0.001;
   double energy_b0_init = 5.;
   
   std::mt19937 eng(myRank);
@@ -1040,9 +1042,7 @@ void CSpecDyn::set_dt()
 
 void CSpecDyn::Alvelius()
 {
-  //~ double P = 1.;
-  //~ double k_f = 2.5;
-  //~ double dk_f = 0.5;
+  /* PROBLEM: moden mit (0,0,K_z) haben eine 0_norm in der xy_Ebene! */
   
   // white noise with bandpass and zero velocity-correlation
   for(int ix = 0; ix<size_F[0]; ix++){
@@ -1053,8 +1053,9 @@ void CSpecDyn::Alvelius()
     
     double K = sqrt(k2[id]);
     
-    if( ( K > (k_f-dk_f) ) && ( K < (k_f+dk_f) ) )
+    if( dk_f > abs(k_f-K))
     {
+      
       // Alvelius
       double K_x = kx[ix];
       double K_y = ky[iy];
@@ -1062,9 +1063,19 @@ void CSpecDyn::Alvelius()
       double K_p = (K_x*K_x + K_y*K_y);
       double K_inv   = 1./K;
       double K_p_inv = 1./K_p;
+     
+      //~ printf("K = %f (%f,%f,%f, %f, %f)\n", K, K_x, K_y, K_z, K_p_inv, K_inv);
       
       double e1[3] = { K_y * K_p_inv, - K_x * K_p_inv, 0. };
       double e2[3] = { K_x * K_z * K_inv * K_p_inv, K_y * K_z * K_inv * K_p_inv, - K_p * K_inv };
+      
+      ///
+      //~ double phi_k   = atan2(K_y, K_x);
+      //~ double theta_k = acos(K_z*K_inv);
+      
+      //~ double e1[3] = { -sin(phi_k) , cos(phi_k), 0. };
+      //~ double e2[3] = {  cos(theta_k) * cos(phi_k) , cos(theta_k) * sin(phi_k), -sin(theta_k) };
+      ///
       
       CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];
