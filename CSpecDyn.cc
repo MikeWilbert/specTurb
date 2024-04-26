@@ -562,15 +562,23 @@ void CSpecDyn::setup_fields()
         double y_val = (start_R[1]+iy)*dx+XB;
         double z_val = (start_R[2]+iz)*dx+XB;
         
-        Vx_R[id] = -2.*sin(y_val);
-        Vy_R[id] =  2.*sin(x_val);
-        Vz_R[id] =  0.;
+        Vx_R[id] = cos(x_val)*cos(y_val)*cos(z_val);
+        Vy_R[id] = cos(x_val)*cos(y_val)*cos(z_val);
+        Vz_R[id] = cos(x_val)*cos(y_val)*cos(z_val);
+
+        Bx_R[id] = x_val;
+        By_R[id] = y_val;
+        Bz_R[id] = z_val;
         
-        double beta = 0.8;
+        // Vx_R[id] = -2.*sin(y_val);
+        // Vy_R[id] =  2.*sin(x_val);
+        // Vz_R[id] =  0.;
         
-        Bx_R[id] = ( -2.*sin(2*y_val) + sin(z_val) )*beta;
-        By_R[id] = (  2.*sin(  x_val) + sin(z_val) )*beta;
-        Bz_R[id] = (     sin(  x_val) + sin(y_val) )*beta;
+        // double beta = 0.8;
+        
+        // Bx_R[id] = ( -2.*sin(2*y_val) + sin(z_val) )*beta;
+        // By_R[id] = (  2.*sin(  x_val) + sin(z_val) )*beta;
+        // Bz_R[id] = (     sin(  x_val) + sin(y_val) )*beta;
     
       }}}
       
@@ -838,8 +846,8 @@ void CSpecDyn::time_step()
   for(int id = 0; id < size_F_tot; id++)
   { 
     
-    exp_diff_V_0 = exp(- nu  * k2[id] * dt);
-    exp_diff_B_0 = exp(- eta * k2[id] * dt);
+    exp_diff_V_0 = 1.;// exp(- nu  * k2[id] * dt);
+    exp_diff_B_0 = 1.;// exp(- eta * k2[id] * dt);
     
     Vx_F1[id] = ( Vx_F[id] + dt * RHS_Vx_F[id] ) * exp_diff_V_0 ;
     Vy_F1[id] = ( Vy_F[id] + dt * RHS_Vy_F[id] ) * exp_diff_V_0 ;
@@ -851,8 +859,8 @@ void CSpecDyn::time_step()
     
   }
   
-  projection(Vx_F1, Vy_F1, Vz_F1);
-  projection(Bx_F1, By_F1, Bz_F1);
+  // projection(Vx_F1, Vy_F1, Vz_F1);
+  // projection(Bx_F1, By_F1, Bz_F1);
           
   // step 2
   
@@ -864,10 +872,10 @@ void CSpecDyn::time_step()
   for(int id = 0; id < size_F_tot; id++)
   { 
     
-    exp_diff_V_0 = exp(- 0.5 * nu  * k2[id] * dt);
-    exp_diff_B_0 = exp(- 0.5 * eta * k2[id] * dt);
-    exp_diff_V_1 = exp(+ 0.5 * nu  * k2[id] * dt);
-    exp_diff_B_1 = exp(+ 0.5 * eta * k2[id] * dt);
+    exp_diff_V_0 = 1.;// exp(- 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_0 = 1.;// exp(- 0.5 * eta * k2[id] * dt);
+    exp_diff_V_1 = 1.;// exp(+ 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_1 = 1.;// exp(+ 0.5 * eta * k2[id] * dt);
     
     Vx_F2[id] = ( Vx_F[id] + dt_025 *  RHS_Vx_F[id] ) * exp_diff_V_0+ ( dt_025 * RHS_Vx_F1[id] ) * exp_diff_V_1;
     Vy_F2[id] = ( Vy_F[id] + dt_025 *  RHS_Vy_F[id] ) * exp_diff_V_0+ ( dt_025 * RHS_Vy_F1[id] ) * exp_diff_V_1;
@@ -879,8 +887,8 @@ void CSpecDyn::time_step()
     
   }
   
-  projection(Vx_F2, Vy_F2, Vz_F2);
-  projection(Bx_F2, By_F2, Bz_F2);
+  // projection(Vx_F2, Vy_F2, Vz_F2);
+  // projection(Bx_F2, By_F2, Bz_F2);
           
   // step 3
   calc_RHS(RHS_Vx_F2, RHS_Vy_F2, RHS_Vz_F2, Vx_F2, Vy_F2, Vz_F2
@@ -891,10 +899,10 @@ void CSpecDyn::time_step()
   for(int id = 0; id < size_F_tot; id++)
   { 
     
-    exp_diff_V_0 = exp(-       nu  * k2[id] * dt);
-    exp_diff_B_0 = exp(-       eta * k2[id] * dt);
-    exp_diff_V_1 = exp(- 0.5 * nu  * k2[id] * dt);
-    exp_diff_B_1 = exp(- 0.5 * eta * k2[id] * dt);
+    exp_diff_V_0 = 1.;// exp(-       nu  * k2[id] * dt);
+    exp_diff_B_0 = 1.;// exp(-       eta * k2[id] * dt);
+    exp_diff_V_1 = 1.;// exp(- 0.5 * nu  * k2[id] * dt);
+    exp_diff_B_1 = 1.;// exp(- 0.5 * eta * k2[id] * dt);
     
     Vx_F[id] = ( Vx_F[id] + dt_6 * RHS_Vx_F[id] ) * exp_diff_V_0 + dt_6 * RHS_Vx_F1[id] + dt_6 * 4.*RHS_Vx_F2[id] * exp_diff_V_1;
     Vy_F[id] = ( Vy_F[id] + dt_6 * RHS_Vy_F[id] ) * exp_diff_V_0 + dt_6 * RHS_Vy_F1[id] + dt_6 * 4.*RHS_Vy_F2[id] * exp_diff_V_1;
@@ -906,8 +914,8 @@ void CSpecDyn::time_step()
   
   }
   
-  projection(Vx_F , Vy_F , Vz_F );
-  projection(Bx_F , By_F , Bz_F );
+  // projection(Vx_F , Vy_F , Vz_F );
+  // projection(Bx_F , By_F , Bz_F );
   
   // update time
   time += dt;
@@ -1034,9 +1042,11 @@ void CSpecDyn::set_dt()
   
   MPI_Allreduce(&L1_max_loc, &L1_max, 1, MPI_DOUBLE, MPI_MAX, comm);
   
-  dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
+  dt = 0.5*dx/PI2;
+
+  // dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
   
-  fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // do I need back trafo?
+  // fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // do I need back trafo?
   
 }
 
@@ -1238,111 +1248,127 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
                         double del_t)
 {
   // W = rot(V)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  // for(int ix = 0; ix<size_F[0]; ix++){
+  // for(int iy = 0; iy<size_F[1]; iy++){
+  // for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+  //   int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
-    Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
-    Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
+  //   Wx_F[id] = IM * ( ky[iy]*V_Z[id] - kz[iz]*V_Y[id] );
+  //   Wy_F[id] = IM * ( kz[iz]*V_X[id] - kx[ix]*V_Z[id] );
+  //   Wz_F[id] = IM * ( kx[ix]*V_Y[id] - ky[iy]*V_X[id] );
     
-  }}}
+  // }}}
   
-  // J = rot(B)
-  for(int ix = 0; ix<size_F[0]; ix++){
-  for(int iy = 0; iy<size_F[1]; iy++){
-  for(int iz = 0; iz<size_F[2]; iz++){
+  // // J = rot(B)
+  // for(int ix = 0; ix<size_F[0]; ix++){
+  // for(int iy = 0; iy<size_F[1]; iy++){
+  // for(int iz = 0; iz<size_F[2]; iz++){
     
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+  //   int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
     
-    Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
-    Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
-    Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
+  //   Jx_F[id] = IM * ( ky[iy]*B_Z[id] - kz[iz]*B_Y[id] );
+  //   Jy_F[id] = IM * ( kz[iz]*B_X[id] - kx[ix]*B_Z[id] );
+  //   Jz_F[id] = IM * ( kx[ix]*B_Y[id] - ky[iy]*B_X[id] );
     
-  }}}
+  // }}}
   
-  // dealias
-  dealias(V_X, V_Y, V_Z);
-  dealias(B_X, B_Y, B_Z);
-  dealias(Wx_F, Wy_F, Wz_F);
-  dealias(Jx_F, Jy_F, Jz_F);
+  // // dealias
+  // dealias(V_X, V_Y, V_Z);
+  // dealias(B_X, B_Y, B_Z);
+  // dealias(Wx_F, Wy_F, Wz_F);
+  // dealias(Jx_F, Jy_F, Jz_F);
   
-  // FFT F->R
-  bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
-  bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
-  bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
-  bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
+  // // FFT F->R
+  // bFFT(V_X, V_Y, V_Z, Vx_R, Vy_R, Vz_R);
+  // bFFT(B_X, B_Y, B_Z, Bx_R, By_R, Bz_R);
+  // bFFT(Wx_F, Wy_F, Wz_F, Wx_R, Wy_R, Wz_R);  
+  // bFFT(Jx_F, Jy_F, Jz_F, Jx_R, Jy_R, Jz_R);
   
-  // clean up imaginary part
-  for(int id = 0; id < size_R_tot; id++){
+  // // clean up imaginary part
+  // for(int id = 0; id < size_R_tot; id++){
    
-    Vx_R[id] = Vx_R[id].real();
-    Vy_R[id] = Vy_R[id].real();
-    Vz_R[id] = Vz_R[id].real();
-    Bx_R[id] = Bx_R[id].real();
-    By_R[id] = By_R[id].real();
-    Bz_R[id] = Bz_R[id].real();
+  //   Vx_R[id] = Vx_R[id].real();
+  //   Vy_R[id] = Vy_R[id].real();
+  //   Vz_R[id] = Vz_R[id].real();
+  //   Bx_R[id] = Bx_R[id].real();
+  //   By_R[id] = By_R[id].real();
+  //   Bz_R[id] = Bz_R[id].real();
     
-  }
+  // }
   
   
-  // RHS_V = VxW + JxB
-  for(int id = 0; id < size_R_tot; id++){
+  // // RHS_V = VxW + JxB
+  // for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
-    RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
-    RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
+  //   RHS_Vx_R[id] = Vy_R[id]*Wz_R[id]-Vz_R[id]*Wy_R[id] + (Jy_R[id]*(Bz_R[id]+B0z[id])-Jz_R[id]*(By_R[id]+B0y[id]) );
+  //   RHS_Vy_R[id] = Vz_R[id]*Wx_R[id]-Vx_R[id]*Wz_R[id] + (Jz_R[id]*(Bx_R[id]+B0x[id])-Jx_R[id]*(Bz_R[id]+B0z[id]) );
+  //   RHS_Vz_R[id] = Vx_R[id]*Wy_R[id]-Vy_R[id]*Wx_R[id] + (Jx_R[id]*(By_R[id]+B0y[id])-Jy_R[id]*(Bx_R[id]+B0x[id]) );
     
-  }
+  // }
   
-  // RHS_B = VxB
-  for(int id = 0; id < size_R_tot; id++){
+  // // RHS_B = VxB
+  // for(int id = 0; id < size_R_tot; id++){
     
-    RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
-    RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
-    RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
+  //   RHS_Bx_R[id] = Vy_R[id]*(Bz_R[id]+B0z[id])-Vz_R[id]*(By_R[id]+B0y[id]);
+  //   RHS_By_R[id] = Vz_R[id]*(Bx_R[id]+B0x[id])-Vx_R[id]*(Bz_R[id]+B0z[id]);
+  //   RHS_Bz_R[id] = Vx_R[id]*(By_R[id]+B0y[id])-Vy_R[id]*(Bx_R[id]+B0x[id]);
     
-  }
+  // }
   
-  // FFT R->F
-  fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
-  fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
-  fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
-  fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
+  // // FFT R->F
+  // fFFT(Vx_R, Vy_R, Vz_R, V_X, V_Y, V_Z);
+  // fFFT(Bx_R, By_R, Bz_R, B_X, B_Y, B_Z);
+  // fFFT(RHS_Vx_R, RHS_Vy_R, RHS_Vz_R, RHSV_X, RHSV_Y, RHSV_Z);
+  // fFFT(RHS_Bx_R, RHS_By_R, RHS_Bz_R, RHSB_X, RHSB_Y, RHSB_Z);
   
-  // dealias
-  dealias(V_X, V_Y, V_Z);
-  dealias(B_X, B_Y, B_Z);
-  dealias(RHSV_X, RHSV_Y, RHSV_Z);
-  dealias(RHSB_X, RHSB_Y, RHSB_Z);
+  // // dealias
+  // dealias(V_X, V_Y, V_Z);
+  // dealias(B_X, B_Y, B_Z);
+  // dealias(RHSV_X, RHSV_Y, RHSV_Z);
+  // dealias(RHSB_X, RHSB_Y, RHSB_Z);
   
-  // RHS_B = rot(VxB)
+  // // RHS_B = rot(VxB)
+  // for(int ix = 0; ix<size_F[0]; ix++){
+  // for(int iy = 0; iy<size_F[1]; iy++){
+  // for(int iz = 0; iz<size_F[2]; iz++){
+    
+  //   int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+    
+  //   CX VxB_X = RHSB_X[id];
+  //   CX VxB_Y = RHSB_Y[id];
+  //   CX VxB_Z = RHSB_Z[id];
+    
+  //   RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
+  //   RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
+  //   RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
+    
+  // }}}
+  
+  // // forcing
+  // for(int id = 0; id < size_F_tot; id++){
+   
+  //   RHSV_X[id] += Force_X[id];
+  //   RHSV_Y[id] += Force_Y[id];
+  //   RHSV_Z[id] += Force_Z[id];
+  
+  // }
+
   for(int ix = 0; ix<size_F[0]; ix++){
   for(int iy = 0; iy<size_F[1]; iy++){
   for(int iz = 0; iz<size_F[2]; iz++){
-    
-    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
-    
-    CX VxB_X = RHSB_X[id];
-    CX VxB_Y = RHSB_Y[id];
-    CX VxB_Z = RHSB_Z[id];
-    
-    RHSB_X[id] = IM * ( ky[iy]*VxB_Z - kz[iz]*VxB_Y );
-    RHSB_Y[id] = IM * ( kz[iz]*VxB_X - kx[ix]*VxB_Z );
-    RHSB_Z[id] = IM * ( kx[ix]*VxB_Y - ky[iy]*VxB_X );
-    
-  }}}
-  
-  // forcing
-  for(int id = 0; id < size_F_tot; id++){
    
-    RHSV_X[id] += Force_X[id];
-    RHSV_Y[id] += Force_Y[id];
-    RHSV_Z[id] += Force_Z[id];
+    int id = ix * size_F[1]*size_F[2] + iy * size_F[2] + iz;
+
+    RHSV_X[id] = PI2 * IM * kx[ix] * V_X[id];
+    RHSV_Y[id] = PI2 * IM * ky[iy] * V_Y[id];
+    RHSV_Z[id] = PI2 * IM * kz[iz] * V_Z[id];
+
+    RHSB_X[id] = 0.;
+    RHSB_Y[id] = 0.;
+    RHSB_Z[id] = 0.;
   
-  }
+  }}}
     
 }
 
@@ -1444,7 +1470,7 @@ void CSpecDyn::print_vti()
                                         << extend_l[2] << " " << extend_r[2] 
 				 << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
 				 << "\" Spacing=\"" << dx << " " << dx << " " << dx
-         << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // FORTRAN -> C order
+         << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // FORTRAN -> C order (no effect..)
     
     os << "      <FieldData>" << std::endl;
     os << "        <DataArray type=\"Float32\" Name=\"TimeValue\" NumberOfTuples=\"1\" format=\"ascii\">" << std::endl;
@@ -1521,9 +1547,9 @@ void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_b
   // data to float array
   for(int id = 0; id < size_R_tot; id++)
   {
-    float_array_vector[3*id+0] = float(field_X[id].real());
+    float_array_vector[3*id+2] = float(field_X[id].real());
     float_array_vector[3*id+1] = float(field_Y[id].real());
-    float_array_vector[3*id+2] = float(field_Z[id].real());
+    float_array_vector[3*id+0] = float(field_Z[id].real());
   }
   
   // write data

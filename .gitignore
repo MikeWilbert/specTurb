@@ -3,4 +3,5 @@ machinefile
 CSpecDyn
 *.err
 *.out
+.vscode
 TSpecDyn*

@@ -38,12 +38,12 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/clean_up/N_128";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/stretching/test1";
 
 // output interval
-const double OUT_INTERVAL = 1.;
+const double OUT_INTERVAL = 0.2;
 // simulation time
-const double END_SIMU = 50.;
+const double END_SIMU = 1.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/new_version/v2"
@@ -53,7 +53,7 @@ const int RESTART_STEP = 0;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
-const int SETUP = 2;
+const int SETUP = 1;
 const bool BACKGROUND = false;
 const double BACKGROUND_ENERGY = 0.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
@@ -61,7 +61,7 @@ const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mappin
 // choose Forcing
 // (0) None
 // (1) Alvelius
-const int FORCING = 1;
+const int FORCING = 0;
 
 // domain size
 const double LENGTH = PI2;
