@@ -28,9 +28,9 @@ const int NUM = 64;
 int const PDIMS[2] = {4,4};
 
 // forced mode
-const double K_F = 1.5;
+const double K_F = 1.25;
 // width of forcing band
-const double DK_F = 0.45;
+const double DK_F = 0.24;
 // resolution of turbulence
 const double C_REF = 1.5;
 // large eddy turnover time
@@ -41,9 +41,9 @@ const double PRM = 1.;
 const std::string OUT_DIR = "/home/fs1/mw/Turbulence/stretching/test1";
 
 // output interval
-const double OUT_INTERVAL = 0.2;
+const double OUT_INTERVAL = 0.25;
 // simulation time
-const double END_SIMU = 1.;
+const double END_SIMU = 10.;
 // restart
 const int RESTART_STEP = 0;
 //~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/new_version/v2"
@@ -53,7 +53,7 @@ const int RESTART_STEP = 0;
 // (1):Orszag-Tang; 
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
-const int SETUP = 1;
+const int SETUP = 2;
 const bool BACKGROUND = false;
 const double BACKGROUND_ENERGY = 0.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
@@ -61,7 +61,7 @@ const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mappin
 // choose Forcing
 // (0) None
 // (1) Alvelius
-const int FORCING = 0;
+const int FORCING = 1;
 
 // domain size
 const double LENGTH = PI2;
