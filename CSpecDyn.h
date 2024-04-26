@@ -29,14 +29,19 @@ class CSpecDyn
     double eta;// magnetic resistivity 
 
     double XB; // left spatial position
+    double ZB; // left spatial position
     double dx; // space      discretization
+    double dz; // space      discretization
     double dk; // wavenumber discretization
+    double dkz; // wavenumber discretization
     double k_max;
+    double kz_max;
     
     // other quantites
     double time;
     double dt;
     double L;
+    double Lz;
   
     // MPI
     int myRank, nprocs;

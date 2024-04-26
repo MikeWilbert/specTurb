@@ -65,6 +65,7 @@ const int FORCING = 0;
 
 // domain size
 const double LENGTH = PI2;
+const double Lz_L = 2.;
 //~ const double LENGTH = 1.;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512

@@ -28,13 +28,18 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
   time = 0.;
   dt   = 0.;
   L = PI2;
+  Lz = Lz_L * L;
   
   // drived quantities
-  XB    = -L*0.5;
-  dx    = L/N;
-  dk    = PI2/L;
-  k_max = N/3.;
-  
+  XB     = -L *0.5;
+  ZB     = -Lz*0.5;
+  dx     = L /N;
+  dz     = Lz/N;
+  dk     = PI2/L ;
+  dkz    = PI2/Lz;
+  k_max  = N/3.;
+  kz_max = N/3. / Lz_L;  
+
   double L_f = PI2/k_f;
   P   = L_f*L_f/(T*T*T);
   nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.);
@@ -470,11 +475,11 @@ void CSpecDyn::setup_k()
     
     if(iz_glob < N/2)
     {
-      kz[iz] = iz_glob * dk;
+      kz[iz] = iz_glob * dkz;
     }
     else
     {
-      kz[iz] = (iz_glob-N) * dk;
+      kz[iz] = (iz_glob-N) * dkz;
 		}
 	}
   
@@ -560,7 +565,7 @@ void CSpecDyn::setup_fields()
         
         double x_val = (start_R[0]+ix)*dx+XB;
         double y_val = (start_R[1]+iy)*dx+XB;
-        double z_val = (start_R[2]+iz)*dx+XB;
+        double z_val = (start_R[2]+iz)*dz+ZB;
         
         Vx_R[id] = cos(x_val)*cos(y_val)*cos(z_val);
         Vy_R[id] = cos(x_val)*cos(y_val)*cos(z_val);
@@ -1462,14 +1467,14 @@ void CSpecDyn::print_vti()
     // write header	
 		int extend_l[3]  = {0, 0, 0};
 		int extend_r[3]  = {N-1, N-1, N-1};
-		double origin[3] = {XB,XB,XB};
+		double origin[3] = {XB,XB,ZB};
     
     os << "<VTKFile type=\"ImageData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">" << std::endl;	
     os << "  <ImageData WholeExtent=\"" << extend_l[0] << " " << extend_r[0] << " " 
                                         << extend_l[1] << " " << extend_r[1] << " " 
                                         << extend_l[2] << " " << extend_r[2] 
 				 << "\" Origin=\""  << origin[0]  << " " << origin[1]  << " " << origin[2] 
-				 << "\" Spacing=\"" << dx << " " << dx << " " << dx
+				 << "\" Spacing=\"" << dx << " " << dx << " " << dz
          << "\" Direction=\"0 0 1 0 1 0 1 0 0\">" << std::endl; // FORTRAN -> C order (no effect..)
     
     os << "      <FieldData>" << std::endl;
@@ -1547,9 +1552,9 @@ void CSpecDyn::print_mpi_vector(CX* field_X, CX* field_Y, CX* field_Z, long& N_b
   // data to float array
   for(int id = 0; id < size_R_tot; id++)
   {
-    float_array_vector[3*id+2] = float(field_X[id].real());
+    float_array_vector[3*id+0] = float(field_X[id].real());
     float_array_vector[3*id+1] = float(field_Y[id].real());
-    float_array_vector[3*id+0] = float(field_Z[id].real());
+    float_array_vector[3*id+2] = float(field_Z[id].real());
   }
   
   // write data
