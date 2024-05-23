@@ -7,4 +7,4 @@
 #SBATCH --time=02:00:00
 #SBATCH --partition=batch
 
-srun --overlap ./TSpecDyn_B20
+srun --overlap ./TSpecDyn_B0

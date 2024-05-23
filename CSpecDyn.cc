@@ -1068,7 +1068,7 @@ void CSpecDyn::Alvelius()
     
     double K = sqrt(k2[id]);
     
-    if( dk_f > abs(k_f-K))
+    if( dk_f >= abs(k_f-K))
     {
       
       // Alvelius

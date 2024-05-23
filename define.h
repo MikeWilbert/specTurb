@@ -38,7 +38,7 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // output directory
-const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/singularity_fix/singularityFix_N256_B2";
+const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/singularity_fix/singularityFix_N256_B0";
 
 // output interval
 const double OUT_INTERVAL = 0.5;
@@ -54,8 +54,8 @@ const int RESTART_STEP = 0;
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
-const bool BACKGROUND = true;
-const double BACKGROUND_ENERGY = 2. * 10.0;
+const bool BACKGROUND = false;
+const double BACKGROUND_ENERGY = 0. * 10.0;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
 // choose Forcing
@@ -65,7 +65,7 @@ const int FORCING = 1;
 
 // domain size
 const double LENGTH = PI2;
-const double Lz_L = sqrt(3.);
+const double Lz_L = 1.;
 
 /** DEFINES **/
 
