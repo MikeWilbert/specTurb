@@ -1082,8 +1082,28 @@ void CSpecDyn::Alvelius()
      
       // printf("K = %f (%f,%f,%f, %f, %f)\n", K, K_x, K_y, K_z, K_p_inv, K_inv);
       
-      double e1[3] = { K_y * K_p_inv, - K_x * K_p_inv, 0. };
-      double e2[3] = { K_x * K_z * K_inv * K_p_inv, K_y * K_z * K_inv * K_p_inv, - K_p * K_inv };
+      double e1[3];
+      double e2[3];
+
+      if ( isinf(K_p_inv) ) // avoid singularity at K_x == K_y == 0
+      {
+        e1[0] = 1.;
+        e1[1] = 0.;
+        e1[2] = 0.;
+
+        e2[0] = 0.;
+        e2[1] = 1.;
+        e2[2] = 0.;
+      }
+      else{
+        e1[0] =   K_y * K_p_inv;
+        e1[1] = - K_x * K_p_inv;
+        e1[2] =   0.;
+
+        e2[0] =   K_x * K_z * K_inv * K_p_inv;
+        e2[1] =   K_y * K_z * K_inv * K_p_inv;
+        e2[2] = - K_p * K_inv;
+      }
       
       CX xi_1 = Vx_F[id]*e1[0] + Vy_F[id]*e1[1] + Vz_F[id]*e1[2];
       CX xi_2 = Vx_F[id]*e2[0] + Vy_F[id]*e2[1] + Vz_F[id]*e2[2];

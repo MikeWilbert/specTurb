@@ -28,9 +28,9 @@ const int NUM = 64;
 int const PDIMS[2] = {4,4};
 
 // forced mode
-const double K_F = 1.25;
+const double K_F = 1.5;
 // width of forcing band
-const double DK_F = 0.24;
+const double DK_F = 0.5;
 // resolution of turbulence
 const double C_REF = 1.5;
 // large eddy turnover time
@@ -38,10 +38,10 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/Turbulence/stretching/test1";
+const std::string OUT_DIR = "/home/fs1/mw/Turbulence/stretching/singularity";
 
 // output interval
-const double OUT_INTERVAL = 0.25;
+const double OUT_INTERVAL = 0.5;
 // simulation time
 const double END_SIMU = 10.;
 // restart
@@ -65,7 +65,7 @@ const int FORCING = 1;
 
 // domain size
 const double LENGTH = PI2;
-const double Lz_L = 2.;
+const double Lz_L = sqrt(3.);
 //~ const double LENGTH = 1.;
 // kinematic viscosity
 //~ const double NU  = 0.0009; // decaying Turbulence N=512
