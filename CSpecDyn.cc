@@ -1049,8 +1049,7 @@ void CSpecDyn::set_dt()
   
   // dt = 0.5*dx/PI2;
 
-  dt = 0.1*sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
-  // dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
+  dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
   
   // fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // do I need back trafo?
   
