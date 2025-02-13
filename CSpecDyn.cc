@@ -42,7 +42,7 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
 
   double L_f = PI2/k_f;
   P   = L_f*L_f/(T*T*T);
-  nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.);
+  nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.); // Change for hyperviscosity!!!
   eta = nu / Pr_m;
   
   // print parameters

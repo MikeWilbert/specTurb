@@ -23,9 +23,9 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 256;
+const int NUM = 1024;
 // processor grid
-int const PDIMS[2] = {48,48};
+int const PDIMS[2] = {96,96};
 
 // forced mode
 const double K_F = 1.5;
@@ -38,14 +38,16 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // output directory
-const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/singularity_fix/singularityFix_N256_B0";
+const std::string OUT_DIR = "/p/scratch/specturb/singularityFix_N1024_B0p5";
+// const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/singularity_fix/singularityFix_N1024_B2";
 
 // output interval
 const double OUT_INTERVAL = 0.5;
 // simulation time
-const double END_SIMU = 20.;
+// const double END_SIMU = 20.;
+const double END_SIMU = 14.;
 // restart
-const int RESTART_STEP = 0;
+const int RESTART_STEP = 24;
 //~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
 
 // choose initial setup: 
@@ -54,8 +56,10 @@ const int RESTART_STEP = 0;
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
-const bool BACKGROUND = false;
-const double BACKGROUND_ENERGY = 0. * 10.0;
+const bool BACKGROUND = true;
+const double E0_dE = 0.5;
+const double dE = 10.;
+const double BACKGROUND_ENERGY =  E0_dE * dE;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
 
 // choose Forcing
@@ -65,7 +69,7 @@ const int FORCING = 1;
 
 // domain size
 const double LENGTH = PI2;
-const double Lz_L = 1.;
+const double Lz_L = sqrt(1 + E0_dE);
 
 /** DEFINES **/
 
