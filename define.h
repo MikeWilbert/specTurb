@@ -40,7 +40,7 @@ const double PRM = 1.;
 // hyperviscosity
 const int HYP = 2;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/test_h2";
+const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/Test_h2";
 
 // output interval
 const double OUT_INTERVAL = 0.1;
