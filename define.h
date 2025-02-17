@@ -23,9 +23,9 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 1024;
+const int NUM = 128;
 // processor grid
-int const PDIMS[2] = {96,96};
+int const PDIMS[2] = {8,8};
 
 // forced mode
 const double K_F = 1.5;
@@ -37,18 +37,20 @@ const double C_REF = 1.5;
 const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
+// hyperviscosity
+const int HYP = 2;
 // output directory
-const std::string OUT_DIR = "/p/scratch/specturb/singularityFix_N1024_B0p5";
-// const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/Tests/singularity_fix/singularityFix_N1024_B2";
+const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/test_h2";
 
 // output interval
-const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.1;
+// const double OUT_INTERVAL = 0.5;
 // simulation time
 // const double END_SIMU = 20.;
 const double END_SIMU = 14.;
 // restart
-const int RESTART_STEP = 24;
-//~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
+const int RESTART_STEP = 0;
+// #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
 
 // choose initial setup: 
 // (0):all zero; 
@@ -56,8 +58,10 @@ const int RESTART_STEP = 24;
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
-const bool BACKGROUND = true;
-const double E0_dE = 0.5;
+const bool BACKGROUND = false;
+// const bool BACKGROUND = true;
+const double E0_dE = 0.;
+// const double E0_dE = 0.5;
 const double dE = 10.;
 const double BACKGROUND_ENERGY =  E0_dE * dE;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";
