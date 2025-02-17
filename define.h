@@ -38,19 +38,18 @@ const double T_LE = 1.;
 // magnetic Prandtl number
 const double PRM = 1.;
 // hyperviscosity
-const int HYP = 2;
+const uint HYP = 2;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/Test_h2";
+const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/MHD_N128_hyper2";
 
 // output interval
-const double OUT_INTERVAL = 0.1;
-// const double OUT_INTERVAL = 0.5;
+const double OUT_INTERVAL = 0.5;
 // simulation time
 // const double END_SIMU = 20.;
 const double END_SIMU = 14.;
 // restart
 const int RESTART_STEP = 0;
-// #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
+//~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
 
 // choose initial setup: 
 // (0):all zero; 
@@ -59,9 +58,7 @@ const int RESTART_STEP = 0;
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
 const bool BACKGROUND = false;
-// const bool BACKGROUND = true;
 const double E0_dE = 0.;
-// const double E0_dE = 0.5;
 const double dE = 10.;
 const double BACKGROUND_ENERGY =  E0_dE * dE;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";

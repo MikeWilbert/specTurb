@@ -9,14 +9,14 @@ class CSpecDyn
   private:
   
     //parameters
-    const int N;        // resolution
-    const int* pdims;   // processor grid
-    const double k_f;   // forcing wavenumber
-    const double dk_f;  // width of forcingwavenumber band
-    const double c_ref; // resolution of Kolmogorov scale
-    const double T;     // large-eddy turnover-time
-    const double Pr_m;  // magnetic Prandtl nuber
-    const int    hyp;   // hyperviscosity coefficient (ordinary: hyp = 1)
+    const int N;
+    const int* pdims;
+    const double k_f;
+    const double dk_f;
+    const double c_ref;
+    const double T;
+    const double Pr_m;
+    const uint   hyp;
 
     std::string out_dir;
     double out_interval;
@@ -181,6 +181,7 @@ class CSpecDyn
     void calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX* V_Z,
                   CX* RHSB_X, CX* RHSB_Y, CX* RHSB_Z, CX* B_X, CX* B_Y, CX* B_Z,
                   double del_t);
+    void diffusion_correction(CX* Vx, CX* Vy, CX* Vz, CX* Bx, CX* By, CX* Bz, double del_t);
     void projection(CX* fieldX, CX* fieldY, CX* fieldZ);
     void dealias(CX* fieldX, CX* fieldY, CX* fieldZ);
     
