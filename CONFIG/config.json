@@ -1,0 +1,33 @@
+{
+  "simulation": {
+    "N" :   64,
+    "px":    8,
+    "py":    8,
+    "Prm": 1.0,
+    "hyp": 2.0,
+    "setup" : 2,
+    "restart_step": 0,
+    "restart_dir": "",
+    "binary_dir" : ""
+  },
+
+  "forcing": {
+    "on" : true,
+    "k"  : 1.5,
+    "dk" : 0.5,
+    "res": 1.5,
+    "LET": 1.0
+  },
+
+  "B_bg": {
+    "on"    : true,
+    "dE"    : 10.0,
+    "E0_dE" : 2.0
+  },
+
+  "output": {
+    "dir"     : "/home/fs1/mw/SpecTurb/test",
+    "interval": 0.5,
+    "end"     : 2.0
+  }
+}

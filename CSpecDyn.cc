@@ -1,29 +1,54 @@
 #include "CSpecDyn.h"
 
-CSpecDyn::CSpecDyn():
-N(NUM), pdims(PDIMS), k_f(K_F), dk_f(DK_F), c_ref(C_REF), T(T_LE), Pr_m(PRM), hyp(HYP), out_dir(OUT_DIR), 
-out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
+CSpecDyn::CSpecDyn()
 {
   
   // init MPI
   MPI_Init(NULL, NULL);
+
+  // read config parameters
+  using json = nlohmann::json;
+
+  std::string config_file = "./CONFIG/config.json";
+  std::ifstream file(config_file);
+  if(!file.is_open())
+  {
+    throw std::runtime_error("Cannot open config file: " + config_file);
+  }
+
+  json config;
+  file >> config;
+
+  N          = config["simulation"]["N"];
+  pdims[0]   = config["simulation"]["px"];
+  pdims[1]   = config["simulation"]["py"];
+  Pr_m       = config["simulation"]["Prm"];
+  hyp        = config["simulation"]["hyp"];
+  setup      = config["simulation"]["setup"];
+  RESTART_STEP = config["simulation"]["restart_step"];
+  RESTART_DIR  = config["simulation"]["restart_dir"];
+  BINARY_DIR   = config["simulation"]["binary_dir"];
+
+  BACKGROUND = config["B_bg"]["on"];
+  dE         = config["B_bg"]["dE"];
+  E0_dE      = config["B_bg"]["E0_dE"];
+
+  FORCING = config["forcing"]["on"];
+  k_f     = config["forcing"]["k"];
+  dk_f    = config["forcing"]["dk"];
+  c_ref   = config["forcing"]["res"];
+  T       = config["forcing"]["LET"];
+
+  out_dir      = config["output"]["dir"];
+  out_interval = config["output"]["interval"];
+  end_simu     = config["output"]["end"];
+
+  BACKGROUND_ENERGY =  E0_dE * dE;
+  Lz_L = sqrt(1 + E0_dE);
+  LENGTH = PI2;
  
   // init FFT  
   FFT = MikeFFT(N, pdims);
-  
-
-  // forced mode
-  const double K_F = 1.5;
-  // width of forcing band
-  const double DK_F = 0.5;
-  // resolution of turbulence
-  const double C_REF = 1.5;
-  // large eddy turnover time
-  const double T_LE = 1.;
-  // magnetic Prandtl number
-  const double PRM = 1.;
-  // hyperviscosity
-  const uint HYP = 1;
 
   // get sizes
   FFT.get_sizes(size_R, start_R, size_F, start_F);
@@ -34,10 +59,10 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
   // get MPI info
   FFT.get_comm(comm);
   
-  MPI_Comm_size(comm, &nprocs);
-	MPI_Comm_rank(comm, &myRank);
-  MPI_Cart_coords(comm, myRank, 2, mpi_coords);
-  
+  MPI_Comm_size  (comm, &nprocs);
+	MPI_Comm_rank  (comm, &myRank);
+  MPI_Cart_coords(comm,  myRank, 2, mpi_coords);
+
   // other quantites
   time = 0.;
   dt   = 0.;
@@ -57,8 +82,7 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
   double L_f = PI2/k_f;
   P   = L_f*L_f/(T*T*T);
   double m = 6 * hyp - 2;
-  nu  = pow( c_ref * pow( P, 1./m ) / k_max , m/3.); // Change for hyperviscosity!!!
-  // nu  = pow( c_ref * pow( P, 0.25 ) / k_max , 4./3.); // Change for hyperviscosity!!!
+  nu  = pow( c_ref * pow( P, 1./m ) / k_max , m/3.);
   eta = nu / Pr_m;
   
   // print parameters
@@ -70,8 +94,8 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
     printf("nu  = %f\n", nu);
     printf("eta = %f\n", eta);
     printf("P   = %f\n", P);
-     printf("\n");
-    
+    printf("\n");
+      
   }MPI_Barrier(comm);
   
   // allocate memory
@@ -219,12 +243,17 @@ out_interval(OUT_INTERVAL), end_simu(END_SIMU), setup(SETUP)
 
 void CSpecDyn::restart()
 {
+
+  std::string restart_dir;
   
-  #ifdef RESTART_DIR
-  std::string restart_dir = RESTART_DIR;
-  #else
-  std::string restart_dir = out_dir;
-  #endif
+  if( RESTART_DIR == "")
+  {
+    restart_dir = out_dir;
+  }
+  else
+  {
+    restart_dir = RESTART_DIR;
+  }
   
   std::string restart_file = restart_dir + "/vti/step_" + std::to_string(RESTART_STEP) + ".vti";
   
@@ -1384,7 +1413,7 @@ void CSpecDyn::calc_RHS(CX* RHSV_X, CX* RHSV_Y, CX* RHSV_Z, CX* V_X, CX* V_Y, CX
   }}}
   
   // forcing
-  if( FORCING > 0 )
+  if( FORCING )
   {
     for(int id = 0; id < size_F_tot; id++){
     

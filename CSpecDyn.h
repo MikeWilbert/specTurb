@@ -3,26 +3,43 @@
 #include "define.h"
 #include "MikeFFT.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#include "json.hpp"
+#pragma GCC diagnostic pop
+
 class CSpecDyn
 {
   
   private:
   
     //parameters
-    const int N;
-    const int* pdims;
-    const double k_f;
-    const double dk_f;
-    const double c_ref;
-    const double T;
-    const double Pr_m;
-    const uint   hyp;
+    int N;
+    int pdims[2];
+    double k_f;
+    double dk_f;
+    double c_ref;
+    double T;
+    double Pr_m;
+    uint   hyp;
 
     std::string out_dir;
     double out_interval;
     double end_simu;
 
-    const int setup;
+    int setup;
+
+    bool BACKGROUND;
+    bool FORCING;
+    double BACKGROUND_ENERGY;
+    double dE;
+    double E0_dE;
+    double Lz_L;
+    double LENGTH;
+    int RESTART_STEP;
+    std::string RESTART_DIR ;
+    std::string BINARY_DIR;
     
     // derived quantities
     double P;  // energy injection rate
