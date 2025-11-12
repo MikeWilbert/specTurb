@@ -23,9 +23,9 @@ const CX IM = CX(0., 1.);
 
 /** PARAMETERS **/
 // spatial resolution
-const int NUM = 128;
+const int NUM = 1024;
 // processor grid
-int const PDIMS[2] = {8,8};
+int const PDIMS[2] = {96,96};
 
 // forced mode
 const double K_F = 1.5;
@@ -40,15 +40,22 @@ const double PRM = 1.;
 // hyperviscosity
 const uint HYP = 2;
 // output directory
-const std::string OUT_DIR = "/home/fs1/mw/MHD/hyper/MHD_N128_hyper2";
+// const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/hyper2/N1024_h2_B0";
+// const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/hyper2/N1024_h2_B1";
+const std::string OUT_DIR = "/p/scratch/specturb/Turbulence/hyper2/N1024_h2_B10";
+// const double E0_dE =  0.;
+// const double E0_dE =  1.;
+const double E0_dE = 10.;
+// const int RESTART_STEP = 18;
+// const int RESTART_STEP = 20;
+const int RESTART_STEP = 17;
 
 // output interval
 const double OUT_INTERVAL = 0.5;
 // simulation time
-// const double END_SIMU = 20.;
-const double END_SIMU = 14.;
+const double END_SIMU = 15.;
 // restart
-const int RESTART_STEP = 0;
+// const int RESTART_STEP = ;
 //~ #define RESTART_DIR  "/p/scratch/specturb/Turbulence/Tests/singularity_fix"
 
 // choose initial setup: 
@@ -57,8 +64,8 @@ const int RESTART_STEP = 0;
 // (2):Energy spectrum [s=11/3] with linear Forcing
 // (3):Read from binary data (.dat)
 const int SETUP = 2;
-const bool BACKGROUND = false;
-const double E0_dE = 0.;
+const bool BACKGROUND = true;
+// const double E0_dE = 0.;
 const double dE = 10.;
 const double BACKGROUND_ENERGY =  E0_dE * dE;
 const std::string BINARY_DIR = "/p/project/specturb/synthetic_fields/Mike/mapping_zw_seed-512/lagrangian_mapping/i0";

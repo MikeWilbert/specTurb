@@ -1071,12 +1071,8 @@ void CSpecDyn::set_dt()
   }
   
   MPI_Allreduce(&L1_max_loc, &L1_max, 1, MPI_DOUBLE, MPI_MAX, comm);
-  
-  // dt = 0.5*dx/PI2;
 
   dt = sqrt(3.) * dx / ( PI * ( 3 + L1_max ) );
-  
-  // fFFT(Vx_R, Vy_R, Vz_R, Vx_F, Vy_F, Vz_F); // do I need back trafo?
   
 }
 
