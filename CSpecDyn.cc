@@ -25,7 +25,7 @@ CSpecDyn::CSpecDyn()
 
   Pr_m  = config["turbulence"]["Prm"];
   hyp   = config["turbulence"]["hyp"];
-  c_ref = config["turbulence"]["c_ref"];
+  c_ref = config["turbulence"]["c_res"];
 
   setup      = config["setup"]["which"];
   BINARY_DIR = config["setup"]["binary_dir"];
