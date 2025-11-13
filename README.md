@@ -107,11 +107,19 @@ git clone git@github.com:MikeWilbert/specTurb.git
 
 2. Specify your parameters in the config file 'CONFIG/config.json'
 
-3. Make sure your MPI compiler and the FFTW3 library are correctly linked in the Makefile and run `make`
+3. Make sure your MPI compiler and the FFTW3 library are correctly linked in the Makefile
 
 4. Build and run the code with:
 
-`mpiexec -np [#processes] SpecTurb`
+``
+
+```bash
+# build
+make
+
+# run
+mpiexec -np [#processes] SpecTurb
+```
 
 ## How to setup?
 
