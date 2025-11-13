@@ -169,3 +169,13 @@ The turbulence scales for each snapshot, to be found in 'output_dir/scales/'.
 
 - **nlohmann/json** (MIT License, included)
   - Header-only JSON parser included in `include/nlohmann/json.hpp`
+
+## License
+
+This code is distributed under a custom **Academic Non-Commercial License**.  
+You may use, modify, and share this code for non-commercial research purposes, provided that proper credit is given.
+
+Publications using this software must include the original author (Mike Wilbert) as a co-author, unless explicit permission for another form of acknowledgment is obtained.
+
+Commercial use is prohibited without prior written consent.  
+See the [LICENSE](./LICENSE) file for full details.
