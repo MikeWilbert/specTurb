@@ -118,7 +118,7 @@ git clone git@github.com:MikeWilbert/specTurb.git
 make
 
 # run
-mpiexec -np [#processes] SpecTurb
+mpiexec -np [numer_processes] SpecTurb
 ```
 
 ## How to setup?
@@ -145,7 +145,14 @@ The following parameters can be specified in the config file 'CONFIG/config.json
 |            | end        | End time of the simulation (in large-eddy turnover times).                                                                                                                                                       |
 | restart    | dir        | Restart directory. If not specified (i.e. `dir = ""`), the output directory is used.                                                                                                                             |
 |            | step       | Output step to restart from. If set to 0, no restart is performed and the specified setup is used.                                                                                                               |
+## What's the output?
 
+#### Field Snapshots
+Snapshots of the whole fields stored in the VTK format as a single .vti file, to be found in 'output_dir/vti/'. Those can be rendered e.g. using Paraview.
+#### Energy vs Time
+Energy vs time stored in 'output_dir/energy.csv' with the columns representing: kinetic energy, magnetic energy, fluid dissipation, magnetic dissipation, fluid enstrophy, magnetic enstrophy, helicity (Re), helicity (Im)
+#### Turbulence Scales
+The turbulence scales for each snapshot, to be found in 'output_dir/scales/'.
 
 ## Third-party libraries
 
