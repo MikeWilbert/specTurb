@@ -19,33 +19,36 @@ CSpecDyn::CSpecDyn()
   json config;
   file >> config;
 
-  N          = config["simulation"]["N"];
-  pdims[0]   = config["simulation"]["px"];
-  pdims[1]   = config["simulation"]["py"];
-  Pr_m       = config["simulation"]["Prm"];
-  hyp        = config["simulation"]["hyp"];
-  setup      = config["simulation"]["setup"];
-  RESTART_STEP = config["simulation"]["restart_step"];
-  RESTART_DIR  = config["simulation"]["restart_dir"];
-  BINARY_DIR   = config["simulation"]["binary_dir"];
+  N          = config["resolution"]["N"];
+  pdims[0]   = config["resolution"]["px"];
+  pdims[1]   = config["resolution"]["py"];
+
+  Pr_m  = config["turbulence"]["Prm"];
+  hyp   = config["turbulence"]["hyp"];
+  c_ref = config["turbulence"]["c_ref"];
+
+  setup      = config["setup"]["which"];
+  BINARY_DIR = config["setup"]["binary_dir"];
+
+  FORCING = config["forcing"]["on"];
+  k_f     = config["forcing"]["k"];
+  dk_f    = config["forcing"]["dk"];
 
   BACKGROUND = config["B_bg"]["on"];
   dE         = config["B_bg"]["dE"];
   E0_dE      = config["B_bg"]["E0_dE"];
 
-  FORCING = config["forcing"]["on"];
-  k_f     = config["forcing"]["k"];
-  dk_f    = config["forcing"]["dk"];
-  c_ref   = config["forcing"]["res"];
-  T       = config["forcing"]["LET"];
-
   out_dir      = config["output"]["dir"];
   out_interval = config["output"]["interval"];
   end_simu     = config["output"]["end"];
 
+  RESTART_DIR  = config["restart"]["dir"];
+  RESTART_STEP = config["restart"]["step"];
+
   BACKGROUND_ENERGY =  E0_dE * dE;
   Lz_L = sqrt(1 + E0_dE);
   LENGTH = PI2;
+  T       = 1.;
  
   // init FFT  
   FFT = MikeFFT(N, pdims);

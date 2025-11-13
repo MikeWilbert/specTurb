@@ -1,6 +1,6 @@
 *.o
 machinefile
-CSpecDyn
+SpecTurb
 *.err
 *.out
 .vscode

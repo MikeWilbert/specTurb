@@ -6,11 +6,9 @@
 
 /* TOOO:
  * 
- * - was ist mit dem deafult in setup_fields() los?
- * - B0=dB Simu (dB aus Simu mit oder ohne Hintergrundfeld?)
- *
- * - typedef für int->long
- * - fft -> rfft & Alvelius explizit im Ortsraum 
+ * README: Parameter erklären (einzeln) und die Sache mit den Skalen und dem Forcing herleiten:
+ * -> Auch für Hyperviskosität! -> hab iwo ein Markdown, wo das drin stehen sollte!
+ * Und kurz sagen, wie man das benutzt.
  * 
  */
 

@@ -1,22 +1,25 @@
 {
-  "simulation": {
+  "resolution": {
     "N" :   64,
     "px":    8,
-    "py":    8,
+    "py":    8
+  },
+
+  "turbulence": {
     "Prm": 1.0,
     "hyp": 2.0,
-    "setup" : 2,
-    "restart_step": 0,
-    "restart_dir": "",
+    "c_ref": 1.5
+  },
+
+  "setup": {
+    "which": 2,
     "binary_dir" : ""
   },
 
   "forcing": {
     "on" : true,
     "k"  : 1.5,
-    "dk" : 0.5,
-    "res": 1.5,
-    "LET": 1.0
+    "dk" : 0.5
   },
 
   "B_bg": {
@@ -29,5 +32,11 @@
     "dir"     : "/home/fs1/mw/SpecTurb/test",
     "interval": 0.5,
     "end"     : 2.0
+  },
+
+  "restart": {
+    "dir": "",
+    "step": 0
   }
+
 }
